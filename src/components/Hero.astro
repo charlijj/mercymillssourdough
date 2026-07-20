@@ -1,0 +1,59 @@
+---
+import { site } from '../data/menu.js';
+---
+
+<section id="top" class="hero">
+  <div class="hero-bg" aria-hidden="true"></div>
+  <div class="container hero-inner">
+    <span class="eyebrow hero-eyebrow">Naturally leavened · Small batch</span>
+    <h1>{site.tagline}</h1>
+    <p class="hero-sub">
+      Hand-shaped loaves and bakes made the slow way — wild yeast, long ferments,
+      and a golden crust worth the wait. Baked in small batches and delivered fresh.
+    </p>
+    <div class="hero-actions">
+      <a href="#order" class="btn btn-primary">Place an Order</a>
+      <a href="#menu" class="btn btn-outline hero-outline">See the Menu</a>
+    </div>
+  </div>
+</section>
+
+<style>
+  .hero {
+    position: relative;
+    min-height: 88vh;
+    display: flex;
+    align-items: center;
+    color: var(--cream);
+    overflow: hidden;
+  }
+  .hero-bg {
+    position: absolute;
+    inset: 0;
+    background:
+      linear-gradient(180deg, rgba(30, 20, 12, 0.55) 0%, rgba(30, 20, 12, 0.65) 100%),
+      radial-gradient(120% 120% at 70% 20%, #7a5a34 0%, #4a3320 55%, #2a1c10 100%);
+    background-size: cover;
+    background-position: center;
+  }
+  /* When a real hero photo is added, set it on .hero-bg like:
+     background-image: linear-gradient(...same overlay...), url('/images/hero.jpg'); */
+  .hero-inner {
+    position: relative;
+    z-index: 1;
+    max-width: 760px;
+    padding-top: 3rem;
+    padding-bottom: 3rem;
+  }
+  .hero-eyebrow { color: var(--wheat); }
+  .hero h1 { color: var(--cream); }
+  .hero-sub {
+    font-size: 1.2rem;
+    color: rgba(250, 244, 234, 0.92);
+    max-width: 620px;
+    margin-bottom: 2rem;
+  }
+  .hero-actions { display: flex; gap: 1rem; flex-wrap: wrap; }
+  .hero-outline { border-color: var(--cream); color: var(--cream); }
+  .hero-outline:hover { background: var(--cream); color: var(--crust); }
+</style>

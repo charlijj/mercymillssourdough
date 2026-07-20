@@ -1,0 +1,62 @@
+---
+// A simple photo catalog. Replace the placeholder images in /public/images
+// with real photos and update the `src` / `alt` below.
+const photos = [
+  { src: '/images/placeholder-loaf.svg', alt: 'Freshly baked country loaf', label: 'Classic Country Loaf' },
+  { src: '/images/placeholder-process.svg', alt: 'Sourdough starter bubbling', label: 'The living starter' },
+  { src: '/images/placeholder-loaf.svg', alt: 'Seeded multigrain loaf', label: 'Seeded Multigrain' },
+  { src: '/images/placeholder-process.svg', alt: 'Dough being shaped by hand', label: 'Shaping by hand' },
+  { src: '/images/placeholder-loaf.svg', alt: 'Scoring a loaf before baking', label: 'Scored & ready to bake' },
+  { src: '/images/placeholder-process.svg', alt: 'Golden crust close up', label: 'That golden crust' },
+];
+---
+
+<section id="gallery" class="bg-crust">
+  <div class="container">
+    <div class="gallery-head">
+      <span class="eyebrow">Gallery</span>
+      <h2>From starter to table</h2>
+      <p class="section-lead gallery-lead">
+        A look at the loaves and the process behind them.
+      </p>
+    </div>
+
+    <div class="gallery-grid">
+      {photos.map((p) => (
+        <figure class="tile">
+          <img src={p.src} alt={p.alt} loading="lazy" />
+          <figcaption>{p.label}</figcaption>
+        </figure>
+      ))}
+    </div>
+  </div>
+</section>
+
+<style>
+  .gallery-head { max-width: 720px; margin-bottom: 3rem; }
+  .gallery-lead { color: rgba(250, 244, 234, 0.85); }
+  .gallery-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 1.2rem;
+  }
+  .tile {
+    position: relative;
+    margin: 0;
+    border-radius: var(--radius);
+    overflow: hidden;
+    aspect-ratio: 1 / 1;
+    background: var(--crust-soft);
+  }
+  .tile img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s ease; }
+  .tile:hover img { transform: scale(1.05); }
+  .tile figcaption {
+    position: absolute;
+    left: 0; right: 0; bottom: 0;
+    padding: 1.4rem 1rem 0.9rem;
+    color: var(--cream);
+    font-weight: 500;
+    font-size: 0.95rem;
+    background: linear-gradient(180deg, transparent, rgba(20, 12, 6, 0.8));
+  }
+</style>

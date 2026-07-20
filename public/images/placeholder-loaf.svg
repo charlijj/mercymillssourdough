@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" role="img" aria-label="Sourdough loaf placeholder">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#f2e8d5"/>
+      <stop offset="1" stop-color="#e6c98f"/>
+    </linearGradient>
+    <linearGradient id="crust" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#c8862d"/>
+      <stop offset="1" stop-color="#8a5a1e"/>
+    </linearGradient>
+  </defs>
+  <rect width="800" height="600" fill="url(#bg)"/>
+  <ellipse cx="400" cy="360" rx="250" ry="150" fill="url(#crust)"/>
+  <path d="M400 230 C 300 230 220 290 220 360 C 220 300 300 260 400 260 C 500 260 580 300 580 360 C 580 290 500 230 400 230 Z" fill="#e6c98f" opacity="0.6"/>
+  <path d="M300 330 Q 400 300 500 330" stroke="#5b3a12" stroke-width="6" fill="none" stroke-linecap="round" opacity="0.55"/>
+  <path d="M320 370 Q 400 345 480 370" stroke="#5b3a12" stroke-width="6" fill="none" stroke-linecap="round" opacity="0.45"/>
+  <text x="400" y="520" font-family="Georgia, serif" font-size="30" fill="#8a6a3a" text-anchor="middle">Add your loaf photo</text>
+</svg>

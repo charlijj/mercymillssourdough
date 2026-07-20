@@ -1,0 +1,215 @@
+---
+import { menu, site } from '../data/menu.js';
+
+// Web3Forms access key. Get a free key at https://web3forms.com (enter your
+// mom's Gmail; every submission is emailed there). Then replace the value
+// below, OR set it via the PUBLIC_WEB3FORMS_KEY environment variable at build.
+const WEB3FORMS_KEY =
+  import.meta.env.PUBLIC_WEB3FORMS_KEY || 'YOUR_WEB3FORMS_ACCESS_KEY';
+---
+
+<section id="order">
+  <div class="container order-wrap">
+    <div class="order-head">
+      <span class="eyebrow">Place an order</span>
+      <h2>Order fresh sourdough</h2>
+      <p class="section-lead">
+        Tell us what you'd like and when. We'll email you back to confirm your
+        total and arrange pickup or local delivery. Orders are usually ready
+        within a few days.
+      </p>
+    </div>
+
+    <form id="order-form" class="order-form" action="https://api.web3forms.com/submit" method="POST">
+      <input type="hidden" name="access_key" value={WEB3FORMS_KEY} />
+      <input type="hidden" name="subject" value={`New sourdough order — ${site.name}`} />
+      <input type="hidden" name="from_name" value={site.name} />
+      <!-- Honeypot spam trap (leave empty) -->
+      <input type="checkbox" name="botcheck" class="hidden-bot" style="display:none" tabindex="-1" autocomplete="off" />
+
+      <fieldset class="fs-items">
+        <legend>What would you like?</legend>
+        <div class="item-list">
+          {menu.map((item) => (
+            <label class="item-row">
+              <span class="item-name">
+                {item.name}
+                <small>${item.price} / {item.unit}</small>
+              </span>
+              <input
+                type="number"
+                name={`qty_${item.id}`}
+                min="0"
+                max="50"
+                step="1"
+                value="0"
+                inputmode="numeric"
+                aria-label={`Quantity of ${item.name}`}
+              />
+            </label>
+          ))}
+        </div>
+      </fieldset>
+
+      <div class="grid-2">
+        <label class="field">
+          <span>Your name *</span>
+          <input type="text" name="name" required autocomplete="name" />
+        </label>
+        <label class="field">
+          <span>Email *</span>
+          <input type="email" name="email" required autocomplete="email" />
+        </label>
+        <label class="field">
+          <span>Phone</span>
+          <input type="tel" name="phone" autocomplete="tel" />
+        </label>
+        <label class="field">
+          <span>Preferred date</span>
+          <input type="date" name="preferred_date" />
+        </label>
+      </div>
+
+      <fieldset class="fs-fulfil">
+        <legend>Pickup or delivery?</legend>
+        <label class="radio"><input type="radio" name="fulfilment" value="Pickup" checked /> Pickup</label>
+        <label class="radio"><input type="radio" name="fulfilment" value="Local delivery" /> Local delivery</label>
+      </fieldset>
+
+      <label class="field">
+        <span>Notes (allergies, special requests, delivery address)</span>
+        <textarea name="notes" rows="3"></textarea>
+      </label>
+
+      <button type="submit" class="btn btn-primary order-submit">Send Order Request</button>
+
+      <p id="order-status" class="order-status" role="status" aria-live="polite"></p>
+      <noscript>
+        <p class="order-note">This form works without JavaScript — after you submit you'll see a confirmation page.</p>
+      </noscript>
+      <p class="order-fineprint">
+        This sends a request, not a payment. We'll reply to confirm your total and details.
+      </p>
+    </form>
+  </div>
+</section>
+
+<style>
+  .order-wrap { max-width: 780px; }
+  .order-head { margin-bottom: 2.5rem; }
+  .order-form {
+    background: var(--white);
+    border-radius: var(--radius);
+    padding: clamp(1.5rem, 4vw, 2.6rem);
+    box-shadow: var(--shadow);
+    border: 1px solid rgba(58, 42, 30, 0.06);
+  }
+  fieldset { border: none; padding: 0; margin: 0 0 1.6rem; }
+  legend {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 1.15rem;
+    color: var(--crust);
+    padding: 0;
+    margin-bottom: 0.9rem;
+  }
+  .item-list { display: grid; gap: 0.6rem; }
+  .item-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.7rem 0.9rem;
+    background: var(--cream);
+    border-radius: 10px;
+    border: 1px solid rgba(58, 42, 30, 0.06);
+  }
+  .item-name { display: flex; flex-direction: column; font-weight: 500; }
+  .item-name small { color: var(--muted); font-weight: 400; font-size: 0.85rem; }
+  .item-row input[type='number'] {
+    width: 72px;
+    text-align: center;
+  }
+  .grid-2 {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+    margin-bottom: 1.6rem;
+  }
+  .field { display: flex; flex-direction: column; gap: 0.35rem; }
+  .field span { font-weight: 500; font-size: 0.92rem; color: var(--crust-soft); }
+  input, textarea, select {
+    font-family: var(--font-body);
+    font-size: 1rem;
+    padding: 0.7rem 0.85rem;
+    border: 1.5px solid rgba(58, 42, 30, 0.15);
+    border-radius: 9px;
+    background: var(--white);
+    color: var(--ink);
+    width: 100%;
+  }
+  input:focus, textarea:focus, select:focus {
+    outline: none;
+    border-color: var(--amber);
+    box-shadow: 0 0 0 3px rgba(200, 134, 45, 0.15);
+  }
+  .fs-fulfil { display: flex; flex-wrap: wrap; align-items: center; gap: 1.2rem; }
+  .fs-fulfil legend { margin-bottom: 0.6rem; width: 100%; }
+  .radio { display: flex; align-items: center; gap: 0.4rem; font-weight: 500; cursor: pointer; }
+  .radio input { width: auto; }
+  .order-submit { width: 100%; margin-top: 0.5rem; font-size: 1.05rem; }
+  .order-status { margin: 1rem 0 0; font-weight: 600; text-align: center; }
+  .order-status.ok { color: var(--sage-deep); }
+  .order-status.err { color: #b23b2e; }
+  .order-fineprint, .order-note { font-size: 0.85rem; color: var(--muted); text-align: center; margin: 0.8rem 0 0; }
+
+  @media (max-width: 560px) {
+    .grid-2 { grid-template-columns: 1fr; }
+  }
+</style>
+
+<script>
+  const form = document.getElementById('order-form');
+  const status = document.getElementById('order-status');
+
+  if (form && status) {
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const data = new FormData(form);
+
+      // Require at least one item with quantity > 0
+      let total = 0;
+      for (const [key, val] of data.entries()) {
+        if (key.startsWith('qty_')) total += Number(val) || 0;
+      }
+      if (total === 0) {
+        status.textContent = 'Please add a quantity for at least one item.';
+        status.className = 'order-status err';
+        return;
+      }
+
+      status.textContent = 'Sending your order…';
+      status.className = 'order-status';
+
+      try {
+        const res = await fetch('https://api.web3forms.com/submit', {
+          method: 'POST',
+          headers: { Accept: 'application/json' },
+          body: data,
+        });
+        const json = await res.json();
+        if (json.success) {
+          status.textContent = 'Thank you! Your order request was sent. We’ll email you to confirm.';
+          status.className = 'order-status ok';
+          form.reset();
+        } else {
+          throw new Error(json.message || 'Submission failed');
+        }
+      } catch (err) {
+        status.textContent =
+          'Sorry, something went wrong. Please email us directly and we’ll sort it out.';
+        status.className = 'order-status err';
+      }
+    });
+  }
+</script>

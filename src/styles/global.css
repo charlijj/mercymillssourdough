@@ -1,0 +1,114 @@
+/* ==========================================================================
+   Mercy Mills Sourdough — global styles
+   A warm, modern farmers-market aesthetic: earthy tones, big type, airy layout.
+   ========================================================================== */
+
+:root {
+  /* Palette */
+  --cream: #faf4ea;
+  --cream-deep: #f2e8d5;
+  --crust: #3a2a1e;
+  --crust-soft: #5b4636;
+  --amber: #c8862d;
+  --amber-deep: #a86a1c;
+  --sage: #7d8a6a;
+  --sage-deep: #5f6b50;
+  --wheat: #e6c98f;
+  --ink: #2b2018;
+  --muted: #7a6a5a;
+  --white: #fffdf9;
+
+  /* Type */
+  --font-display: 'Fraunces', Georgia, 'Times New Roman', serif;
+  --font-body: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+
+  /* Layout */
+  --maxw: 1180px;
+  --radius: 14px;
+  --shadow: 0 10px 40px rgba(58, 42, 30, 0.12);
+  --shadow-sm: 0 4px 18px rgba(58, 42, 30, 0.1);
+}
+
+* { box-sizing: border-box; }
+
+html { scroll-behavior: smooth; scroll-padding-top: 84px; }
+
+body {
+  margin: 0;
+  font-family: var(--font-body);
+  color: var(--ink);
+  background: var(--cream);
+  line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  line-height: 1.1;
+  color: var(--crust);
+  margin: 0 0 0.4em;
+}
+
+h1 { font-size: clamp(2.6rem, 6vw, 4.6rem); letter-spacing: -0.02em; }
+h2 { font-size: clamp(2rem, 4vw, 3rem); letter-spacing: -0.01em; }
+h3 { font-size: 1.3rem; }
+
+p { margin: 0 0 1rem; }
+a { color: var(--amber-deep); text-decoration: none; }
+a:hover { text-decoration: underline; }
+img { max-width: 100%; display: block; }
+
+.container {
+  width: 100%;
+  max-width: var(--maxw);
+  margin: 0 auto;
+  padding: 0 1.5rem;
+}
+
+section { padding: clamp(3.5rem, 8vw, 6.5rem) 0; }
+
+.eyebrow {
+  display: inline-block;
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 0.8rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--amber-deep);
+  margin-bottom: 0.75rem;
+}
+
+.section-lead {
+  max-width: 640px;
+  font-size: 1.1rem;
+  color: var(--crust-soft);
+}
+
+/* Buttons */
+.btn {
+  display: inline-block;
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 1rem;
+  padding: 0.85rem 1.8rem;
+  border-radius: 999px;
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+  text-decoration: none;
+}
+.btn:hover { text-decoration: none; transform: translateY(-2px); }
+.btn-primary { background: var(--amber); color: var(--white); box-shadow: var(--shadow-sm); }
+.btn-primary:hover { background: var(--amber-deep); }
+.btn-outline { background: transparent; border-color: var(--crust); color: var(--crust); }
+.btn-outline:hover { background: var(--crust); color: var(--cream); }
+
+/* Alternating section backgrounds */
+.bg-cream-deep { background: var(--cream-deep); }
+.bg-crust { background: var(--crust); color: var(--cream); }
+.bg-crust h2, .bg-crust h3 { color: var(--wheat); }
+
+/* Utility */
+.text-center { text-align: center; }
+.mx-auto { margin-left: auto; margin-right: auto; }

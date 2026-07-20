@@ -1,0 +1,80 @@
+---
+// Newsletter signup.
+//
+// Recommended: MailerLite (free up to ~1,000 subscribers, scheduling included).
+// After you create a free MailerLite account and build an embedded signup form,
+// MailerLite gives you either (a) an embed snippet or (b) a hosted form URL.
+//
+// Simplest path (used below): set the form's `action` to your MailerLite
+// embedded-form POST URL, or replace this whole block with MailerLite's embed
+// snippet. Until then, this posts to the same email service as fallback so no
+// signup is lost — see docs/HANDOFF.md for the exact swap.
+const MAILERLITE_ACTION =
+  import.meta.env.PUBLIC_NEWSLETTER_ACTION || '';
+---
+
+<section id="newsletter" class="bg-cream-deep">
+  <div class="container newsletter-inner">
+    <div class="newsletter-card">
+      <span class="eyebrow">Stay in the loop</span>
+      <h2>Fresh bakes, in your inbox</h2>
+      <p>
+        Join our newsletter for new menu items, seasonal specials, and the
+        occasional baking tip. Sent monthly — never spammy, unsubscribe anytime.
+      </p>
+
+      {MAILERLITE_ACTION ? (
+        <form class="newsletter-form" action={MAILERLITE_ACTION} method="POST" target="_blank">
+          <input type="email" name="email" placeholder="you@example.com" required aria-label="Email address" />
+          <button type="submit" class="btn btn-primary">Subscribe</button>
+        </form>
+      ) : (
+        <p class="newsletter-todo">
+          <strong>Setup note:</strong> connect your MailerLite embedded form here
+          (see <code>docs/HANDOFF.md</code>). Once connected, visitors subscribe
+          right from this box.
+        </p>
+      )}
+    </div>
+  </div>
+</section>
+
+<style>
+  .newsletter-inner { display: flex; justify-content: center; }
+  .newsletter-card {
+    max-width: 640px;
+    text-align: center;
+    background: var(--white);
+    padding: clamp(2rem, 5vw, 3.2rem);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-sm);
+    border: 1px solid rgba(58, 42, 30, 0.06);
+  }
+  .newsletter-card p { color: var(--crust-soft); }
+  .newsletter-form {
+    display: flex;
+    gap: 0.7rem;
+    margin-top: 1.5rem;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  .newsletter-form input {
+    flex: 1;
+    min-width: 220px;
+    padding: 0.8rem 1rem;
+    border: 1.5px solid rgba(58, 42, 30, 0.15);
+    border-radius: 999px;
+  }
+  .newsletter-form input:focus {
+    outline: none; border-color: var(--amber);
+    box-shadow: 0 0 0 3px rgba(200, 134, 45, 0.15);
+  }
+  .newsletter-todo {
+    margin-top: 1.2rem;
+    font-size: 0.9rem;
+    background: var(--cream);
+    padding: 0.9rem 1rem;
+    border-radius: 10px;
+    color: var(--muted);
+  }
+</style>
