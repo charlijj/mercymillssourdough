@@ -1,40 +1,43 @@
 ---
-// Newsletter signup.
-//
-// Recommended: MailerLite (free up to ~1,000 subscribers, scheduling included).
-// After you create a free MailerLite account and build an embedded signup form,
-// MailerLite gives you either (a) an embed snippet or (b) a hosted form URL.
-//
-// Simplest path (used below): set the form's `action` to your MailerLite
-// embedded-form POST URL, or replace this whole block with MailerLite's embed
-// snippet. Until then, this posts to the same email service as fallback so no
-// signup is lost — see docs/HANDOFF.md for the exact swap.
-const MAILERLITE_ACTION =
-  import.meta.env.PUBLIC_NEWSLETTER_ACTION || '';
+import { site } from '../data/menu.js';
+import T from './T.astro';
+
+// Newsletter signups are emailed to the bakery via the same free Web3Forms key
+// used for orders (subject line marks them as signups). The owner collects
+// addresses this way and sends campaigns from their email tool of choice.
+const WEB3FORMS_KEY =
+  import.meta.env.PUBLIC_WEB3FORMS_KEY || 'YOUR_WEB3FORMS_ACCESS_KEY';
 ---
 
 <section id="newsletter" class="bg-cream-deep">
   <div class="container newsletter-inner">
     <div class="newsletter-card">
-      <span class="eyebrow">Stay in the loop</span>
-      <h2>Fresh bakes, in your inbox</h2>
+      <span class="eyebrow"><T en="Stay in the loop" zh="保持联系" /></span>
+      <h2><T en="Fresh bakes, in your inbox" zh="新鲜烘焙，直达您的邮箱" /></h2>
       <p>
-        Join our newsletter for new menu items, seasonal specials, and the
-        occasional baking tip. Sent monthly — never spammy, unsubscribe anytime.
+        <T
+          en="Join our newsletter for new menu items, seasonal specials, and the occasional baking tip. Sent monthly — never spammy, unsubscribe anytime."
+          zh="订阅我们的邮件，获取新品菜单、季节特惠和偶尔的烘焙小贴士。每月一封——绝不打扰，随时可取消订阅。"
+        />
       </p>
 
-      {MAILERLITE_ACTION ? (
-        <form class="newsletter-form" action={MAILERLITE_ACTION} method="POST" target="_blank">
-          <input type="email" name="email" placeholder="you@example.com" required aria-label="Email address" />
-          <button type="submit" class="btn btn-primary">Subscribe</button>
-        </form>
-      ) : (
-        <p class="newsletter-todo">
-          <strong>Setup note:</strong> connect your MailerLite embedded form here
-          (see <code>docs/HANDOFF.md</code>). Once connected, visitors subscribe
-          right from this box.
-        </p>
-      )}
+      <form id="newsletter-form" class="newsletter-form" action="https://api.web3forms.com/submit" method="POST">
+        <input type="hidden" name="access_key" value={WEB3FORMS_KEY} />
+        <input type="hidden" name="subject" value={`New newsletter signup — ${site.name}`} />
+        <input type="hidden" name="from_name" value={`${site.name} Newsletter`} />
+        <input type="checkbox" name="botcheck" style="display:none" tabindex="-1" autocomplete="off" />
+        <input
+          type="email"
+          name="email"
+          required
+          aria-label="Email address"
+          data-ph-en="you@example.com"
+          data-ph-zh="您的邮箱地址"
+          placeholder="you@example.com"
+        />
+        <button type="submit" class="btn btn-primary"><T en="Subscribe" zh="订阅" /></button>
+      </form>
+      <p id="newsletter-status" class="newsletter-status" role="status" aria-live="polite"></p>
     </div>
   </div>
 </section>
@@ -64,17 +67,51 @@ const MAILERLITE_ACTION =
     padding: 0.8rem 1rem;
     border: 1.5px solid rgba(58, 42, 30, 0.15);
     border-radius: 999px;
+    font-family: var(--font-body);
+    font-size: 1rem;
   }
   .newsletter-form input:focus {
     outline: none; border-color: var(--amber);
     box-shadow: 0 0 0 3px rgba(200, 134, 45, 0.15);
   }
-  .newsletter-todo {
-    margin-top: 1.2rem;
-    font-size: 0.9rem;
-    background: var(--cream);
-    padding: 0.9rem 1rem;
-    border-radius: 10px;
-    color: var(--muted);
-  }
+  .newsletter-status { margin: 1rem 0 0; font-weight: 600; min-height: 1.2em; }
+  .newsletter-status.ok { color: var(--sage-deep); }
+  .newsletter-status.err { color: #b23b2e; }
 </style>
+
+<script>
+  const form = document.getElementById('newsletter-form');
+  const status = document.getElementById('newsletter-status');
+  const msg = {
+    sending: { en: 'Subscribing…', zh: '正在订阅……' },
+    ok: { en: 'Thanks for subscribing! 🍞', zh: '订阅成功，谢谢！🍞' },
+    err: { en: 'Something went wrong. Please try again.', zh: '出了点问题，请重试。' },
+  };
+  const lang = () => (document.documentElement.getAttribute('data-lang') === 'zh' ? 'zh' : 'en');
+
+  if (form && status) {
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      status.textContent = msg.sending[lang()];
+      status.className = 'newsletter-status';
+      try {
+        const res = await fetch('https://api.web3forms.com/submit', {
+          method: 'POST',
+          headers: { Accept: 'application/json' },
+          body: new FormData(form),
+        });
+        const json = await res.json();
+        if (json.success) {
+          status.textContent = msg.ok[lang()];
+          status.className = 'newsletter-status ok';
+          form.reset();
+        } else {
+          throw new Error(json.message || 'failed');
+        }
+      } catch (err) {
+        status.textContent = msg.err[lang()];
+        status.className = 'newsletter-status err';
+      }
+    });
+  }
+</script>

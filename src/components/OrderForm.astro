@@ -1,22 +1,26 @@
 ---
 import { menu, site } from '../data/menu.js';
+import T from './T.astro';
 
-// Web3Forms access key. Get a free key at https://web3forms.com (enter your
-// mom's Gmail; every submission is emailed there). Then replace the value
-// below, OR set it via the PUBLIC_WEB3FORMS_KEY environment variable at build.
+// Web3Forms access key. Get a free key at https://web3forms.com (enter the
+// bakery's Gmail; every submission is emailed there). Set it via the
+// PUBLIC_WEB3FORMS_KEY environment variable, or paste it below.
 const WEB3FORMS_KEY =
   import.meta.env.PUBLIC_WEB3FORMS_KEY || 'YOUR_WEB3FORMS_ACCESS_KEY';
+
+const quantities = [0, 1, 2, 3, 4, 5];
 ---
 
 <section id="order">
   <div class="container order-wrap">
     <div class="order-head">
-      <span class="eyebrow">Place an order</span>
-      <h2>Order fresh sourdough</h2>
+      <span class="eyebrow"><T en="Place an order" zh="在线下单" /></span>
+      <h2><T en="Order fresh sourdough" zh="订购新鲜酸种面包" /></h2>
       <p class="section-lead">
-        Tell us what you'd like and when. We'll email you back to confirm your
-        total and arrange pickup or local delivery. Orders are usually ready
-        within a few days.
+        <T
+          en="Tell us what you'd like and when. We'll email you back to confirm your total and arrange pickup. Orders are usually ready within a few days."
+          zh="告诉我们您想要什么、何时需要。我们会通过邮件与您确认总价并安排自取。订单通常在几天内备好。"
+        />
       </p>
     </div>
 
@@ -24,28 +28,22 @@ const WEB3FORMS_KEY =
       <input type="hidden" name="access_key" value={WEB3FORMS_KEY} />
       <input type="hidden" name="subject" value={`New sourdough order — ${site.name}`} />
       <input type="hidden" name="from_name" value={site.name} />
+      <input type="hidden" name="fulfilment" value="Pickup (address confirmed by email)" />
       <!-- Honeypot spam trap (leave empty) -->
-      <input type="checkbox" name="botcheck" class="hidden-bot" style="display:none" tabindex="-1" autocomplete="off" />
+      <input type="checkbox" name="botcheck" style="display:none" tabindex="-1" autocomplete="off" />
 
       <fieldset class="fs-items">
-        <legend>What would you like?</legend>
+        <legend><T en="What would you like?" zh="您想要点什么？" /></legend>
         <div class="item-list">
           {menu.map((item) => (
             <label class="item-row">
               <span class="item-name">
-                {item.name}
-                <small>${item.price} / {item.unit}</small>
+                <T en={item.name} zh={item.name_zh} />
+                <small>${item.price} / <T en={item.unit} zh={item.unit_zh} /></small>
               </span>
-              <input
-                type="number"
-                name={`qty_${item.id}`}
-                min="0"
-                max="50"
-                step="1"
-                value="0"
-                inputmode="numeric"
-                aria-label={`Quantity of ${item.name}`}
-              />
+              <select name={`qty_${item.id}`} aria-label={item.name}>
+                {quantities.map((q) => <option value={q}>{q}</option>)}
+              </select>
             </label>
           ))}
         </div>
@@ -53,42 +51,45 @@ const WEB3FORMS_KEY =
 
       <div class="grid-2">
         <label class="field">
-          <span>Your name *</span>
+          <span><T en="Your name *" zh="您的姓名 *" /></span>
           <input type="text" name="name" required autocomplete="name" />
         </label>
         <label class="field">
-          <span>Email *</span>
+          <span><T en="Email *" zh="邮箱 *" /></span>
           <input type="email" name="email" required autocomplete="email" />
         </label>
         <label class="field">
-          <span>Phone</span>
+          <span><T en="Phone" zh="电话" /></span>
           <input type="tel" name="phone" autocomplete="tel" />
         </label>
         <label class="field">
-          <span>Preferred date</span>
+          <span><T en="Preferred pickup date" zh="期望自取日期" /></span>
           <input type="date" name="preferred_date" />
         </label>
       </div>
 
-      <fieldset class="fs-fulfil">
-        <legend>Pickup or delivery?</legend>
-        <label class="radio"><input type="radio" name="fulfilment" value="Pickup" checked /> Pickup</label>
-        <label class="radio"><input type="radio" name="fulfilment" value="Local delivery" /> Local delivery</label>
-      </fieldset>
-
       <label class="field">
-        <span>Notes (allergies, special requests, delivery address)</span>
+        <span><T en="Notes (allergies, special requests)" zh="备注（过敏、特殊要求）" /></span>
         <textarea name="notes" rows="3"></textarea>
       </label>
 
-      <button type="submit" class="btn btn-primary order-submit">Send Order Request</button>
+      <p class="pickup-note">
+        <T
+          en="Pickup only — we'll confirm the pickup address and time with you by email."
+          zh="仅限自取——我们将通过邮件与您确认自取地址和时间。"
+        />
+      </p>
+
+      <button type="submit" class="btn btn-primary order-submit">
+        <T en="Send Order Request" zh="提交订单请求" />
+      </button>
 
       <p id="order-status" class="order-status" role="status" aria-live="polite"></p>
-      <noscript>
-        <p class="order-note">This form works without JavaScript — after you submit you'll see a confirmation page.</p>
-      </noscript>
       <p class="order-fineprint">
-        This sends a request, not a payment. We'll reply to confirm your total and details.
+        <T
+          en="This sends a request, not a payment. We'll reply to confirm your total and details."
+          zh="这是提交订单请求，并非付款。我们会回复确认总价与细节。"
+        />
       </p>
     </form>
   </div>
@@ -126,9 +127,11 @@ const WEB3FORMS_KEY =
   }
   .item-name { display: flex; flex-direction: column; font-weight: 500; }
   .item-name small { color: var(--muted); font-weight: 400; font-size: 0.85rem; }
-  .item-row input[type='number'] {
-    width: 72px;
+  .item-row select {
+    width: 84px;
     text-align: center;
+    padding: 0.55rem 0.6rem;
+    cursor: pointer;
   }
   .grid-2 {
     display: grid;
@@ -153,15 +156,19 @@ const WEB3FORMS_KEY =
     border-color: var(--amber);
     box-shadow: 0 0 0 3px rgba(200, 134, 45, 0.15);
   }
-  .fs-fulfil { display: flex; flex-wrap: wrap; align-items: center; gap: 1.2rem; }
-  .fs-fulfil legend { margin-bottom: 0.6rem; width: 100%; }
-  .radio { display: flex; align-items: center; gap: 0.4rem; font-weight: 500; cursor: pointer; }
-  .radio input { width: auto; }
-  .order-submit { width: 100%; margin-top: 0.5rem; font-size: 1.05rem; }
+  .pickup-note {
+    font-size: 0.9rem;
+    color: var(--crust-soft);
+    background: var(--cream);
+    border-radius: 10px;
+    padding: 0.8rem 1rem;
+    margin: 0 0 1.4rem;
+  }
+  .order-submit { width: 100%; margin-top: 0.25rem; font-size: 1.05rem; }
   .order-status { margin: 1rem 0 0; font-weight: 600; text-align: center; }
   .order-status.ok { color: var(--sage-deep); }
   .order-status.err { color: #b23b2e; }
-  .order-fineprint, .order-note { font-size: 0.85rem; color: var(--muted); text-align: center; margin: 0.8rem 0 0; }
+  .order-fineprint { font-size: 0.85rem; color: var(--muted); text-align: center; margin: 0.8rem 0 0; }
 
   @media (max-width: 560px) {
     .grid-2 { grid-template-columns: 1fr; }
@@ -172,23 +179,36 @@ const WEB3FORMS_KEY =
   const form = document.getElementById('order-form');
   const status = document.getElementById('order-status');
 
+  const msg = {
+    none: { en: 'Please choose a quantity for at least one item.', zh: '请至少为一件商品选择数量。' },
+    sending: { en: 'Sending your order…', zh: '正在提交您的订单……' },
+    ok: {
+      en: 'Thank you! Your order request was sent. We’ll email you to confirm.',
+      zh: '谢谢！您的订单请求已提交。我们会通过邮件与您确认。',
+    },
+    err: {
+      en: 'Sorry, something went wrong. Please email us directly and we’ll sort it out.',
+      zh: '抱歉，出了点问题。请直接给我们发邮件，我们会为您处理。',
+    },
+  };
+  const lang = () => (document.documentElement.getAttribute('data-lang') === 'zh' ? 'zh' : 'en');
+
   if (form && status) {
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
       const data = new FormData(form);
 
-      // Require at least one item with quantity > 0
       let total = 0;
       for (const [key, val] of data.entries()) {
         if (key.startsWith('qty_')) total += Number(val) || 0;
       }
       if (total === 0) {
-        status.textContent = 'Please add a quantity for at least one item.';
+        status.textContent = msg.none[lang()];
         status.className = 'order-status err';
         return;
       }
 
-      status.textContent = 'Sending your order…';
+      status.textContent = msg.sending[lang()];
       status.className = 'order-status';
 
       try {
@@ -199,15 +219,14 @@ const WEB3FORMS_KEY =
         });
         const json = await res.json();
         if (json.success) {
-          status.textContent = 'Thank you! Your order request was sent. We’ll email you to confirm.';
+          status.textContent = msg.ok[lang()];
           status.className = 'order-status ok';
           form.reset();
         } else {
           throw new Error(json.message || 'Submission failed');
         }
       } catch (err) {
-        status.textContent =
-          'Sorry, something went wrong. Please email us directly and we’ll sort it out.';
+        status.textContent = msg.err[lang()];
         status.className = 'order-status err';
       }
     });

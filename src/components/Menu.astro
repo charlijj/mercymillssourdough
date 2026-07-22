@@ -1,18 +1,23 @@
 ---
 import { menu } from '../data/menu.js';
+import T from './T.astro';
 
-const fmt = (n) =>
-  Number.isInteger(n) ? `$${n}` : `$${n.toFixed(2)}`;
+const fmt = (n) => (Number.isInteger(n) ? `$${n}` : `$${n.toFixed(2)}`);
+
+// Mandarin labels for the short product tags.
+const tagZh = { Bestseller: '热销', Seasonal: '季节限定' };
 ---
 
 <section id="menu">
   <div class="container">
     <div class="menu-head">
-      <span class="eyebrow">The Menu</span>
-      <h2>This week's bakes</h2>
+      <span class="eyebrow"><T en="The Menu" zh="菜单" /></span>
+      <h2><T en="This week's bakes" zh="本周烘焙" /></h2>
       <p class="section-lead">
-        Fresh out of the oven. Prices are per item — ready to order below and
-        pick up or have delivered locally.
+        <T
+          en="Fresh out of the oven. Prices are per item — order below and pick up locally."
+          zh="新鲜出炉。价格按份计算——在下方下单，即可到店自取。"
+        />
       </p>
     </div>
 
@@ -22,22 +27,26 @@ const fmt = (n) =>
           <div class="card-media">
             <img src={item.image} alt={item.name} loading="lazy" />
             {item.tags && item.tags.length > 0 && (
-              <span class="card-tag">{item.tags[0]}</span>
+              <span class="card-tag">
+                <T en={item.tags[0]} zh={tagZh[item.tags[0]] || item.tags[0]} />
+              </span>
             )}
           </div>
           <div class="card-body">
             <div class="card-title-row">
-              <h3>{item.name}</h3>
-              <span class="card-price">{fmt(item.price)}<small>/{item.unit}</small></span>
+              <h3><T en={item.name} zh={item.name_zh} /></h3>
+              <span class="card-price">
+                {fmt(item.price)}<small>/<T en={item.unit} zh={item.unit_zh} /></small>
+              </span>
             </div>
-            <p>{item.description}</p>
+            <p><T en={item.description} zh={item.description_zh} /></p>
           </div>
         </article>
       ))}
     </div>
 
     <div class="text-center menu-cta">
-      <a href="#order" class="btn btn-primary">Order Your Loaves</a>
+      <a href="#order" class="btn btn-primary"><T en="Order Your Loaves" zh="立即下单" /></a>
     </div>
   </div>
 </section>

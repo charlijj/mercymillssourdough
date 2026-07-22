@@ -1,5 +1,6 @@
 ---
 import { site } from '../data/menu.js';
+import T from './T.astro';
 ---
 
 <header class="site-header">
@@ -12,11 +13,14 @@ import { site } from '../data/menu.js';
     </label>
 
     <nav class="site-nav">
-      <a href="#story">Our Story</a>
-      <a href="#menu">Menu</a>
-      <a href="#gallery">Gallery</a>
-      <a href="#newsletter">Newsletter</a>
-      <a href="#order" class="btn btn-primary nav-cta">Order Now</a>
+      <a href="#story"><T en="Our Story" zh="关于我们" /></a>
+      <a href="#menu"><T en="Menu" zh="菜单" /></a>
+      <a href="#gallery"><T en="Gallery" zh="图库" /></a>
+      <a href="#newsletter"><T en="Newsletter" zh="订阅" /></a>
+      <button id="lang-toggle" class="lang-toggle" type="button" aria-label="切换语言 / Switch language">
+        <span data-lang-en>中文</span><span data-lang-zh>EN</span>
+      </button>
+      <a href="#order" class="btn btn-primary nav-cta"><T en="Order Now" zh="立即订购" /></a>
     </nav>
   </div>
 </header>
@@ -47,7 +51,7 @@ import { site } from '../data/menu.js';
   .site-nav {
     display: flex;
     align-items: center;
-    gap: 1.6rem;
+    gap: 1.4rem;
   }
   .site-nav a {
     color: var(--crust-soft);
@@ -80,7 +84,8 @@ import { site } from '../data/menu.js';
       transition: max-height 0.25s ease;
     }
     .site-nav a { padding: 0.9rem 1.5rem; border-top: 1px solid rgba(58, 42, 30, 0.06); }
+    .lang-toggle { margin: 0.8rem 1.5rem 0; text-align: center; }
     .nav-cta { margin: 0.8rem 1.5rem; text-align: center; }
-    .nav-toggle:checked ~ .site-nav { max-height: 420px; }
+    .nav-toggle:checked ~ .site-nav { max-height: 460px; }
   }
 </style>

@@ -20,7 +20,7 @@
 
   /* Type */
   --font-display: 'Fraunces', Georgia, 'Times New Roman', serif;
-  --font-body: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-body: 'Inter', 'Noto Sans SC', system-ui, -apple-system, 'Segoe UI', sans-serif;
 
   /* Layout */
   --maxw: 1180px;
@@ -112,3 +112,39 @@ section { padding: clamp(3.5rem, 8vw, 6.5rem) 0; }
 /* Utility */
 .text-center { text-align: center; }
 .mx-auto { margin-left: auto; margin-right: auto; }
+
+/* ------------------------------------------------------------------ */
+/* Bilingual (English / Mandarin) toggle                               */
+/* Both languages are in the HTML; we show only the active one.        */
+/* Default (no data-lang or data-lang="en") shows English.             */
+/* ------------------------------------------------------------------ */
+[data-lang-zh] { display: none; }
+html[data-lang='zh'] [data-lang-en] { display: none; }
+html[data-lang='zh'] [data-lang-zh] { display: inline; }
+
+/* Chinese renders better in a CJK sans than in the Latin display serif */
+html[data-lang='zh'] body { line-height: 1.75; }
+html[data-lang='zh'] h1,
+html[data-lang='zh'] h2,
+html[data-lang='zh'] h3,
+html[data-lang='zh'] .brand,
+html[data-lang='zh'] .footer-name {
+  font-family: 'Noto Sans SC', 'Fraunces', sans-serif;
+  font-weight: 700;
+}
+
+/* Language toggle button */
+.lang-toggle {
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 0.9rem;
+  padding: 0.4rem 0.9rem;
+  border-radius: 999px;
+  border: 1.5px solid var(--crust);
+  background: transparent;
+  color: var(--crust);
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+  line-height: 1;
+}
+.lang-toggle:hover { background: var(--crust); color: var(--cream); }

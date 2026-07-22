@@ -1,24 +1,34 @@
 ---
+import T from './T.astro';
+
 const steps = [
   {
     num: '01',
-    title: 'A Living Starter',
-    body: 'It begins with our wild sourdough starter — flour and water, fed daily until it bubbles with natural yeast. No commercial yeast, ever.',
+    title_en: 'A Living Starter',
+    title_zh: '鲜活的酵头',
+    body_en: 'It begins with our wild sourdough starter — flour and water, fed daily until it bubbles with natural yeast. No commercial yeast, ever.',
+    body_zh: '一切始于我们的天然酵头——面粉与水，每天喂养，直到冒出天然酵母的气泡。绝不使用商业酵母。',
   },
   {
     num: '02',
-    title: 'The Slow Rise',
-    body: 'We mix, fold, and let the dough ferment slowly over 18–24 hours. Time is the real ingredient — it builds flavor and makes the bread easy to digest.',
+    title_en: 'The Slow Rise',
+    title_zh: '缓慢发酵',
+    body_en: 'We mix, fold, and let the dough ferment slowly over 18–24 hours. Time is the real ingredient — it builds flavor and makes the bread easy to digest.',
+    body_zh: '我们揉面、折叠，让面团在 18 至 24 小时内缓慢发酵。时间才是真正的配料——它带来风味，也让面包更易消化。',
   },
   {
     num: '03',
-    title: 'Hand Shaped',
-    body: 'Every loaf is shaped by hand and rested overnight in the cool, so the crumb sets open and airy and the tang deepens.',
+    title_en: 'Hand Shaped',
+    title_zh: '手工塑形',
+    body_en: 'Every loaf is shaped by hand and rested overnight in the cool, so the crumb sets open and airy and the tang deepens.',
+    body_zh: '每一个面包都由手工塑形，在低温中静置一夜，让面包心组织松软通透，风味更加浓郁。',
   },
   {
     num: '04',
-    title: 'Baked to Gold',
-    body: 'Scored and baked in a screaming-hot oven with steam for that signature crackly, deep-golden crust. Cooled, then straight to you.',
+    title_en: 'Baked to Gold',
+    title_zh: '烘至金黄',
+    body_en: 'Scored and baked in a screaming-hot oven with steam for that signature crackly, deep-golden crust. Cooled, then straight to you.',
+    body_zh: '划纹后在高温蒸汽烤箱中烘烤，成就标志性的酥脆金黄外壳。冷却后，即刻交到您手中。',
   },
 ];
 ---
@@ -26,11 +36,13 @@ const steps = [
 <section id="story" class="bg-cream-deep">
   <div class="container">
     <div class="story-head">
-      <span class="eyebrow">How it's made</span>
-      <h2>Bread the slow, honest way</h2>
+      <span class="eyebrow"><T en="How it's made" zh="制作工艺" /></span>
+      <h2><T en="Bread the slow, honest way" zh="慢工细作，真材实料" /></h2>
       <p class="section-lead">
-        Real sourdough can't be rushed. From a living starter to a golden crust,
-        here's the four-day journey every loaf takes before it reaches your table.
+        <T
+          en="Real sourdough can't be rushed. From a living starter to a golden crust, here's the four-day journey every loaf takes before it reaches your table."
+          zh="真正的酸种面包急不得。从鲜活的酵头到金黄的外壳，每一个面包在端上您的餐桌前，都要经历四天的旅程。"
+        />
       </p>
     </div>
 
@@ -38,8 +50,8 @@ const steps = [
       {steps.map((s) => (
         <li class="step">
           <span class="step-num">{s.num}</span>
-          <h3>{s.title}</h3>
-          <p>{s.body}</p>
+          <h3><T en={s.title_en} zh={s.title_zh} /></h3>
+          <p><T en={s.body_en} zh={s.body_zh} /></p>
         </li>
       ))}
     </ol>

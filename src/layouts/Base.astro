@@ -4,14 +4,14 @@ import { site } from '../data/menu.js';
 
 const {
   title = `${site.name} — ${site.tagline}`,
-  description = 'Small-batch, naturally-leavened sourdough bread and bakes. Order fresh loaves for local pickup and delivery from Mercy Mills Sourdough.',
+  description = 'Small-batch, naturally-leavened sourdough bread and bakes. Order fresh loaves for local pickup from Mercy Mills Sourdough.',
 } = Astro.props;
 
 const canonical = new URL(Astro.url.pathname, Astro.site).href;
 ---
 
 <!doctype html>
-<html lang="en">
+<html lang="en" data-lang="en">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -26,11 +26,23 @@ const canonical = new URL(Astro.url.pathname, Astro.site).href;
     <meta property="og:url" content={canonical} />
     <meta property="og:site_name" content={site.name} />
 
+    <!-- Restore saved language before paint to avoid a flash -->
+    <script is:inline>
+      (function () {
+        try {
+          if (localStorage.getItem('mms-lang') === 'zh') {
+            document.documentElement.setAttribute('data-lang', 'zh');
+            document.documentElement.setAttribute('lang', 'zh');
+          }
+        } catch (e) {}
+      })();
+    </script>
+
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;700&display=swap"
       rel="stylesheet"
     />
 
@@ -38,5 +50,33 @@ const canonical = new URL(Astro.url.pathname, Astro.site).href;
   </head>
   <body>
     <slot />
+
+    <!-- Language toggle + placeholder translation -->
+    <script is:inline>
+      (function () {
+        function apply(lang) {
+          var root = document.documentElement;
+          root.setAttribute('data-lang', lang);
+          root.setAttribute('lang', lang === 'zh' ? 'zh' : 'en');
+          try { localStorage.setItem('mms-lang', lang); } catch (e) {}
+          document.querySelectorAll('[data-ph-en]').forEach(function (el) {
+            el.setAttribute(
+              'placeholder',
+              lang === 'zh' ? el.getAttribute('data-ph-zh') : el.getAttribute('data-ph-en')
+            );
+          });
+          window.__mmsLang = lang;
+        }
+        var saved = 'en';
+        try { saved = localStorage.getItem('mms-lang') || 'en'; } catch (e) {}
+        apply(saved);
+        var btn = document.getElementById('lang-toggle');
+        if (btn) {
+          btn.addEventListener('click', function () {
+            apply(window.__mmsLang === 'zh' ? 'en' : 'zh');
+          });
+        }
+      })();
+    </script>
   </body>
 </html>

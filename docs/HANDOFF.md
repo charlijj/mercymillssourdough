@@ -31,28 +31,27 @@ Orders are emailed straight to a Gmail inbox. No backend, free forever.
 
 ---
 
-## Part B — Connect the newsletter (MailerLite)
+## Part B — Newsletter signups
 
-1. Create a free account at <https://www.mailerlite.com> (free up to ~1,000
-   subscribers, includes scheduling).
-2. Verify the sending email/domain when prompted (improves deliverability).
-3. In MailerLite, create an **embedded signup form**:
-   - Go to **Forms → Embedded forms → Create form**.
-   - Design it (name, "Subscribe" button).
-   - When done, MailerLite gives you either an **HTML embed snippet** or a
-     **form action URL**.
-4. Wire it into the site (pick one):
-   - **Simple:** copy the form's POST URL and set
-     `PUBLIC_NEWSLETTER_ACTION=` in `.env` to that URL. The existing signup box
-     will post to it.
-   - **Full embed:** replace the contents of
-     `src/components/Newsletter.astro`'s markup with MailerLite's embed snippet.
-5. Rebuild, deploy, and do a test subscribe. The new contact should appear in
-   MailerLite → **Subscribers**.
+Newsletter signups are collected the same simple way as orders: the signup box
+emails each new subscriber's address to the bakery inbox using the **same
+Web3Forms key from Part A** (the email subject says "New newsletter signup").
+So once Part A is done, the newsletter box already works — no extra service to
+set up.
 
-**Sending a newsletter later:** MailerLite → **Campaigns → Create campaign**,
-write it, then **Schedule** it for a weekly/monthly date. MailerLite handles
-delivery and unsubscribes automatically.
+- Each signup arrives as an email; keep a list (or a Google Sheet) of addresses.
+- Test it: enter an email in the signup box on the live site and confirm the
+  "New newsletter signup" email lands in the inbox.
+
+**Sending the actual newsletter** to that list is a separate step you do when you
+have something to announce. Two easy options:
+
+- **Gmail:** paste the collected addresses into the **Bcc** field and send. Fine
+  for a small list.
+- **A free email tool (optional, for scheduling + unsubscribe links):** create a
+  free account at <https://www.mailerlite.com>, import your collected addresses,
+  and use **Campaigns → Create campaign → Schedule** for weekly/monthly sends.
+  Recommended once the list grows, since it handles unsubscribes automatically.
 
 ---
 
@@ -143,8 +142,10 @@ You mostly won't touch code. Here's what changes and how.
 
 ### Update the menu, prices, or descriptions
 1. Open `src/data/menu.js`.
-2. Edit an item's `name`, `price`, `unit`, or `description`. To add an item,
-   copy an existing block; to remove one, delete its block. Keep the commas.
+2. Edit an item's `name`, `price`, `unit`, or `description`. Each item also has
+   Mandarin fields (`name_zh`, `unit_zh`, `description_zh`) — update those too so
+   the Chinese version stays in sync. To add an item, copy an existing block; to
+   remove one, delete its block. Keep the commas.
 3. Save, then run `npm run build && firebase deploy`.
 
 ### Add real photos
@@ -159,12 +160,22 @@ You mostly won't touch code. Here's what changes and how.
 
 ### Read and fulfill orders
 - Orders arrive as emails in the Gmail inbox (from Web3Forms). Each email lists
-  the items, quantities, customer contact, pickup/delivery choice, and notes.
-- Reply to the customer's email to confirm the total and arrange pickup/delivery.
+  the items and quantities, customer contact, preferred pickup date, and notes.
+  Ordering is **pickup only** — reply to the customer's email to confirm the
+  total, the pickup address, and the time.
 
 ### Send a newsletter
-- Log into MailerLite → **Campaigns → Create campaign**. Write it, pick the
-  subscriber group, and **Schedule** or send. Unsubscribes are automatic.
+- New signups arrive as "New newsletter signup" emails — keep those addresses in
+  a list. To send an update, either Bcc the list from Gmail, or use a free tool
+  like MailerLite (import the list, then Campaigns → Create → Schedule). See
+  Part B.
+
+### Edit the Mandarin translation
+- Every visitor-facing phrase is bilingual. Section text lives in the
+  components as `<T en="…" zh="…" />` — edit the `zh="…"` value to change the
+  Chinese. Menu items use the `_zh` fields in `src/data/menu.js`.
+- The 中文 / EN button in the header toggles languages; the choice is remembered
+  in the visitor's browser.
 
 ### Update contact info / social links
 - Edit the `site` object at the bottom of `src/data/menu.js` (email, Instagram,
@@ -182,5 +193,5 @@ You mostly won't touch code. Here's what changes and how.
 | Build + deploy in one go | `npm run build && firebase deploy` |
 
 Free-tier limits (plenty for ~50 customers): Firebase Hosting ~10 GB storage &
-~360 MB/day transfer; Web3Forms free submissions; MailerLite up to ~1,000
-subscribers.
+~360 MB/day transfer; Web3Forms free submissions (orders + newsletter signups);
+MailerLite (optional, for sending campaigns) up to ~1,000 subscribers.

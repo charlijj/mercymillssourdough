@@ -1,0 +1,7 @@
+---
+// Bilingual text helper. Renders both English and Mandarin; CSS shows only the
+// active language based on <html data-lang="…">. Usage:
+//   <T en="Our Story" zh="关于我们" />
+const { en, zh } = Astro.props;
+---
+<span data-lang-en>{en}</span><span data-lang-zh>{zh}</span>

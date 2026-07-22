@@ -1,23 +1,25 @@
 ---
+import T from './T.astro';
+
 // A simple photo catalog. Replace the placeholder images in /public/images
 // with real photos and update the `src` / `alt` below.
 const photos = [
-  { src: '/images/placeholder-loaf.svg', alt: 'Freshly baked country loaf', label: 'Classic Country Loaf' },
-  { src: '/images/placeholder-process.svg', alt: 'Sourdough starter bubbling', label: 'The living starter' },
-  { src: '/images/placeholder-loaf.svg', alt: 'Seeded multigrain loaf', label: 'Seeded Multigrain' },
-  { src: '/images/placeholder-process.svg', alt: 'Dough being shaped by hand', label: 'Shaping by hand' },
-  { src: '/images/placeholder-loaf.svg', alt: 'Scoring a loaf before baking', label: 'Scored & ready to bake' },
-  { src: '/images/placeholder-process.svg', alt: 'Golden crust close up', label: 'That golden crust' },
+  { src: '/images/placeholder-loaf.svg', alt: 'Freshly baked country loaf', en: 'Classic Country Loaf', zh: '经典乡村面包' },
+  { src: '/images/placeholder-process.svg', alt: 'Sourdough starter bubbling', en: 'The living starter', zh: '鲜活的酵头' },
+  { src: '/images/placeholder-loaf.svg', alt: 'Seeded multigrain loaf', en: 'Seeded Multigrain', zh: '多谷物杂粮面包' },
+  { src: '/images/placeholder-process.svg', alt: 'Dough being shaped by hand', en: 'Shaping by hand', zh: '手工塑形' },
+  { src: '/images/placeholder-loaf.svg', alt: 'Scoring a loaf before baking', en: 'Scored & ready to bake', zh: '划纹待烤' },
+  { src: '/images/placeholder-process.svg', alt: 'Golden crust close up', en: 'That golden crust', zh: '金黄外壳' },
 ];
 ---
 
 <section id="gallery" class="bg-crust">
   <div class="container">
     <div class="gallery-head">
-      <span class="eyebrow">Gallery</span>
-      <h2>From starter to table</h2>
+      <span class="eyebrow"><T en="Gallery" zh="图库" /></span>
+      <h2><T en="From starter to table" zh="从酵头到餐桌" /></h2>
       <p class="section-lead gallery-lead">
-        A look at the loaves and the process behind them.
+        <T en="A look at the loaves and the process behind them." zh="一览我们的面包与背后的制作过程。" />
       </p>
     </div>
 
@@ -25,7 +27,7 @@ const photos = [
       {photos.map((p) => (
         <figure class="tile">
           <img src={p.src} alt={p.alt} loading="lazy" />
-          <figcaption>{p.label}</figcaption>
+          <figcaption><T en={p.en} zh={p.zh} /></figcaption>
         </figure>
       ))}
     </div>

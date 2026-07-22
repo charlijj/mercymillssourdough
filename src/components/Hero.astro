@@ -1,19 +1,23 @@
 ---
-import { site } from '../data/menu.js';
+import T from './T.astro';
 ---
 
 <section id="top" class="hero">
   <div class="hero-bg" aria-hidden="true"></div>
   <div class="container hero-inner">
-    <span class="eyebrow hero-eyebrow">Naturally leavened · Small batch</span>
-    <h1>{site.tagline}</h1>
+    <span class="eyebrow hero-eyebrow">
+      <T en="Naturally leavened · Small batch" zh="天然发酵 · 小批量手作" />
+    </span>
+    <h1><T en="Small-batch sourdough, baked with patience." zh="小批量酸种面包，慢工细作。" /></h1>
     <p class="hero-sub">
-      Hand-shaped loaves and bakes made the slow way — wild yeast, long ferments,
-      and a golden crust worth the wait. Baked in small batches and delivered fresh.
+      <T
+        en="Hand-shaped loaves and bakes made the slow way — wild yeast, long ferments, and a golden crust worth the wait. Baked in small batches, fresh for local pickup."
+        zh="手工塑形，慢火烘焙——天然野生酵母，长时间发酵，金黄酥脆的外壳值得等待。小批量制作，新鲜出炉，本地自取。"
+      />
     </p>
     <div class="hero-actions">
-      <a href="#order" class="btn btn-primary">Place an Order</a>
-      <a href="#menu" class="btn btn-outline hero-outline">See the Menu</a>
+      <a href="#order" class="btn btn-primary"><T en="Place an Order" zh="立即订购" /></a>
+      <a href="#menu" class="btn btn-outline hero-outline"><T en="See the Menu" zh="查看菜单" /></a>
     </div>
   </div>
 </section>

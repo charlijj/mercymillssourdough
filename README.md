@@ -58,10 +58,10 @@ three business goals: take orders, send newsletters, and present information.
        ┌────────────────────────────┼────────────────────────────┐
        │                            │                            │
 ┌──────▼───────┐          ┌─────────▼─────────┐        ┌─────────▼─────────┐
-│  Web3Forms    │          │    MailerLite     │        │  Google Fonts     │
-│ order form →  │          │ newsletter signup │        │ (Fraunces/Inter)  │
-│ emails Mom's  │          │ + scheduled sends │        │                   │
-│ Gmail inbox   │          │ from a dashboard  │        │                   │
+│  Web3Forms    │          │  MailerLite       │        │  Google Fonts     │
+│ order form +  │          │  (optional) for   │        │ (Fraunces/Inter/  │
+│ newsletter →  │          │  sending campaign │        │  Noto Sans SC)    │
+│ Gmail inbox   │          │  emails to a list │        │                   │
 └──────────────┘          └───────────────────┘        └───────────────────┘
 ```
 
@@ -85,13 +85,22 @@ the browser. At ~50 customers this comfortably fits inside every free tier.
    database — orders arrive as emails and are handled by replying. A honeypot
    field and required-field validation reduce spam and empty orders.
 
-3. **Newsletter** — Handled by **[MailerLite](https://mailerlite.com)** (free up
-   to ~1,000 subscribers, with scheduled/automated sends). The site embeds a
-   signup form (`src/components/Newsletter.astro`); MailerLite stores the
-   subscriber list and provides a dashboard where the owner composes and
-   schedules weekly/monthly emails. Deliverability (SPF/DKIM, unsubscribe links,
-   spam compliance) is handled by MailerLite, which is why we don't send email
-   ourselves.
+3. **Newsletter** — The signup box (`src/components/Newsletter.astro`) collects
+   subscriber emails through the **same Web3Forms key** used for orders, so each
+   signup is emailed to the bakery inbox with no extra service to set up. The
+   owner keeps that list and sends campaigns when ready — from Gmail (Bcc) for a
+   small list, or optionally a free tool like
+   **[MailerLite](https://mailerlite.com)** for scheduled sends and automatic
+   unsubscribe handling as the list grows.
+
+### Bilingual (English / Mandarin)
+
+The whole site is bilingual with a header toggle (中文 / EN). Both languages are
+rendered into the HTML; a tiny script flips `<html data-lang>` and CSS shows only
+the active language (choice remembered in `localStorage`). Section copy uses a
+small `<T en="…" zh="…" />` helper (`src/components/T.astro`); menu items carry
+`_zh` fields in `src/data/menu.js`. No translation API or network call is
+involved — it works offline and adds virtually no page weight.
 
 ### Tech stack
 
@@ -101,7 +110,8 @@ the browser. At ~50 customers this comfortably fits inside every free tier.
 | Styling | Hand-written modern CSS | Warm farmers-market palette, big display type (Fraunces) + clean body type (Inter). No CSS framework needed. |
 | Hosting | **Firebase Hosting** (Spark/free) | Free global CDN, free SSL, free custom domain, generous free bandwidth. |
 | Orders | **Web3Forms** (free) | Form → email, no backend. |
-| Newsletter | **MailerLite** (free) | List management + scheduled campaigns. |
+| Newsletter | **Web3Forms** (free) | Signups emailed to the inbox; MailerLite optional for sending. |
+| i18n | Custom CSS/JS toggle | English ⇄ Mandarin, no external service. |
 | Fonts | Google Fonts | Fraunces + Inter, loaded via `<link>`. |
 
 ### Project layout
@@ -151,10 +161,10 @@ npm run preview    # preview the production build locally
 
 Copy `.env.example` to `.env` and fill in:
 
-- `PUBLIC_WEB3FORMS_KEY` — free key from web3forms.com (where orders are emailed).
-- `PUBLIC_NEWSLETTER_ACTION` — MailerLite embedded-form POST URL (optional).
+- `PUBLIC_WEB3FORMS_KEY` — free key from web3forms.com. Both the order form and
+  the newsletter signup email to this inbox.
 
-These are public identifiers, not secrets, so committing built output is fine.
+This is a public identifier, not a secret, so committing built output is fine.
 
 ---
 
