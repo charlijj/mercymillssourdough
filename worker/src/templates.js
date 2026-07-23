@@ -100,7 +100,7 @@ export function customerReceived(order, siteUrl) {
     ${para(`Hi ${esc(order.customer.name)}, we've received your request and will confirm it shortly. <strong>Your order isn't final until we confirm it by email.</strong>`)}
     ${itemsTable(order)}
     ${detailsBlock(order)}
-    ${para(`This is <strong>pickup only</strong>. We'll confirm the pickup address and time, and payment is by <strong>cash or e-transfer</strong> once your order is confirmed.`)}
+    ${para(`This is <strong>pickup only</strong>. We'll confirm the pickup address and time, and payment is by <strong>cash or e-transfer, payable at pickup</strong>.`)}
     ${para(`Order reference: <span style="color:${C.muted};">${esc(order.id)}</span>`)}
   `;
   return { subject: `We got your order — Mercy Mills Sourdough`, html: wrap('We received your order and will confirm shortly.', body, siteUrl) };
@@ -134,7 +134,7 @@ export function customerConfirmed(order, siteUrl) {
     ${para(`Hi ${esc(order.customer.name)}, good news — your order is confirmed and we'll have it ready for pickup.`)}
     ${itemsTable(order)}
     ${detailsBlock(order)}
-    ${para(`<strong>Payment:</strong> cash or e-transfer. We'll follow up with the pickup address and time. See you soon!`)}
+    ${para(`<strong>Payment:</strong> cash or e-transfer, payable at pickup. We'll follow up with the pickup address and time. See you soon!`)}
     ${para(`Order reference: <span style="color:${C.muted};">${esc(order.id)}</span>`)}
   `;
   return { subject: `Your order is confirmed — Mercy Mills Sourdough`, html: wrap('Your order is confirmed.', body, siteUrl) };
