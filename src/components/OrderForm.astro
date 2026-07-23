@@ -79,8 +79,20 @@ const fmt = (n) => (Number.isInteger(n) ? `$${n}` : `$${n.toFixed(2)}`);
       </div>
 
       <label class="field">
-        <span><T en="Notes (allergies, special requests)" zh="备注（过敏、特殊要求）" /></span>
-        <textarea name="notes" rows="3"></textarea>
+        <span><T en="Notes & allergy concerns" zh="备注与过敏事项" /></span>
+        <textarea
+          name="notes"
+          rows="3"
+          data-ph-en="Please note any allergy concerns or special requests here."
+          data-ph-zh="请在此写明任何过敏事项或特殊要求。"
+          placeholder="Please note any allergy concerns or special requests here."
+        ></textarea>
+        <small class="field-hint">
+          <T
+            en="Have allergies? Our breads may contain wheat, gluten, and eggs. Please list any concerns above so we can help."
+            zh="有过敏情况吗？我们的面包可能含有小麦、麸质和鸡蛋。请在上方列出任何顾虑，以便我们协助。"
+          />
+        </small>
       </label>
 
       <div class="pickup-note">

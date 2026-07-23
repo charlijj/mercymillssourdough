@@ -158,6 +158,15 @@ You mostly won't touch code. Here's what changes and how.
    (set a `background-image` on `.hero-bg`).
 5. Build and deploy.
 
+### Add the real logo
+- The header shows a placeholder logo. To use Sarah's design, replace
+  `public/images/logo.svg` with the real file (keep the name `logo.svg`, or
+  update the path in `src/components/Header.astro`). PNG works too — just change
+  the extension in the `<img src>`.
+- Optionally replace `public/favicon.svg` with a small square version of the
+  logo for the browser tab.
+- Build and deploy.
+
 ### Read and fulfill orders
 - Orders arrive as emails in the Gmail inbox (from Web3Forms). Each email lists
   the items and quantities, customer contact, preferred pickup date, and notes.

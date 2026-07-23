@@ -5,7 +5,10 @@ import T from './T.astro';
 
 <header class="site-header">
   <div class="container header-inner">
-    <a href="#top" class="brand">{site.name}</a>
+    <a href="#top" class="brand">
+      <img src="/images/logo.svg" class="brand-logo" alt={`${site.name} logo`} width="40" height="40" />
+      <span class="brand-name">{site.name}</span>
+    </a>
 
     <input type="checkbox" id="nav-toggle" class="nav-toggle" hidden />
     <label for="nav-toggle" class="nav-burger" aria-label="Toggle menu">
@@ -41,13 +44,22 @@ import T from './T.astro';
     min-height: 68px;
   }
   .brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
     font-family: var(--font-display);
     font-weight: 700;
     font-size: 1.25rem;
     color: var(--crust);
     letter-spacing: -0.01em;
   }
+  .brand-logo { display: block; width: 40px; height: 40px; flex-shrink: 0; }
   .brand:hover { text-decoration: none; color: var(--amber-deep); }
+  .brand:hover .brand-name { color: var(--amber-deep); }
+
+  @media (max-width: 400px) {
+    .brand-name { font-size: 1.05rem; }
+  }
   .site-nav {
     display: flex;
     align-items: center;

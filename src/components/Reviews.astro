@@ -1,0 +1,71 @@
+---
+import T from './T.astro';
+
+// PLACEHOLDER REVIEWS — replace with real customer quotes when available.
+// Edit the text/name of each, add or remove blocks. `name` shows as-is in both
+// languages; translate the quote via en/zh.
+const reviews = [
+  {
+    en: 'The best sourdough I have had outside of a bakery in the city. That crust! We order every week now.',
+    zh: '这是我在城里面包店之外吃过最好的酸种面包。那外壳太赞了！我们现在每周都订。',
+    name: 'Sample Review',
+  },
+  {
+    en: 'So fresh and clearly made with care. Pickup was easy and the cinnamon raisin loaf did not last a day.',
+    zh: '非常新鲜，一看就是用心制作。自取很方便，那条肉桂葡萄干面包一天都没撑过。',
+    name: 'Sample Review',
+  },
+  {
+    en: 'You can taste the slow fermentation — it is light and easy to digest. Highly recommend to friends.',
+    zh: '能吃出慢发酵的味道——口感轻盈、易消化。强烈推荐给朋友们。',
+    name: 'Sample Review',
+  },
+];
+---
+
+<section id="reviews" class="bg-cream-deep">
+  <div class="container">
+    <div class="reviews-head">
+      <span class="eyebrow"><T en="Kind words" zh="顾客好评" /></span>
+      <h2><T en="What our customers say" zh="顾客怎么说" /></h2>
+    </div>
+
+    <div class="reviews-grid">
+      {reviews.map((r) => (
+        <figure class="review">
+          <div class="stars" aria-label="5 out of 5 stars">★★★★★</div>
+          <blockquote><T en={r.en} zh={r.zh} /></blockquote>
+          <figcaption>— {r.name}</figcaption>
+        </figure>
+      ))}
+    </div>
+  </div>
+</section>
+
+<style>
+  .reviews-head { max-width: 720px; margin-bottom: 3rem; }
+  .reviews-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(270px, 1fr));
+    gap: 1.5rem;
+  }
+  .review {
+    margin: 0;
+    background: var(--white);
+    border-radius: var(--radius);
+    padding: 1.8rem;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid rgba(58, 42, 30, 0.06);
+    display: flex;
+    flex-direction: column;
+  }
+  .stars { color: var(--amber); letter-spacing: 0.15em; margin-bottom: 0.8rem; }
+  .review blockquote {
+    margin: 0 0 1rem;
+    font-size: 1.05rem;
+    color: var(--crust-soft);
+    line-height: 1.6;
+    flex: 1;
+  }
+  .review figcaption { font-weight: 600; color: var(--crust); }
+</style>
