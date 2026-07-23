@@ -136,18 +136,26 @@ With the KV log enabled, each order can only be accepted or declined once.
 
 ---
 
-## Part 5 — Newsletter (separate, via MailerLite)
+## Part 5 — Newsletter
 
-The newsletter is independent of the order backend.
+**Signups** go through the same Worker (`POST /api/subscribe`) — no extra
+service. When someone subscribes:
+- they get a **welcome email**, and
+- you get a **"new newsletter signup"** email with their address.
 
-1. Finish your **MailerLite** embedded signup form (Forms → Embedded forms).
-   Create a subscriber group (e.g. "Newsletter"), then grab the form's embed
-   code or POST URL.
-2. Tell me the URL/snippet and I'll wire the site's signup box to it (replacing
-   the temporary Web3Forms signup).
-3. To send an issue: MailerLite → **Campaigns → Create → Custom HTML**, paste
-   `email-templates/newsletter.html`, fill in the `[[ bracketed ]]` text, and
-   **Schedule**. MailerLite adds the unsubscribe footer automatically.
+It's already wired to `PUBLIC_ORDER_API`, so once Parts 2–3 are done, the signup
+box works. Keep those addresses in a list (or a Google Sheet).
+
+**Sending an issue** to your subscribers is a separate step you do when you have
+news. Options:
+- **Gmail:** Bcc your collected addresses. Fine for a small list.
+- **MailerLite (optional):** import your addresses, then **Campaigns → Create →
+  Custom HTML**, paste `email-templates/newsletter.html`, fill in the
+  `[[ bracketed ]]` text, and **Schedule**. MailerLite adds the unsubscribe
+  footer and handles opt-outs automatically — worth it as the list grows.
+
+> Web3Forms is no longer used anywhere — the Worker handles both orders and
+> newsletter signups.
 
 ---
 

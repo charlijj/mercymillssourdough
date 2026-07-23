@@ -22,6 +22,8 @@ import {
   ownerNewOrder,
   customerConfirmed,
   customerDeclined,
+  subscriberWelcome,
+  ownerNewSubscriber,
   decisionPage,
   messagePage,
 } from './templates.js';
@@ -39,6 +41,9 @@ export default {
       }
       if (url.pathname === '/api/decide' && request.method === 'GET') {
         return await handleDecide(url, env);
+      }
+      if (url.pathname === '/api/subscribe' && request.method === 'POST') {
+        return await handleSubscribe(request, env, cors);
       }
       if (url.pathname === '/') {
         return new Response('Mercy Mills Sourdough order service is running.', {
@@ -169,6 +174,40 @@ async function handleDecide(url, env) {
   await sendEmail(env, { to: order.customer.email, ...mail });
 
   return html(decisionPage(payload.action, order, siteUrl));
+}
+
+// --------------------------------------------------------------------------
+// POST /api/subscribe  — newsletter signup
+// --------------------------------------------------------------------------
+async function handleSubscribe(request, env, cors) {
+  let data;
+  try {
+    data = await request.json();
+  } catch {
+    return json({ success: false, error: 'Invalid JSON' }, 400, cors);
+  }
+  if (data.botcheck) return json({ success: true }, 200, cors);
+
+  const email = String(data.email || '').trim().toLowerCase();
+  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email))
+    return json({ success: false, error: 'Valid email required' }, 400, cors);
+
+  const siteUrl = env.SITE_URL || 'https://mercymillsourdough.com';
+
+  // De-duplicate with KV if available, so repeat signups don't re-email.
+  let already = false;
+  if (env.ORDERS) {
+    already = (await env.ORDERS.get(`sub:${email}`)) !== null;
+    if (!already) await env.ORDERS.put(`sub:${email}`, new Date().toISOString());
+  }
+
+  if (!already) {
+    await sendEmail(env, { to: email, ...subscriberWelcome(email, siteUrl) });
+    if (env.OWNER_EMAIL) {
+      await sendEmail(env, { to: env.OWNER_EMAIL, ...ownerNewSubscriber(email, siteUrl) });
+    }
+  }
+  return json({ success: true }, 200, cors);
 }
 
 // --------------------------------------------------------------------------

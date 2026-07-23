@@ -1,12 +1,10 @@
 ---
-import { site } from '../data/menu.js';
 import T from './T.astro';
 
-// Newsletter signups are emailed to the bakery via the same free Web3Forms key
-// used for orders (subject line marks them as signups). The owner collects
-// addresses this way and sends campaigns from their email tool of choice.
-const WEB3FORMS_KEY =
-  import.meta.env.PUBLIC_WEB3FORMS_KEY || 'YOUR_WEB3FORMS_ACCESS_KEY';
+// Newsletter signups go through the same Cloudflare Worker as orders
+// (POST /api/subscribe): the subscriber gets a welcome email and the owner is
+// notified. Configured via PUBLIC_ORDER_API (the Worker base URL).
+const ORDER_API = import.meta.env.PUBLIC_ORDER_API || '';
 ---
 
 <section id="newsletter" class="bg-cream-deep">
@@ -21,10 +19,7 @@ const WEB3FORMS_KEY =
         />
       </p>
 
-      <form id="newsletter-form" class="newsletter-form" action="https://api.web3forms.com/submit" method="POST">
-        <input type="hidden" name="access_key" value={WEB3FORMS_KEY} />
-        <input type="hidden" name="subject" value={`New newsletter signup — ${site.name}`} />
-        <input type="hidden" name="from_name" value={`${site.name} Newsletter`} />
+      <form id="newsletter-form" class="newsletter-form" data-api={ORDER_API}>
         <input type="checkbox" name="botcheck" style="display:none" tabindex="-1" autocomplete="off" />
         <input
           type="email"
@@ -61,7 +56,7 @@ const WEB3FORMS_KEY =
     flex-wrap: wrap;
     justify-content: center;
   }
-  .newsletter-form input {
+  .newsletter-form input[type='email'] {
     flex: 1;
     min-width: 220px;
     padding: 0.8rem 1rem;
@@ -82,32 +77,40 @@ const WEB3FORMS_KEY =
 <script>
   const form = document.getElementById('newsletter-form');
   const status = document.getElementById('newsletter-status');
+  const api = (form && form.dataset.api ? form.dataset.api : '').replace(/\/$/, '');
   const msg = {
     sending: { en: 'Subscribing…', zh: '正在订阅……' },
     ok: { en: 'Thanks for subscribing! 🍞', zh: '订阅成功，谢谢！🍞' },
     err: { en: 'Something went wrong. Please try again.', zh: '出了点问题，请重试。' },
+    noapi: { en: 'Signup is not available right now. Please try again later.', zh: '暂时无法订阅，请稍后再试。' },
   };
   const lang = () => (document.documentElement.getAttribute('data-lang') === 'zh' ? 'zh' : 'en');
 
   if (form && status) {
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
+      if (!api) {
+        status.textContent = msg.noapi[lang()];
+        status.className = 'newsletter-status err';
+        return;
+      }
       status.textContent = msg.sending[lang()];
       status.className = 'newsletter-status';
       try {
-        const res = await fetch('https://api.web3forms.com/submit', {
+        const res = await fetch(api + '/api/subscribe', {
           method: 'POST',
-          headers: { Accept: 'application/json' },
-          body: new FormData(form),
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: form.querySelector('[name="email"]').value.trim(),
+            botcheck: form.querySelector('[name="botcheck"]').checked,
+            lang: lang(),
+          }),
         });
-        const json = await res.json();
-        if (json.success) {
-          status.textContent = msg.ok[lang()];
-          status.className = 'newsletter-status ok';
-          form.reset();
-        } else {
-          throw new Error(json.message || 'failed');
-        }
+        const j = await res.json().catch(() => ({}));
+        if (!res.ok || !j.success) throw new Error(j.error || 'failed');
+        status.textContent = msg.ok[lang()];
+        status.className = 'newsletter-status ok';
+        form.reset();
       } catch (err) {
         status.textContent = msg.err[lang()];
         status.className = 'newsletter-status err';

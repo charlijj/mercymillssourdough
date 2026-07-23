@@ -152,6 +152,27 @@ export function customerDeclined(order, siteUrl) {
   return { subject: `Update on your order — Mercy Mills Sourdough`, html: wrap('An update on your recent order.', body, siteUrl) };
 }
 
+// ---- Subscriber: welcome -------------------------------------------------
+export function subscriberWelcome(email, siteUrl) {
+  const body = `
+    ${heading("You're on the list 🍞")}
+    ${para(`Thanks for subscribing to Mercy Mills Sourdough! About once a month we'll share new menu items, seasonal specials, and the occasional baking tip.`)}
+    ${para(`Hungry now? <a href="${siteUrl}/#order" style="color:${C.amberDeep};font-weight:bold;text-decoration:none;">Place an order &rarr;</a>`)}
+  `;
+  return { subject: 'Welcome to Mercy Mills Sourdough', html: wrap('Thanks for subscribing!', body, siteUrl) };
+}
+
+// ---- Owner: new subscriber ----------------------------------------------
+export function ownerNewSubscriber(email, siteUrl) {
+  const body = `
+    ${heading('New newsletter signup')}
+    ${para('Someone just joined your newsletter:')}
+    ${para(`<strong>${esc(email)}</strong>`)}
+    ${para(`<span style="color:${C.muted};font-size:13px;">Add them to your MailerLite list (or however you send updates).</span>`)}
+  `;
+  return { subject: `New newsletter signup — ${esc(email)}`, html: wrap('New newsletter signup', body, siteUrl) };
+}
+
 // ---- Simple HTML pages shown to mom after clicking Accept/Decline --------
 export function decisionPage(kind, order, siteUrl) {
   const accepted = kind === 'accept';

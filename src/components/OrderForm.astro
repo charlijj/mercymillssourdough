@@ -1,12 +1,6 @@
 ---
-import { menu, site } from '../data/menu.js';
+import { menu } from '../data/menu.js';
 import T from './T.astro';
-
-// Web3Forms access key. Get a free key at https://web3forms.com (enter the
-// bakery's Gmail; every submission is emailed there). Set it via the
-// PUBLIC_WEB3FORMS_KEY environment variable, or paste it below.
-const WEB3FORMS_KEY =
-  import.meta.env.PUBLIC_WEB3FORMS_KEY || 'YOUR_WEB3FORMS_ACCESS_KEY';
 
 const quantities = [0, 1, 2, 3, 4, 5];
 const fmt = (n) => (Number.isInteger(n) ? `$${n}` : `$${n.toFixed(2)}`);
@@ -25,12 +19,7 @@ const fmt = (n) => (Number.isInteger(n) ? `$${n}` : `$${n.toFixed(2)}`);
       </p>
     </div>
 
-    <form id="order-form" class="order-form" action="https://api.web3forms.com/submit" method="POST">
-      <input type="hidden" name="access_key" value={WEB3FORMS_KEY} />
-      <input type="hidden" name="subject" value={`New sourdough order — ${site.name}`} />
-      <input type="hidden" name="from_name" value={site.name} />
-      <input type="hidden" name="fulfilment" value="Pickup (address confirmed by email)" />
-      <input type="hidden" name="order_total" id="order-total-field" value="$0" />
+    <form id="order-form" class="order-form">
       <!-- Honeypot spam trap (leave empty) -->
       <input type="checkbox" name="botcheck" style="display:none" tabindex="-1" autocomplete="off" />
 
@@ -250,6 +239,7 @@ const fmt = (n) => (Number.isInteger(n) ? `$${n}` : `$${n.toFixed(2)}`);
   const msg = {
     none: { en: 'Please choose a quantity for at least one item.', zh: '请至少为一件商品选择数量。' },
     date: { en: 'Please choose a pickup date at least 3 days away.', zh: '请选择至少 3 天后的自取日期。' },
+    noapi: { en: 'Ordering is not available right now. Please email us and we’ll help.', zh: '暂时无法下单，请给我们发邮件，我们会协助您。' },
     sending: { en: 'Sending your order…', zh: '正在提交您的订单……' },
     ok: {
       en: 'Thank you! Your order request was sent. We’ll email you to confirm.',
@@ -262,11 +252,9 @@ const fmt = (n) => (Number.isInteger(n) ? `$${n}` : `$${n.toFixed(2)}`);
   };
   const lang = () => (document.documentElement.getAttribute('data-lang') === 'zh' ? 'zh' : 'en');
 
-  // Order backend (Cloudflare Worker). When set, orders go through it so the
-  // customer + owner get emails and mom can accept/decline. Until it's set,
-  // fall back to the simple Web3Forms email so the form still works.
-  const ORDER_API = import.meta.env.PUBLIC_ORDER_API || '';
-  const WEB3FORMS_KEY = import.meta.env.PUBLIC_WEB3FORMS_KEY || '';
+  // Order backend (Cloudflare Worker). Orders POST here so the customer + owner
+  // get emails and mom can accept/decline. Set via PUBLIC_ORDER_API.
+  const ORDER_API = (import.meta.env.PUBLIC_ORDER_API || '').replace(/\/$/, '');
 
   // Earliest allowed pickup date = today + 3 days.
   const minDate = new Date();
@@ -312,28 +300,6 @@ const fmt = (n) => (Number.isInteger(n) ? `$${n}` : `$${n.toFixed(2)}`);
     };
   }
 
-  async function submitViaWorker() {
-    const res = await fetch(ORDER_API.replace(/\/$/, '') + '/api/order', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(buildOrder()),
-    });
-    const j = await res.json().catch(() => ({}));
-    if (!res.ok || !j.success) throw new Error(j.error || 'Submission failed');
-  }
-
-  async function submitViaWeb3Forms() {
-    const data = new FormData(form);
-    if (WEB3FORMS_KEY) data.set('access_key', WEB3FORMS_KEY);
-    const res = await fetch('https://api.web3forms.com/submit', {
-      method: 'POST',
-      headers: { Accept: 'application/json' },
-      body: data,
-    });
-    const j = await res.json();
-    if (!j.success) throw new Error(j.message || 'Submission failed');
-  }
-
   if (form && status) {
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -348,16 +314,23 @@ const fmt = (n) => (Number.isInteger(n) ? `$${n}` : `$${n.toFixed(2)}`);
         status.className = 'order-status err';
         return;
       }
+      if (!ORDER_API) {
+        status.textContent = msg.noapi[lang()];
+        status.className = 'order-status err';
+        return;
+      }
 
       status.textContent = msg.sending[lang()];
       status.className = 'order-status';
 
       try {
-        if (ORDER_API) {
-          await submitViaWorker();
-        } else {
-          await submitViaWeb3Forms();
-        }
+        const res = await fetch(ORDER_API + '/api/order', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(buildOrder()),
+        });
+        const j = await res.json().catch(() => ({}));
+        if (!res.ok || !j.success) throw new Error(j.error || 'Submission failed');
         status.textContent = msg.ok[lang()];
         status.className = 'order-status ok';
         form.reset();
