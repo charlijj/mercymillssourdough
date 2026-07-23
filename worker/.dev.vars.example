@@ -1,0 +1,9 @@
+# Copy to ".dev.vars" for LOCAL testing with `npx wrangler dev`.
+# (.dev.vars is gitignored. In production these are set with `wrangler secret put`.)
+#
+# Leave RESEND_API_KEY blank locally to run in "dry-run" mode: emails are logged
+# to the console instead of actually sent, so you can test the flow safely.
+
+RESEND_API_KEY=
+SIGNING_SECRET=local-dev-secret-change-me
+OWNER_EMAIL=your-test-inbox@example.com

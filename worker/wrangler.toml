@@ -1,0 +1,23 @@
+name = "mercy-mills-orders"
+main = "src/index.js"
+compatibility_date = "2024-11-01"
+workers_dev = true
+
+# Non-secret config. Edit these to match your setup.
+[vars]
+FROM_NAME = "Mercy Mills Sourdough"
+FROM_EMAIL = "orders@mercymillsourdough.com"   # must be on your Resend-verified domain
+SITE_URL = "https://mercymillsourdough.com"
+ALLOW_ORIGIN = "https://mercymillsourdough.com"  # your live site origin (CORS)
+
+# Secrets are NOT stored here. Set them once with:
+#   npx wrangler secret put RESEND_API_KEY
+#   npx wrangler secret put SIGNING_SECRET   (any long random string)
+#   npx wrangler secret put OWNER_EMAIL      (mom's email address)
+
+# Optional: order history + idempotency (recommended). Create the namespace:
+#   npx wrangler kv namespace create ORDERS
+# then paste the printed id below and uncomment these three lines.
+# [[kv_namespaces]]
+# binding = "ORDERS"
+# id = "PASTE_KV_NAMESPACE_ID_HERE"

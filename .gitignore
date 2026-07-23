@@ -10,6 +10,11 @@ dist/
 firebase-debug.log
 *-debug.log
 
+# cloudflare / wrangler
+.wrangler/
+.dev.vars
+worker/node_modules/
+
 # environment / secrets
 .env
 .env.*

@@ -44,7 +44,14 @@ const fmt = (n) => (Number.isInteger(n) ? `$${n}` : `$${n.toFixed(2)}`);
                 <span class="item-title"><T en={item.name} zh={item.name_zh} /></span>
                 <small>{fmt(item.price)} / <T en={item.unit} zh={item.unit_zh} /></small>
               </span>
-              <select name={`qty_${item.id}`} data-price={item.price} aria-label={item.name}>
+              <select
+                name={`qty_${item.id}`}
+                data-id={item.id}
+                data-price={item.price}
+                data-name={item.name}
+                data-unit={item.unit}
+                aria-label={item.name}
+              >
                 {quantities.map((q) => <option value={q}>{q}</option>)}
               </select>
             </label>
@@ -255,6 +262,12 @@ const fmt = (n) => (Number.isInteger(n) ? `$${n}` : `$${n.toFixed(2)}`);
   };
   const lang = () => (document.documentElement.getAttribute('data-lang') === 'zh' ? 'zh' : 'en');
 
+  // Order backend (Cloudflare Worker). When set, orders go through it so the
+  // customer + owner get emails and mom can accept/decline. Until it's set,
+  // fall back to the simple Web3Forms email so the form still works.
+  const ORDER_API = import.meta.env.PUBLIC_ORDER_API || '';
+  const WEB3FORMS_KEY = import.meta.env.PUBLIC_WEB3FORMS_KEY || '';
+
   // Earliest allowed pickup date = today + 3 days.
   const minDate = new Date();
   minDate.setDate(minDate.getDate() + 3);
@@ -273,10 +286,57 @@ const fmt = (n) => (Number.isInteger(n) ? `$${n}` : `$${n.toFixed(2)}`);
   }
   selects.forEach((s) => s.addEventListener('change', recalcTotal));
 
+  // Build a structured order from the item selects.
+  function buildOrder() {
+    const items = selects
+      .filter((s) => Number(s.value) > 0)
+      .map((s) => ({
+        id: s.dataset.id,
+        name: s.dataset.name,
+        unit: s.dataset.unit,
+        price: Number(s.dataset.price),
+        qty: Number(s.value),
+      }));
+    return {
+      items,
+      total: recalcTotal(),
+      lang: lang(),
+      pickupDate: form.querySelector('[name="preferred_date"]').value,
+      notes: form.querySelector('[name="notes"]').value,
+      botcheck: form.querySelector('[name="botcheck"]').checked,
+      customer: {
+        name: form.querySelector('[name="name"]').value.trim(),
+        email: form.querySelector('[name="email"]').value.trim(),
+        phone: form.querySelector('[name="phone"]').value.trim(),
+      },
+    };
+  }
+
+  async function submitViaWorker() {
+    const res = await fetch(ORDER_API.replace(/\/$/, '') + '/api/order', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(buildOrder()),
+    });
+    const j = await res.json().catch(() => ({}));
+    if (!res.ok || !j.success) throw new Error(j.error || 'Submission failed');
+  }
+
+  async function submitViaWeb3Forms() {
+    const data = new FormData(form);
+    if (WEB3FORMS_KEY) data.set('access_key', WEB3FORMS_KEY);
+    const res = await fetch('https://api.web3forms.com/submit', {
+      method: 'POST',
+      headers: { Accept: 'application/json' },
+      body: data,
+    });
+    const j = await res.json();
+    if (!j.success) throw new Error(j.message || 'Submission failed');
+  }
+
   if (form && status) {
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
-      const data = new FormData(form);
 
       if (recalcTotal() === 0) {
         status.textContent = msg.none[lang()];
@@ -293,20 +353,15 @@ const fmt = (n) => (Number.isInteger(n) ? `$${n}` : `$${n.toFixed(2)}`);
       status.className = 'order-status';
 
       try {
-        const res = await fetch('https://api.web3forms.com/submit', {
-          method: 'POST',
-          headers: { Accept: 'application/json' },
-          body: data,
-        });
-        const json = await res.json();
-        if (json.success) {
-          status.textContent = msg.ok[lang()];
-          status.className = 'order-status ok';
-          form.reset();
-          recalcTotal();
+        if (ORDER_API) {
+          await submitViaWorker();
         } else {
-          throw new Error(json.message || 'Submission failed');
+          await submitViaWeb3Forms();
         }
+        status.textContent = msg.ok[lang()];
+        status.className = 'order-status ok';
+        form.reset();
+        recalcTotal();
       } catch (err) {
         status.textContent = msg.err[lang()];
         status.className = 'order-status err';
