@@ -19,6 +19,10 @@ import T from './T.astro';
       <a href="#order" class="btn btn-primary"><T en="Place an Order" zh="立即订购" /></a>
       <a href="#menu" class="btn btn-outline hero-outline"><T en="See the Menu" zh="查看菜单" /></a>
     </div>
+    <p class="hero-badge">
+      <span class="badge-check" aria-hidden="true">✓</span>
+      <T en="FOODSAFE Level 1 Certified · British Columbia" zh="FOODSAFE 一级认证 · 卑诗省（BC）" />
+    </p>
   </div>
 </section>
 
@@ -60,4 +64,29 @@ import T from './T.astro';
   .hero-actions { display: flex; gap: 1rem; flex-wrap: wrap; }
   .hero-outline { border-color: var(--cream); color: var(--cream); }
   .hero-outline:hover { background: var(--cream); color: var(--crust); }
+  .hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 1.8rem 0 0;
+    padding: 0.45rem 0.95rem;
+    background: rgba(250, 244, 234, 0.12);
+    border: 1px solid rgba(250, 244, 234, 0.3);
+    border-radius: 999px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--cream);
+  }
+  .badge-check {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: var(--sage);
+    color: var(--white);
+    font-size: 0.7rem;
+    font-weight: 700;
+  }
 </style>

@@ -9,6 +9,9 @@ const year = new Date().getFullYear();
     <div class="footer-brand">
       <span class="footer-name">{site.name}</span>
       <p><T en={site.location} zh={site.location_zh} /></p>
+      <p class="footer-cert">
+        <T en="FOODSAFE Level 1 Certified · British Columbia" zh="FOODSAFE 一级认证 · 卑诗省（BC）" />
+      </p>
     </div>
 
     <nav class="footer-nav">
@@ -50,6 +53,7 @@ const year = new Date().getFullYear();
     color: var(--wheat);
   }
   .footer-brand p { color: rgba(250, 244, 234, 0.7); margin-top: 0.4rem; }
+  .footer-cert { font-size: 0.85rem; color: rgba(250, 244, 234, 0.55); }
   .footer-nav { display: flex; flex-direction: column; gap: 0.5rem; }
   .footer-nav a, .footer-contact a { color: rgba(250, 244, 234, 0.85); }
   .footer-nav a:hover, .footer-contact a:hover { color: var(--wheat); text-decoration: none; }

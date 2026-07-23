@@ -9,6 +9,7 @@ const WEB3FORMS_KEY =
   import.meta.env.PUBLIC_WEB3FORMS_KEY || 'YOUR_WEB3FORMS_ACCESS_KEY';
 
 const quantities = [0, 1, 2, 3, 4, 5];
+const fmt = (n) => (Number.isInteger(n) ? `$${n}` : `$${n.toFixed(2)}`);
 ---
 
 <section id="order">
@@ -18,8 +19,8 @@ const quantities = [0, 1, 2, 3, 4, 5];
       <h2><T en="Order fresh sourdough" zh="订购新鲜酸种面包" /></h2>
       <p class="section-lead">
         <T
-          en="Tell us what you'd like and when. We'll email you back to confirm your total and arrange pickup. Orders are usually ready within a few days."
-          zh="告诉我们您想要什么、何时需要。我们会通过邮件与您确认总价并安排自取。订单通常在几天内备好。"
+          en="Tell us what you'd like and when. We'll email you back to confirm your total and arrange pickup. Please order at least 3 days before your pickup date."
+          zh="告诉我们您想要什么、何时需要。我们会通过邮件与您确认总价并安排自取。请至少在自取日期前 3 天下单。"
         />
       </p>
     </div>
@@ -29,6 +30,7 @@ const quantities = [0, 1, 2, 3, 4, 5];
       <input type="hidden" name="subject" value={`New sourdough order — ${site.name}`} />
       <input type="hidden" name="from_name" value={site.name} />
       <input type="hidden" name="fulfilment" value="Pickup (address confirmed by email)" />
+      <input type="hidden" name="order_total" id="order-total-field" value="$0" />
       <!-- Honeypot spam trap (leave empty) -->
       <input type="checkbox" name="botcheck" style="display:none" tabindex="-1" autocomplete="off" />
 
@@ -37,15 +39,20 @@ const quantities = [0, 1, 2, 3, 4, 5];
         <div class="item-list">
           {menu.map((item) => (
             <label class="item-row">
+              <img class="item-thumb" src={item.image} alt="" loading="lazy" />
               <span class="item-name">
-                <T en={item.name} zh={item.name_zh} />
-                <small>${item.price} / <T en={item.unit} zh={item.unit_zh} /></small>
+                <span class="item-title"><T en={item.name} zh={item.name_zh} /></span>
+                <small>{fmt(item.price)} / <T en={item.unit} zh={item.unit_zh} /></small>
               </span>
-              <select name={`qty_${item.id}`} aria-label={item.name}>
+              <select name={`qty_${item.id}`} data-price={item.price} aria-label={item.name}>
                 {quantities.map((q) => <option value={q}>{q}</option>)}
               </select>
             </label>
           ))}
+        </div>
+        <div class="order-total">
+          <span><T en="Total" zh="总计" /></span>
+          <span id="order-total-amount">$0</span>
         </div>
       </fieldset>
 
@@ -64,7 +71,10 @@ const quantities = [0, 1, 2, 3, 4, 5];
         </label>
         <label class="field">
           <span><T en="Preferred pickup date" zh="期望自取日期" /></span>
-          <input type="date" name="preferred_date" />
+          <input type="date" name="preferred_date" id="pickup-date" />
+          <small class="field-hint">
+            <T en="Orders must be placed at least 3 days in advance." zh="订单须至少提前 3 天下单。" />
+          </small>
         </label>
       </div>
 
@@ -73,12 +83,19 @@ const quantities = [0, 1, 2, 3, 4, 5];
         <textarea name="notes" rows="3"></textarea>
       </label>
 
-      <p class="pickup-note">
-        <T
-          en="Pickup only — we'll confirm the pickup address and time with you by email."
-          zh="仅限自取——我们将通过邮件与您确认自取地址和时间。"
-        />
-      </p>
+      <div class="pickup-note">
+        <p>
+          <strong><T en="Pickup only." zh="仅限自取。" /></strong>
+          <T en="We'll confirm the pickup address and time with you by email." zh="我们将通过邮件与您确认自取地址和时间。" />
+        </p>
+        <p>
+          <strong><T en="Payment:" zh="付款方式：" /></strong>
+          <T
+            en="cash or e-transfer. Your order is confirmed once payment is received."
+            zh="现金或电子转账（E-transfer）。收到付款后订单即确认。"
+          />
+        </p>
+      </div>
 
       <button type="submit" class="btn btn-primary order-submit">
         <T en="Send Order Request" zh="提交订单请求" />
@@ -118,29 +135,56 @@ const quantities = [0, 1, 2, 3, 4, 5];
   .item-row {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    gap: 1rem;
-    padding: 0.7rem 0.9rem;
+    gap: 0.9rem;
+    padding: 0.6rem 0.9rem;
     background: var(--cream);
     border-radius: 10px;
     border: 1px solid rgba(58, 42, 30, 0.06);
   }
-  .item-name { display: flex; flex-direction: column; font-weight: 500; }
+  .item-thumb {
+    width: 54px;
+    height: 54px;
+    border-radius: 8px;
+    object-fit: cover;
+    background: var(--cream-deep);
+    flex-shrink: 0;
+  }
+  .item-name { display: flex; flex-direction: column; font-weight: 500; flex: 1; min-width: 0; }
+  .item-title { font-weight: 600; }
   .item-name small { color: var(--muted); font-weight: 400; font-size: 0.85rem; }
   .item-row select {
-    width: 84px;
+    width: 78px;
     text-align: center;
     padding: 0.55rem 0.6rem;
     cursor: pointer;
+    flex-shrink: 0;
+  }
+  .order-total {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-top: 1rem;
+    padding: 0.9rem 1rem;
+    background: var(--crust);
+    color: var(--cream);
+    border-radius: 10px;
+    font-weight: 600;
+  }
+  #order-total-amount {
+    font-family: var(--font-display);
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--wheat);
   }
   .grid-2 {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
     gap: 1rem;
-    margin-bottom: 1.6rem;
+    margin: 1.6rem 0;
   }
   .field { display: flex; flex-direction: column; gap: 0.35rem; }
   .field span { font-weight: 500; font-size: 0.92rem; color: var(--crust-soft); }
+  .field-hint { color: var(--muted); font-size: 0.8rem; }
   input, textarea, select {
     font-family: var(--font-body);
     font-size: 1rem;
@@ -161,9 +205,11 @@ const quantities = [0, 1, 2, 3, 4, 5];
     color: var(--crust-soft);
     background: var(--cream);
     border-radius: 10px;
-    padding: 0.8rem 1rem;
+    padding: 0.9rem 1rem;
     margin: 0 0 1.4rem;
   }
+  .pickup-note p { margin: 0 0 0.4rem; }
+  .pickup-note p:last-child { margin: 0; }
   .order-submit { width: 100%; margin-top: 0.25rem; font-size: 1.05rem; }
   .order-status { margin: 1rem 0 0; font-weight: 600; text-align: center; }
   .order-status.ok { color: var(--sage-deep); }
@@ -178,9 +224,13 @@ const quantities = [0, 1, 2, 3, 4, 5];
 <script>
   const form = document.getElementById('order-form');
   const status = document.getElementById('order-status');
+  const totalAmount = document.getElementById('order-total-amount');
+  const totalField = document.getElementById('order-total-field');
+  const dateInput = document.getElementById('pickup-date');
 
   const msg = {
     none: { en: 'Please choose a quantity for at least one item.', zh: '请至少为一件商品选择数量。' },
+    date: { en: 'Please choose a pickup date at least 3 days away.', zh: '请选择至少 3 天后的自取日期。' },
     sending: { en: 'Sending your order…', zh: '正在提交您的订单……' },
     ok: {
       en: 'Thank you! Your order request was sent. We’ll email you to confirm.',
@@ -193,17 +243,36 @@ const quantities = [0, 1, 2, 3, 4, 5];
   };
   const lang = () => (document.documentElement.getAttribute('data-lang') === 'zh' ? 'zh' : 'en');
 
+  // Earliest allowed pickup date = today + 3 days.
+  const minDate = new Date();
+  minDate.setDate(minDate.getDate() + 3);
+  const minIso = minDate.toISOString().split('T')[0];
+  if (dateInput) dateInput.min = minIso;
+
+  // Live running total.
+  const selects = form ? Array.from(form.querySelectorAll('select[data-price]')) : [];
+  function recalcTotal() {
+    let t = 0;
+    selects.forEach((s) => { t += (Number(s.value) || 0) * Number(s.dataset.price || 0); });
+    const label = Number.isInteger(t) ? `$${t}` : `$${t.toFixed(2)}`;
+    if (totalAmount) totalAmount.textContent = label;
+    if (totalField) totalField.value = label;
+    return t;
+  }
+  selects.forEach((s) => s.addEventListener('change', recalcTotal));
+
   if (form && status) {
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
       const data = new FormData(form);
 
-      let total = 0;
-      for (const [key, val] of data.entries()) {
-        if (key.startsWith('qty_')) total += Number(val) || 0;
-      }
-      if (total === 0) {
+      if (recalcTotal() === 0) {
         status.textContent = msg.none[lang()];
+        status.className = 'order-status err';
+        return;
+      }
+      if (dateInput && dateInput.value && dateInput.value < minIso) {
+        status.textContent = msg.date[lang()];
         status.className = 'order-status err';
         return;
       }
@@ -222,6 +291,7 @@ const quantities = [0, 1, 2, 3, 4, 5];
           status.textContent = msg.ok[lang()];
           status.className = 'order-status ok';
           form.reset();
+          recalcTotal();
         } else {
           throw new Error(json.message || 'Submission failed');
         }
