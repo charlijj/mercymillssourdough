@@ -86,6 +86,18 @@ function detailsBlock(order) {
   </table>`;
 }
 
+// Optional personal note from the bakery, shown in the customer's email.
+function messageBlock(message) {
+  if (!message) return '';
+  const safe = esc(message).replace(/\r?\n/g, '<br>');
+  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:18px 0;background:${C.cream};border-left:4px solid ${C.amber};border-radius:8px;">
+    <tr><td style="padding:16px 18px;">
+      <div style="font-size:12px;letter-spacing:1px;text-transform:uppercase;color:${C.amberDeep};font-weight:bold;margin-bottom:6px;">A note from us</div>
+      <div style="font-size:15px;line-height:1.6;color:${C.crustSoft};">${safe}</div>
+    </td></tr>
+  </table>`;
+}
+
 function button(label, url, bg) {
   return `<table role="presentation" cellpadding="0" cellspacing="0" style="display:inline-block;"><tr>
     <td style="border-radius:999px;background:${bg};">
@@ -113,7 +125,7 @@ export function ownerNewOrder(order, acceptUrl, declineUrl, siteUrl) {
     ${para(`<strong>${esc(order.customer.name)}</strong> &lt;${esc(order.customer.email)}&gt; placed an order.`)}
     ${itemsTable(order)}
     ${detailsBlock(order)}
-    ${para('Choose one — the customer will be emailed automatically:')}
+    ${para('Choose one — you can add a message to the customer on the next screen:')}
     <table role="presentation" cellpadding="0" cellspacing="0"><tr>
       <td style="padding-right:10px;">${button('✓ Accept order', acceptUrl, C.sage)}</td>
       <td>${button('✕ Decline order', declineUrl, '#a23b2e')}</td>
@@ -128,12 +140,13 @@ export function ownerNewOrder(order, acceptUrl, declineUrl, siteUrl) {
 }
 
 // ---- Customer: confirmed -------------------------------------------------
-export function customerConfirmed(order, siteUrl) {
+export function customerConfirmed(order, siteUrl, message) {
   const body = `
     ${heading('Your order is confirmed 🎉')}
     ${para(`Hi ${esc(order.customer.name)}, good news — your order is confirmed and we'll have it ready for pickup.`)}
     ${itemsTable(order)}
     ${detailsBlock(order)}
+    ${messageBlock(message)}
     ${para(`<strong>Payment:</strong> cash or e-transfer, payable at pickup. We'll follow up with the pickup address and time. See you soon!`)}
     ${para(`Order reference: <span style="color:${C.muted};">${esc(order.id)}</span>`)}
   `;
@@ -141,11 +154,12 @@ export function customerConfirmed(order, siteUrl) {
 }
 
 // ---- Customer: declined --------------------------------------------------
-export function customerDeclined(order, siteUrl) {
+export function customerDeclined(order, siteUrl, message) {
   const body = `
     ${heading('About your recent order')}
     ${para(`Hi ${esc(order.customer.name)}, thank you for your interest. Unfortunately we're unable to fulfill this particular order right now.`)}
     ${itemsTable(order)}
+    ${messageBlock(message)}
     ${para(`This can happen when we're fully booked or an item has sold out. Please feel free to reach out or try again for another date — we'd love to bake for you.`)}
     ${para(`Order reference: <span style="color:${C.muted};">${esc(order.id)}</span>`)}
   `;
@@ -173,13 +187,77 @@ export function ownerNewSubscriber(email, siteUrl) {
   return { subject: `New newsletter signup — ${esc(email)}`, html: wrap('New newsletter signup', body, siteUrl) };
 }
 
+// ---- Page shown when mom clicks Accept/Decline: review + optional message --
+export function decisionForm(action, order, token, siteUrl) {
+  const accepted = action === 'accept';
+  const title = accepted ? 'Accept this order?' : 'Decline this order?';
+  const cta = accepted ? 'Confirm & notify customer' : 'Decline & notify customer';
+  const btnColor = accepted ? C.sage : '#a23b2e';
+  const hint = accepted
+    ? 'Add a note for the customer — pickup address, time, or anything else. (Optional)'
+    : 'Let the customer know why, or suggest another date. (Optional)';
+  const placeholder = accepted
+    ? 'e.g. Ready Saturday after 10am — pickup at 123 Main St. See you then!'
+    : "e.g. So sorry — we're fully booked that weekend. Could we do the following Saturday?";
+
+  const rows = order.items
+    .map(
+      (it) =>
+        `<tr><td style="padding:6px 0;border-bottom:1px solid ${C.creamDeep};font-size:14px;">${esc(it.name)} <span style="color:${C.muted};">&times; ${Number(it.qty)}</span></td>
+         <td align="right" style="padding:6px 0;border-bottom:1px solid ${C.creamDeep};font-size:14px;white-space:nowrap;">${money(Number(it.price) * Number(it.qty))}</td></tr>`
+    )
+    .join('');
+
+  return `<!doctype html><html><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(title)}</title>
+<style>
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;background:${C.creamDeep};color:${C.ink};}
+  .card{max-width:560px;margin:5vh auto;background:#fff;border-radius:14px;padding:28px 26px 32px;box-shadow:0 10px 40px rgba(58,42,30,.12);}
+  h1{font-family:Georgia,serif;font-size:24px;color:${C.crust};margin:0 0 6px;}
+  .sub{color:${C.muted};font-size:14px;margin:0 0 18px;}
+  .summary{background:${C.cream};border-radius:10px;padding:14px 16px;margin-bottom:18px;}
+  table{width:100%;border-collapse:collapse;}
+  .total{font-weight:700;font-size:16px;color:${C.crust};padding-top:10px;}
+  .amt{font-weight:700;font-size:18px;color:${C.amberDeep};padding-top:10px;}
+  label{display:block;font-weight:600;font-size:14px;margin:0 0 6px;color:${C.crustSoft};}
+  .hint{font-size:13px;color:${C.muted};margin:0 0 8px;}
+  textarea{width:100%;box-sizing:border-box;font:inherit;font-size:15px;padding:12px;border:1.5px solid rgba(58,42,30,.15);border-radius:10px;resize:vertical;}
+  textarea:focus{outline:none;border-color:${C.amber};box-shadow:0 0 0 3px rgba(200,134,45,.15);}
+  button{width:100%;margin-top:16px;padding:14px;font:inherit;font-size:16px;font-weight:700;color:#fff;background:${btnColor};border:none;border-radius:999px;cursor:pointer;}
+  button:hover{opacity:.92;}
+  .meta{font-size:12px;color:${C.muted};text-align:center;margin-top:14px;}
+</style></head>
+<body>
+  <div class="card">
+    <h1>${esc(title)}</h1>
+    <p class="sub">From <strong>${esc(order.customer.name)}</strong> &lt;${esc(order.customer.email)}&gt;</p>
+    <div class="summary">
+      <table>${rows}
+        <tr><td class="total">Total</td><td align="right" class="amt">${money(order.total)}</td></tr>
+      </table>
+      ${order.pickupDate ? `<div style="margin-top:10px;font-size:14px;color:${C.crustSoft};"><strong>Preferred pickup:</strong> ${esc(order.pickupDate)}</div>` : ''}
+      ${order.notes ? `<div style="margin-top:6px;font-size:14px;color:${C.crustSoft};"><strong>Notes:</strong> ${esc(order.notes)}</div>` : ''}
+    </div>
+    <form method="POST" action="/api/decide">
+      <input type="hidden" name="token" value="${esc(token)}">
+      <label for="message">Message to the customer</label>
+      <p class="hint">${esc(hint)}</p>
+      <textarea id="message" name="message" rows="5" placeholder="${esc(placeholder)}"></textarea>
+      <button type="submit">${esc(cta)}</button>
+    </form>
+    <p class="meta">Order ${esc(order.id)} &middot; nothing is sent until you press the button</p>
+  </div>
+</body></html>`;
+}
+
 // ---- Simple HTML pages shown to mom after clicking Accept/Decline --------
-export function decisionPage(kind, order, siteUrl) {
+export function decisionPage(kind, order, siteUrl, message) {
   const accepted = kind === 'accept';
   const title = accepted ? 'Order accepted ✓' : 'Order declined';
+  const withNote = message ? ' Your message was included.' : '';
   const msg = accepted
-    ? `You've accepted the order from <strong>${esc(order.customer.name)}</strong>. A confirmation email has been sent to them.`
-    : `You've declined the order from <strong>${esc(order.customer.name)}</strong>. They've been notified by email.`;
+    ? `You've accepted the order from <strong>${esc(order.customer.name)}</strong>. A confirmation email has been sent to them.${withNote}`
+    : `You've declined the order from <strong>${esc(order.customer.name)}</strong>. They've been notified by email.${withNote}`;
   return `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${title}</title></head>
   <body style="margin:0;font-family:Helvetica,Arial,sans-serif;background:${C.creamDeep};color:${C.ink};">
     <div style="max-width:520px;margin:8% auto;background:#fff;border-radius:14px;padding:36px 30px;text-align:center;">

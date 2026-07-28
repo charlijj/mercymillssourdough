@@ -110,8 +110,11 @@ safely falls back to the old Web3Forms email, so the site never breaks.)
 1. On the live site, place a test order using **your own email** as the customer.
 2. You should receive the **"order received"** email.
 3. Mom's inbox gets the **"new order"** email with two buttons.
-4. Click **Accept** → you (the customer) get the **confirmed** email, and mom
-   sees a "Order accepted ✓" page. Try **Decline** on another test order.
+4. Click **Accept** (or **Decline**) → a page opens showing the order with a
+   **"Message to the customer"** box. Nothing is sent yet.
+5. Type an optional message (pickup time, or why it's declined) and press the
+   button → the customer gets the **confirmed**/**declined** email with that
+   message included, and mom sees a "done" page.
 5. First time, check spam and mark **"Not spam"**.
 
 ### Local testing (optional, before deploying)
@@ -133,6 +136,23 @@ The buttons in mom's email are **signed links**. The order details are encoded i
 the link and signed with your `SIGNING_SECRET` (HMAC-SHA256). The Worker re-checks
 the signature before doing anything, so nobody can forge a link or alter an order.
 With the KV log enabled, each order can only be accepted or declined once.
+
+Clicking a button only **opens a page** — it never sends an email by itself. The
+email is sent when the button on that page is pressed. That way mail scanners
+that pre-fetch links can't accidentally accept or decline an order.
+
+---
+
+## Changing which inbox receives orders
+
+Orders go to whatever address is stored in the `OWNER_EMAIL` secret. To change it:
+
+```bash
+cd worker
+npx wrangler secret put OWNER_EMAIL     # enter the new address when prompted
+```
+
+Takes effect immediately — no site rebuild or `firebase deploy` needed.
 
 ---
 

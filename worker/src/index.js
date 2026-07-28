@@ -24,6 +24,7 @@ import {
   customerDeclined,
   subscriberWelcome,
   ownerNewSubscriber,
+  decisionForm,
   decisionPage,
   messagePage,
 } from './templates.js';
@@ -40,7 +41,10 @@ export default {
         return await handleOrder(request, env, cors);
       }
       if (url.pathname === '/api/decide' && request.method === 'GET') {
-        return await handleDecide(url, env);
+        return await handleDecideForm(url, env);
+      }
+      if (url.pathname === '/api/decide' && request.method === 'POST') {
+        return await handleDecide(request, env);
       }
       if (url.pathname === '/api/subscribe' && request.method === 'POST') {
         return await handleSubscribe(request, env, cors);
@@ -135,10 +139,35 @@ async function handleOrder(request, env, cors) {
 }
 
 // --------------------------------------------------------------------------
-// GET /api/decide?token=...
+// GET /api/decide?token=...  → show the review page with an optional message.
+// Nothing is sent on GET: link scanners/prefetchers must not trigger a decision.
 // --------------------------------------------------------------------------
-async function handleDecide(url, env) {
+async function handleDecideForm(url, env) {
   const token = url.searchParams.get('token');
+  const payload = token ? await verifyToken(token, env.SIGNING_SECRET) : null;
+  if (!payload || !payload.order || !['accept', 'decline'].includes(payload.action)) {
+    return html(messagePage('Invalid link', 'This confirmation link is invalid or has expired.'), 400);
+  }
+
+  const already = await alreadyDecided(env, payload.order.id);
+  if (already) {
+    return html(
+      messagePage('Already handled', `This order was already ${already}. No further email was sent.`)
+    );
+  }
+
+  const siteUrl = env.SITE_URL || 'https://mercymillsourdough.com';
+  return html(decisionForm(payload.action, payload.order, token, siteUrl));
+}
+
+// --------------------------------------------------------------------------
+// POST /api/decide  (token + optional message) → send the customer's email.
+// --------------------------------------------------------------------------
+async function handleDecide(request, env) {
+  const form = await request.formData();
+  const token = String(form.get('token') || '');
+  const message = String(form.get('message') || '').trim().slice(0, 2000);
+
   const payload = token ? await verifyToken(token, env.SIGNING_SECRET) : null;
   if (!payload || !payload.order || !['accept', 'decline'].includes(payload.action)) {
     return html(messagePage('Invalid link', 'This confirmation link is invalid or has expired.'), 400);
@@ -147,33 +176,43 @@ async function handleDecide(url, env) {
   const siteUrl = env.SITE_URL || 'https://mercymillsourdough.com';
   const order = payload.order;
 
-  // Idempotency: if we have a store and it's already decided, don't re-email.
-  if (env.ORDERS) {
-    const raw = await env.ORDERS.get(`order:${order.id}`);
-    if (raw) {
-      const stored = JSON.parse(raw);
-      if (stored.status && stored.status !== 'pending') {
-        return html(
-          messagePage(
-            'Already handled',
-            `This order was already ${stored.status}. No further email was sent.`
-          )
-        );
-      }
-      stored.status = payload.action === 'accept' ? 'accepted' : 'declined';
-      await env.ORDERS.put(`order:${order.id}`, JSON.stringify(stored), {
-        expirationTtl: 60 * 60 * 24 * 30,
-      });
-    }
+  // Idempotency: never decide (or email) twice.
+  const already = await alreadyDecided(env, order.id);
+  if (already) {
+    return html(
+      messagePage('Already handled', `This order was already ${already}. No further email was sent.`)
+    );
   }
+  await markDecided(env, order.id, payload.action === 'accept' ? 'accepted' : 'declined');
 
   const mail =
     payload.action === 'accept'
-      ? customerConfirmed(order, siteUrl)
-      : customerDeclined(order, siteUrl);
+      ? customerConfirmed(order, siteUrl, message)
+      : customerDeclined(order, siteUrl, message);
   await sendEmail(env, { to: order.customer.email, ...mail });
 
-  return html(decisionPage(payload.action, order, siteUrl));
+  return html(decisionPage(payload.action, order, siteUrl, message));
+}
+
+// Returns the existing status ("accepted"/"declined") if already handled.
+async function alreadyDecided(env, orderId) {
+  if (!env.ORDERS) return null;
+  const raw = await env.ORDERS.get(`order:${orderId}`);
+  if (!raw) return null;
+  const stored = JSON.parse(raw);
+  return stored.status && stored.status !== 'pending' ? stored.status : null;
+}
+
+async function markDecided(env, orderId, status) {
+  if (!env.ORDERS) return;
+  const raw = await env.ORDERS.get(`order:${orderId}`);
+  if (!raw) return;
+  const stored = JSON.parse(raw);
+  stored.status = status;
+  stored.decidedAt = new Date().toISOString();
+  await env.ORDERS.put(`order:${orderId}`, JSON.stringify(stored), {
+    expirationTtl: 60 * 60 * 24 * 30,
+  });
 }
 
 // --------------------------------------------------------------------------
