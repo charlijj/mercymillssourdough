@@ -113,7 +113,7 @@ export const site = {
   tagline: 'Small-batch sourdough, baked with patience.',
   location: 'Baked fresh — local pickup',
   location_zh: '新鲜烘焙 · 本地自取',
-  email: 'hello@mercymillsourdough.com', // shown to customers; orders are emailed to the address configured in the order form
+  email: 'mercymillsourdough@gmail.com', // public contact address shown in the footer
   instagram: '', // e.g. 'https://instagram.com/mercymillsourdough'
   facebook: '',
 };
