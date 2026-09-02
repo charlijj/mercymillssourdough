@@ -6,7 +6,7 @@ import T from './T.astro';
 <header class="site-header">
   <div class="container header-inner">
     <a href="#top" class="brand">
-      <img src="/images/logo.svg" class="brand-logo" alt={`${site.name} logo`} width="40" height="40" />
+      <img src="/images/logo.png" class="brand-logo" alt={`${site.name} logo`} width="50" height="54" />
       <span class="brand-name">{site.name}</span>
     </a>
 
@@ -53,7 +53,7 @@ import T from './T.astro';
     color: var(--crust);
     letter-spacing: -0.01em;
   }
-  .brand-logo { display: block; width: 40px; height: 40px; flex-shrink: 0; }
+  .brand-logo { display: block; height: 54px; width: auto; flex-shrink: 0; }
   .brand:hover { text-decoration: none; color: var(--amber-deep); }
   .brand:hover .brand-name { color: var(--amber-deep); }
 
