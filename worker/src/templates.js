@@ -54,12 +54,25 @@ function para(text) {
   return `<p style="margin:0 0 14px;font-size:15px;line-height:1.6;color:${C.crustSoft};">${text}</p>`;
 }
 
+// "Size: 12 bagels · Flavour: Sesame" — only when the item has choices.
+function itemChoices(it) {
+  const parts = [];
+  if (it.size) parts.push(esc(it.size));
+  if (it.options) {
+    for (const [k, v] of Object.entries(it.options)) {
+      if (v) parts.push(`${esc(k)}: ${esc(v)}`);
+    }
+  }
+  if (!parts.length) return '';
+  return `<br><span style="color:${C.muted};font-size:13px;">${parts.join(' &middot; ')}</span>`;
+}
+
 function itemsTable(order) {
   const rows = order.items
     .map(
       (it) => `<tr>
       <td style="padding:8px 0;border-bottom:1px solid ${C.creamDeep};font-size:14px;color:${C.ink};">
-        ${esc(it.name)} <span style="color:${C.muted};">&times; ${Number(it.qty)}</span>
+        ${esc(it.name)} <span style="color:${C.muted};">&times; ${Number(it.qty)}</span>${itemChoices(it)}
       </td>
       <td align="right" style="padding:8px 0;border-bottom:1px solid ${C.creamDeep};font-size:14px;color:${C.ink};white-space:nowrap;">
         ${money(Number(it.price) * Number(it.qty))}
@@ -112,7 +125,7 @@ export function customerReceived(order, siteUrl) {
     ${para(`Hi ${esc(order.customer.name)}, we've received your request and will confirm it shortly. <strong>Your order isn't final until we confirm it by email.</strong>`)}
     ${itemsTable(order)}
     ${detailsBlock(order)}
-    ${para(`This is <strong>pickup only</strong>. We'll confirm the pickup address and time, and payment is by <strong>cash or e-transfer, payable at pickup</strong>.`)}
+    ${para(`This is <strong>pickup only</strong>. We'll reply with your total and <strong>e-transfer</strong> details — your order is confirmed once your e-transfer has been received.`)}
     ${para(`Order reference: <span style="color:${C.muted};">${esc(order.id)}</span>`)}
   `;
   return { subject: `We got your order — Mercy Mills Sourdough`, html: wrap('We received your order and will confirm shortly.', body, siteUrl) };
@@ -147,7 +160,7 @@ export function customerConfirmed(order, siteUrl, message) {
     ${itemsTable(order)}
     ${detailsBlock(order)}
     ${messageBlock(message)}
-    ${para(`<strong>Payment:</strong> cash or e-transfer, payable at pickup. We'll follow up with the pickup address and time. See you soon!`)}
+    ${para(`<strong>Payment received — thank you!</strong> We'll follow up with the pickup address and time. See you soon!`)}
     ${para(`Order reference: <span style="color:${C.muted};">${esc(order.id)}</span>`)}
   `;
   return { subject: `Your order is confirmed — Mercy Mills Sourdough`, html: wrap('Your order is confirmed.', body, siteUrl) };
@@ -190,11 +203,11 @@ export function ownerNewSubscriber(email, siteUrl) {
 // ---- Page shown when mom clicks Accept/Decline: review + optional message --
 export function decisionForm(action, order, token, siteUrl) {
   const accepted = action === 'accept';
-  const title = accepted ? 'Accept this order?' : 'Decline this order?';
-  const cta = accepted ? 'Confirm & notify customer' : 'Decline & notify customer';
+  const title = accepted ? 'Confirm this order?' : 'Decline this order?';
+  const cta = accepted ? 'Payment received — confirm order' : 'Decline & notify customer';
   const btnColor = accepted ? C.sage : '#a23b2e';
   const hint = accepted
-    ? 'Add a note for the customer — pickup address, time, or anything else. (Optional)'
+    ? 'Only confirm once the e-transfer has arrived. Add a note — pickup address, time, or anything else. (Optional)'
     : 'Let the customer know why, or suggest another date. (Optional)';
   const placeholder = accepted
     ? 'e.g. Ready Saturday after 10am — pickup at 123 Main St. See you then!'

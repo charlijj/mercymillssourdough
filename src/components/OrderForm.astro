@@ -9,12 +9,12 @@ const fmt = (n) => (Number.isInteger(n) ? `$${n}` : `$${n.toFixed(2)}`);
 <section id="order">
   <div class="container order-wrap">
     <div class="order-head">
-      <span class="eyebrow"><T en="Place an order" zh="在线下单" /></span>
-      <h2><T en="Order fresh sourdough" zh="订购新鲜酸种面包" /></h2>
+      <span class="eyebrow"><T en="Place an order" zh="線上下單" /></span>
+      <h2><T en="Order fresh sourdough" zh="訂購新鮮酸種麵包" /></h2>
       <p class="section-lead">
         <T
-          en="Tell us what you'd like and when. We'll email you back to confirm your total and arrange pickup. Please order at least 3 days before your pickup date."
-          zh="告诉我们您想要什么、何时需要。我们会通过邮件与您确认总价并安排自取。请至少在自取日期前 3 天下单。"
+          en="Tell us what you'd like and when. We'll email you back with your total and e-transfer details. Please order at least 3 days before your pickup date."
+          zh="告訴我們您想要什麼、何時取貨。我們會以電子郵件回覆總金額與電子轉帳資訊。請至少在取貨日期前 3 天下單。"
         />
       </p>
     </div>
@@ -24,30 +24,65 @@ const fmt = (n) => (Number.isInteger(n) ? `$${n}` : `$${n.toFixed(2)}`);
       <input type="checkbox" name="botcheck" style="display:none" tabindex="-1" autocomplete="off" />
 
       <fieldset class="fs-items">
-        <legend><T en="What would you like?" zh="您想要点什么？" /></legend>
+        <legend><T en="What would you like?" zh="您想要點什麼？" /></legend>
         <div class="item-list">
           {menu.map((item) => (
-            <label class="item-row">
+            <div class="item-row" data-id={item.id} data-name={item.name} data-price={item.price ?? ''}>
               <img class="item-thumb" src={item.image} alt="" loading="lazy" />
-              <span class="item-name">
+
+              <div class="item-main">
                 <span class="item-title"><T en={item.name} zh={item.name_zh} /></span>
-                <small>{fmt(item.price)} / <T en={item.unit} zh={item.unit_zh} /></small>
-              </span>
-              <select
-                name={`qty_${item.id}`}
-                data-id={item.id}
-                data-price={item.price}
-                data-name={item.name}
-                data-unit={item.unit}
-                aria-label={item.name}
-              >
+                <small class="item-price">
+                  <span class="unit-price">
+                    {item.sizes ? fmt(item.sizes[0].price) : fmt(item.price)}
+                  </span>
+                  {!item.sizes && (
+                    <> / <T en={item.unit} zh={item.unit_zh} /></>
+                  )}
+                </small>
+
+                {(item.sizes || item.options) && (
+                  <div class="item-opts">
+                    {item.sizes && (
+                      <label class="opt">
+                        <span class="opt-label"><T en="Size" zh="份量" /></span>
+                        <select data-role="size" aria-label={`Size for ${item.name}`}>
+                          {item.sizes.map((s) => (
+                            <option value={s.id} data-price={s.price} data-label={s.label}>
+                              {s.label}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                    )}
+                    {item.options && item.options.map((opt) => (
+                      <label class="opt">
+                        <span class="opt-label"><T en={opt.label} zh={opt.label_zh} /></span>
+                        <select
+                          data-role="option"
+                          data-opt-id={opt.id}
+                          data-opt-label={opt.label}
+                          aria-label={`${opt.label} for ${item.name}`}
+                        >
+                          {opt.choices.map((c) => (
+                            <option value={c.id} data-label={c.label}>{c.label}</option>
+                          ))}
+                        </select>
+                      </label>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <select data-role="qty" aria-label={`Quantity of ${item.name}`}>
                 {quantities.map((q) => <option value={q}>{q}</option>)}
               </select>
-            </label>
+            </div>
           ))}
         </div>
+
         <div class="order-total">
-          <span><T en="Total" zh="总计" /></span>
+          <span><T en="Total" zh="總計" /></span>
           <span id="order-total-amount">$0</span>
         </div>
       </fieldset>
@@ -58,62 +93,62 @@ const fmt = (n) => (Number.isInteger(n) ? `$${n}` : `$${n.toFixed(2)}`);
           <input type="text" name="name" required autocomplete="name" />
         </label>
         <label class="field">
-          <span><T en="Email *" zh="邮箱 *" /></span>
+          <span><T en="Email *" zh="電子郵件 *" /></span>
           <input type="email" name="email" required autocomplete="email" />
         </label>
         <label class="field">
-          <span><T en="Phone" zh="电话" /></span>
+          <span><T en="Phone" zh="電話" /></span>
           <input type="tel" name="phone" autocomplete="tel" />
         </label>
         <label class="field">
-          <span><T en="Preferred pickup date" zh="期望自取日期" /></span>
+          <span><T en="Preferred pickup date" zh="希望取貨日期" /></span>
           <input type="date" name="preferred_date" id="pickup-date" />
           <small class="field-hint">
-            <T en="Orders must be placed at least 3 days in advance." zh="订单须至少提前 3 天下单。" />
+            <T en="Orders must be placed at least 3 days in advance." zh="訂單須至少提前 3 天下單。" />
           </small>
         </label>
       </div>
 
       <label class="field">
-        <span><T en="Notes & allergy concerns" zh="备注与过敏事项" /></span>
+        <span><T en="Notes & allergy concerns" zh="備註與過敏事項" /></span>
         <textarea
           name="notes"
           rows="3"
           data-ph-en="Please note any allergy concerns or special requests here."
-          data-ph-zh="请在此写明任何过敏事项或特殊要求。"
+          data-ph-zh="請在此註明任何過敏事項或特殊需求。"
           placeholder="Please note any allergy concerns or special requests here."
         ></textarea>
         <small class="field-hint">
           <T
             en="Have allergies? Our breads may contain wheat, gluten, and eggs. Please list any concerns above so we can help."
-            zh="有过敏情况吗？我们的面包可能含有小麦、麸质和鸡蛋。请在上方列出任何顾虑，以便我们协助。"
+            zh="有過敏情況嗎？我們的麵包可能含有小麥、麩質與雞蛋。請在上方列出任何顧慮，以便我們協助。"
           />
         </small>
       </label>
 
       <div class="pickup-note">
         <p>
-          <strong><T en="Pickup only." zh="仅限自取。" /></strong>
-          <T en="We'll confirm the pickup address and time with you by email." zh="我们将通过邮件与您确认自取地址和时间。" />
+          <strong><T en="Pickup only." zh="僅限自取。" /></strong>
+          <T en="We'll confirm the pickup address and time with you by email." zh="我們將以電子郵件與您確認取貨地址與時間。" />
         </p>
         <p>
-          <strong><T en="Payment:" zh="付款方式：" /></strong>
+          <strong><T en="Payment: e-transfer only." zh="付款方式：僅接受電子轉帳。" /></strong>
           <T
-            en="cash or e-transfer, payable when you pick up your order."
-            zh="现金或电子转账（E-transfer），可在取货时付款。"
+            en="Your order is confirmed only once your e-transfer has been received."
+            zh="我們收到您的電子轉帳後，訂單才算確認。"
           />
         </p>
       </div>
 
       <button type="submit" class="btn btn-primary order-submit">
-        <T en="Send Order Request" zh="提交订单请求" />
+        <T en="Send Order Request" zh="送出訂單需求" />
       </button>
 
       <p id="order-status" class="order-status" role="status" aria-live="polite"></p>
       <p class="order-fineprint">
         <T
-          en="This sends a request, not a payment. We'll reply to confirm your total and details."
-          zh="这是提交订单请求，并非付款。我们会回复确认总价与细节。"
+          en="This sends a request, not a payment. We'll reply with your total and e-transfer details."
+          zh="這是送出訂單需求，並非付款。我們會回覆您的總金額與電子轉帳資訊。"
         />
       </p>
     </form>
@@ -121,7 +156,7 @@ const fmt = (n) => (Number.isInteger(n) ? `$${n}` : `$${n.toFixed(2)}`);
 </section>
 
 <style>
-  .order-wrap { max-width: 780px; }
+  .order-wrap { max-width: 820px; }
   .order-head { margin-bottom: 2.5rem; }
   .order-form {
     background: var(--white);
@@ -144,23 +179,31 @@ const fmt = (n) => (Number.isInteger(n) ? `$${n}` : `$${n.toFixed(2)}`);
     display: flex;
     align-items: center;
     gap: 0.9rem;
-    padding: 0.6rem 0.9rem;
+    padding: 0.7rem 0.9rem;
     background: var(--cream);
     border-radius: 10px;
     border: 1px solid rgba(58, 42, 30, 0.06);
   }
   .item-thumb {
-    width: 54px;
-    height: 54px;
+    width: 54px; height: 54px;
     border-radius: 8px;
     object-fit: cover;
     background: var(--cream-deep);
     flex-shrink: 0;
   }
-  .item-name { display: flex; flex-direction: column; font-weight: 500; flex: 1; min-width: 0; }
+  .item-main { display: flex; flex-direction: column; flex: 1; min-width: 0; gap: 0.15rem; }
   .item-title { font-weight: 600; }
-  .item-name small { color: var(--muted); font-weight: 400; font-size: 0.85rem; }
-  .item-row select {
+  .item-price { color: var(--muted); font-size: 0.85rem; }
+  .item-opts { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.35rem; }
+  .opt { display: flex; align-items: center; gap: 0.35rem; }
+  .opt-label { font-size: 0.78rem; color: var(--muted); }
+  .item-opts select {
+    width: auto;
+    font-size: 0.85rem;
+    padding: 0.3rem 0.5rem;
+    border-radius: 7px;
+  }
+  .item-row > select[data-role='qty'] {
     width: 78px;
     text-align: center;
     padding: 0.55rem 0.6rem;
@@ -191,7 +234,7 @@ const fmt = (n) => (Number.isInteger(n) ? `$${n}` : `$${n.toFixed(2)}`);
     margin: 1.6rem 0;
   }
   .field { display: flex; flex-direction: column; gap: 0.35rem; }
-  .field span { font-weight: 500; font-size: 0.92rem; color: var(--crust-soft); }
+  .field > span { font-weight: 500; font-size: 0.92rem; color: var(--crust-soft); }
   .field-hint { color: var(--muted); font-size: 0.8rem; }
   input, textarea, select {
     font-family: var(--font-body);
@@ -224,8 +267,10 @@ const fmt = (n) => (Number.isInteger(n) ? `$${n}` : `$${n.toFixed(2)}`);
   .order-status.err { color: #b23b2e; }
   .order-fineprint { font-size: 0.85rem; color: var(--muted); text-align: center; margin: 0.8rem 0 0; }
 
-  @media (max-width: 560px) {
+  @media (max-width: 620px) {
     .grid-2 { grid-template-columns: 1fr; }
+    .item-row { flex-wrap: wrap; }
+    .item-main { flex-basis: calc(100% - 150px); }
   }
 </style>
 
@@ -233,28 +278,26 @@ const fmt = (n) => (Number.isInteger(n) ? `$${n}` : `$${n.toFixed(2)}`);
   const form = document.getElementById('order-form');
   const status = document.getElementById('order-status');
   const totalAmount = document.getElementById('order-total-amount');
-  const totalField = document.getElementById('order-total-field');
   const dateInput = document.getElementById('pickup-date');
 
+  const ORDER_API = (import.meta.env.PUBLIC_ORDER_API || '').replace(/\/$/, '');
+
   const msg = {
-    none: { en: 'Please choose a quantity for at least one item.', zh: '请至少为一件商品选择数量。' },
-    date: { en: 'Please choose a pickup date at least 3 days away.', zh: '请选择至少 3 天后的自取日期。' },
-    noapi: { en: 'Ordering is not available right now. Please email us and we’ll help.', zh: '暂时无法下单，请给我们发邮件，我们会协助您。' },
-    sending: { en: 'Sending your order…', zh: '正在提交您的订单……' },
+    none: { en: 'Please choose a quantity for at least one item.', zh: '請至少為一項商品選擇數量。' },
+    date: { en: 'Please choose a pickup date at least 3 days away.', zh: '請選擇至少 3 天後的取貨日期。' },
+    noapi: { en: 'Ordering is not available right now. Please email us and we’ll help.', zh: '目前無法下單，請寄電子郵件給我們，我們會協助您。' },
+    sending: { en: 'Sending your order…', zh: '正在送出您的訂單……' },
     ok: {
       en: 'Thank you! Your order request was sent. We’ll email you to confirm.',
-      zh: '谢谢！您的订单请求已提交。我们会通过邮件与您确认。',
+      zh: '謝謝！您的訂單需求已送出。我們會以電子郵件與您確認。',
     },
     err: {
       en: 'Sorry, something went wrong. Please email us directly and we’ll sort it out.',
-      zh: '抱歉，出了点问题。请直接给我们发邮件，我们会为您处理。',
+      zh: '抱歉，發生問題。請直接寄電子郵件給我們，我們會為您處理。',
     },
   };
   const lang = () => (document.documentElement.getAttribute('data-lang') === 'zh' ? 'zh' : 'en');
-
-  // Order backend (Cloudflare Worker). Orders POST here so the customer + owner
-  // get emails and mom can accept/decline. Set via PUBLIC_ORDER_API.
-  const ORDER_API = (import.meta.env.PUBLIC_ORDER_API || '').replace(/\/$/, '');
+  const fmt = (n) => (Number.isInteger(n) ? `$${n}` : `$${n.toFixed(2)}`);
 
   // Earliest allowed pickup date = today + 3 days.
   const minDate = new Date();
@@ -262,29 +305,61 @@ const fmt = (n) => (Number.isInteger(n) ? `$${n}` : `$${n.toFixed(2)}`);
   const minIso = minDate.toISOString().split('T')[0];
   if (dateInput) dateInput.min = minIso;
 
-  // Live running total.
-  const selects = form ? Array.from(form.querySelectorAll('select[data-price]')) : [];
+  const rows = form ? Array.from(form.querySelectorAll('.item-row')) : [];
+
+  // Unit price for a row: the selected size's price, or the item's flat price.
+  function unitPrice(row) {
+    const size = row.querySelector('select[data-role="size"]');
+    if (size) return Number(size.selectedOptions[0].dataset.price) || 0;
+    return Number(row.dataset.price) || 0;
+  }
+
+  function refreshRow(row) {
+    const el = row.querySelector('.unit-price');
+    if (el) el.textContent = fmt(unitPrice(row));
+  }
+
   function recalcTotal() {
     let t = 0;
-    selects.forEach((s) => { t += (Number(s.value) || 0) * Number(s.dataset.price || 0); });
-    const label = Number.isInteger(t) ? `$${t}` : `$${t.toFixed(2)}`;
-    if (totalAmount) totalAmount.textContent = label;
-    if (totalField) totalField.value = label;
+    rows.forEach((row) => {
+      const qty = Number(row.querySelector('select[data-role="qty"]').value) || 0;
+      t += qty * unitPrice(row);
+    });
+    if (totalAmount) totalAmount.textContent = fmt(t);
     return t;
   }
-  selects.forEach((s) => s.addEventListener('change', recalcTotal));
 
-  // Build a structured order from the item selects.
+  rows.forEach((row) => {
+    row.querySelectorAll('select').forEach((sel) =>
+      sel.addEventListener('change', () => {
+        refreshRow(row);
+        recalcTotal();
+      })
+    );
+  });
+
   function buildOrder() {
-    const items = selects
-      .filter((s) => Number(s.value) > 0)
-      .map((s) => ({
-        id: s.dataset.id,
-        name: s.dataset.name,
-        unit: s.dataset.unit,
-        price: Number(s.dataset.price),
-        qty: Number(s.value),
-      }));
+    const items = rows
+      .map((row) => {
+        const qty = Number(row.querySelector('select[data-role="qty"]').value) || 0;
+        if (qty <= 0) return null;
+        const size = row.querySelector('select[data-role="size"]');
+        const options = {};
+        row.querySelectorAll('select[data-role="option"]').forEach((sel) => {
+          options[sel.dataset.optLabel] = sel.selectedOptions[0].dataset.label;
+        });
+        return {
+          id: row.dataset.id,
+          name: row.dataset.name,
+          unit: size ? size.selectedOptions[0].dataset.label : '',
+          size: size ? size.selectedOptions[0].dataset.label : '',
+          options,
+          price: unitPrice(row),
+          qty,
+        };
+      })
+      .filter(Boolean);
+
     return {
       items,
       total: recalcTotal(),
@@ -301,6 +376,9 @@ const fmt = (n) => (Number.isInteger(n) ? `$${n}` : `$${n.toFixed(2)}`);
   }
 
   if (form && status) {
+    rows.forEach(refreshRow);
+    recalcTotal();
+
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
 
@@ -334,6 +412,7 @@ const fmt = (n) => (Number.isInteger(n) ? `$${n}` : `$${n.toFixed(2)}`);
         status.textContent = msg.ok[lang()];
         status.className = 'order-status ok';
         form.reset();
+        rows.forEach(refreshRow);
         recalcTotal();
       } catch (err) {
         status.textContent = msg.err[lang()];

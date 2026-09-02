@@ -4,19 +4,19 @@ import T from './T.astro';
 
 const fmt = (n) => (Number.isInteger(n) ? `$${n}` : `$${n.toFixed(2)}`);
 
-// Mandarin labels for the short product tags.
-const tagZh = { Bestseller: '热销', Seasonal: '季节限定' };
+// Chinese labels for the short product tags.
+const tagZh = { Bestseller: '熱銷', Seasonal: '季節限定', Sweet: '甜點' };
 ---
 
 <section id="menu">
   <div class="container">
     <div class="menu-head">
-      <span class="eyebrow"><T en="The Menu" zh="菜单" /></span>
-      <h2><T en="This week's bakes" zh="本周烘焙" /></h2>
+      <span class="eyebrow"><T en="The Menu" zh="菜單" /></span>
+      <h2><T en="Our breads & bakes" zh="麵包與烘焙" /></h2>
       <p class="section-lead">
         <T
-          en="Fresh out of the oven. Prices are per item — order below and pick up locally."
-          zh="新鲜出炉。价格按份计算——在下方下单，即可到店自取。"
+          en="Everything is baked to order in small batches. Order below for local pickup."
+          zh="所有產品皆為小批量接單製作。請於下方下單，到店自取。"
         />
       </p>
     </div>
@@ -28,18 +28,21 @@ const tagZh = { Bestseller: '热销', Seasonal: '季节限定' };
         autocomplete="off"
         aria-label="Search the menu"
         data-ph-en="Search the menu…"
-        data-ph-zh="搜索菜单……"
+        data-ph-zh="搜尋菜單……"
         placeholder="Search the menu…"
       />
     </div>
 
     <p id="menu-no-results" class="menu-no-results" hidden>
-      <T en="No items match your search." zh="没有找到匹配的商品。" />
+      <T en="No items match your search." zh="沒有找到符合的商品。" />
     </p>
 
     <div class="menu-grid">
       {menu.map((item) => (
-        <article class="card" data-search={`${item.name} ${item.name_zh} ${item.description} ${item.description_zh}`.toLowerCase()}>
+        <article
+          class="card"
+          data-search={`${item.name} ${item.name_zh} ${item.description} ${item.description_zh}`.toLowerCase()}
+        >
           <div class="card-media">
             <img src={item.image} alt={item.name} loading="lazy" />
             {item.tags && item.tags.length > 0 && (
@@ -52,17 +55,37 @@ const tagZh = { Bestseller: '热销', Seasonal: '季节限定' };
             <div class="card-title-row">
               <h3><T en={item.name} zh={item.name_zh} /></h3>
               <span class="card-price">
-                {fmt(item.price)}<small>/<T en={item.unit} zh={item.unit_zh} /></small>
+                {item.sizes ? (
+                  item.sizes.map((s, i) => (
+                    <>
+                      {i > 0 && <span class="price-sep">·</span>}
+                      {fmt(s.price)}<small>/{s.id}</small>
+                    </>
+                  ))
+                ) : (
+                  <>{fmt(item.price)}<small>/<T en={item.unit} zh={item.unit_zh} /></small></>
+                )}
               </span>
             </div>
             <p><T en={item.description} zh={item.description_zh} /></p>
+            {item.options && item.options.map((opt) => (
+              <p class="card-options">
+                <T en={opt.label} zh={opt.label_zh} />:
+                {opt.choices.map((c, i) => (
+                  <>
+                    {i > 0 && ' / '}
+                    <T en={c.label} zh={c.label_zh} />
+                  </>
+                ))}
+              </p>
+            ))}
           </div>
         </article>
       ))}
     </div>
 
     <div class="text-center menu-cta">
-      <a href="#order" class="btn btn-primary"><T en="Order Your Loaves" zh="立即下单" /></a>
+      <a href="#order" class="btn btn-primary"><T en="Order Now" zh="立即下單" /></a>
     </div>
   </div>
 </section>
@@ -125,16 +148,28 @@ const tagZh = { Bestseller: '热销', Seasonal: '季节限定' };
     gap: 0.75rem;
     margin-bottom: 0.5rem;
   }
-  .card-title-row h3 { margin: 0; }
+  .card-title-row h3 { margin: 0; font-size: 1.18rem; }
   .card-price {
     font-family: var(--font-display);
     font-weight: 700;
-    font-size: 1.2rem;
+    font-size: 1.15rem;
     color: var(--amber-deep);
     white-space: nowrap;
+    text-align: right;
   }
   .card-price small { font-size: 0.72rem; color: var(--muted); font-weight: 500; }
+  .price-sep { margin: 0 0.3rem; color: var(--muted); }
   .card-body p { margin: 0; color: var(--muted); font-size: 0.96rem; }
+  .card-options {
+    margin-top: 0.7rem !important;
+    font-size: 0.85rem;
+    color: var(--crust-soft);
+    background: var(--cream);
+    padding: 0.4rem 0.7rem;
+    border-radius: 8px;
+    display: inline-block;
+    align-self: flex-start;
+  }
   .menu-cta { margin-top: 3rem; }
 </style>
 
