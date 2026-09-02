@@ -92,7 +92,7 @@ export const menu = [
     unit_zh: '個',
     description: 'A gentle kick of jalapeño with pockets of melted cheddar and a golden cheese crust.',
     description_zh: '墨西哥辣椒帶來微辣風味，配上融化的切達起司與金黃起司外皮。',
-    image: '/images/placeholder-loaf.svg',
+    image: '/images/jalapeno-cheddar.jpg',
     tags: [],
     details: { ingredients: '', ingredients_zh: '', allergens: '', allergens_zh: '', netWeight: '', about: '', about_zh: '' },
     options: [shapeOption],

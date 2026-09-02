@@ -31,6 +31,19 @@ const steps = [
     body_zh: '劃紋後在高溫蒸氣烤箱中烘烤，成就標誌性的酥脆金黃外皮。冷卻後，隨即交到您手中。',
   },
 ];
+
+// ---------------------------------------------------------------------------
+//  IN-PROGRESS PHOTOS — behind-the-scenes shots of bakes being made.
+//  To add one: drop the image in /public/images and copy a block below.
+// ---------------------------------------------------------------------------
+const progressPhotos = [
+  {
+    src: '/images/making-focaccia.jpg',
+    alt: 'Focaccia dough dimpled and dressed with pesto and olive oil before baking',
+    caption_en: 'Focaccia dough — dimpled by hand, then dressed with pesto and olive oil before it bakes.',
+    caption_zh: '佛卡夏麵團——手工壓出凹洞，再淋上青醬與橄欖油，準備入爐烘烤。',
+  },
+];
 ---
 
 <section id="how" class="bg-crust">
@@ -55,6 +68,20 @@ const steps = [
         </li>
       ))}
     </ol>
+
+    {progressPhotos.length > 0 && (
+      <div class="in-kitchen">
+        <h3 class="in-kitchen-title"><T en="In the kitchen" zh="廚房實況" /></h3>
+        <div class="progress-grid">
+          {progressPhotos.map((ph) => (
+            <figure class="progress-item">
+              <img src={ph.src} alt={ph.alt} loading="lazy" />
+              <figcaption><T en={ph.caption_en} zh={ph.caption_zh} /></figcaption>
+            </figure>
+          ))}
+        </div>
+      </div>
+    )}
   </div>
 </section>
 
@@ -85,4 +112,37 @@ const steps = [
   }
   .step h3 { margin-bottom: 0.4rem; color: var(--cream); }
   .step p { margin: 0; color: rgba(250, 244, 234, 0.78); font-size: 0.98rem; }
+
+  /* Behind-the-scenes photos */
+  .in-kitchen { margin-top: 3.5rem; }
+  .in-kitchen-title {
+    font-size: 1.4rem;
+    color: var(--wheat);
+    margin-bottom: 1.3rem;
+    text-align: center;
+  }
+  /* Tiles are capped so a single photo doesn't span the whole section, and
+     extra photos simply flow into more columns as they're added. */
+  .progress-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 320px));
+    justify-content: center;
+    gap: 1.4rem;
+    max-width: 1020px;
+    margin: 0 auto;
+  }
+  .progress-item { margin: 0; }
+  .progress-item img {
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    object-fit: cover;
+    border-radius: var(--radius);
+    display: block;
+  }
+  .progress-item figcaption {
+    margin-top: 0.7rem;
+    font-size: 0.92rem;
+    color: rgba(250, 244, 234, 0.78);
+    line-height: 1.55;
+  }
 </style>
