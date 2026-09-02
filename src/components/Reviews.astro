@@ -1,40 +1,59 @@
 ---
 import T from './T.astro';
 
-// PLACEHOLDER REVIEWS — replace with real customer quotes when available.
-// Edit the text/name of each, add or remove blocks. `name` shows as-is in both
-// languages; translate the quote via en/zh.
+// Real customer reviews supplied by the owner. To add one, copy a block.
+// `zh` is only set where the customer wrote in Chinese; otherwise the original
+// English is shown in both language modes (testimonials are quoted verbatim
+// rather than machine-translated).
 const reviews = [
   {
-    en: 'The best sourdough I have had outside of a bakery in the city. That crust! We order every week now.',
-    zh: '这是我在城里面包店之外吃过最好的酸种面包。那外壳太赞了！我们现在每周都订。',
-    name: 'Sample Review',
+    text: "I can't recommend this homemade sourdough bread enough! It's absolutely delicious, with the perfect crust and soft, flavourful interior. Knowing it's made with quality ingredients and a traditional sourdough process makes it feel like a healthier choice too. The biggest surprise? My daughter is usually very picky about bread, but after trying this, she refuses to eat any other bread and will only eat her homemade sourdough now. That's the highest compliment I can give! If you're looking for fresh, wholesome, and truly amazing sourdough, this is it. Highly recommend!",
+    name: 'Xing',
   },
   {
-    en: 'So fresh and clearly made with care. Pickup was easy and the cinnamon raisin loaf did not last a day.',
-    zh: '非常新鲜，一看就是用心制作。自取很方便，那条肉桂葡萄干面包一天都没撑过。',
-    name: 'Sample Review',
+    text: 'The very best! I think she adds a lot of love. ❤',
+    name: 'D. Harvey',
   },
   {
-    en: 'You can taste the slow fermentation — it is light and easy to digest. Highly recommend to friends.',
-    zh: '能吃出慢发酵的味道——口感轻盈、易消化。强烈推荐给朋友们。',
-    name: 'Sample Review',
+    text: 'I absolutely love this sourdough bread. It has the perfect balance of crisp golden crust and soft interior with the right amount of chew. You can really tell it’s made with care and quality ingredients. It is truly authentic, artisan sourdough.',
+    name: 'Shelley Roch',
+  },
+  {
+    text: 'Mercy, your sourdough is very addictive. The texture and taste is second to none. We have been ordering your Sourdough Boules for several months now and have never been disappointed. With every bite, we get confirmation of the quality of ingredients you use and the care you take in baking the boules. You not only have us hooked, but also our daughter and son in law. Thank you so much.',
+    name: 'Ayaz',
+  },
+  {
+    text: 'A truly delectable bake — Mercy Mills Sourdough products are mouth watering good! Everything from the golden brown crust, the perfect shape, and the amazing texture, aroma and flavour make these sourdough batch products a regular purchase for my home. Five star yummy!',
+    name: 'Susan Kuyer',
+  },
+  {
+    text: 'This sourdough loaf was seriously delicious! The crust was perfectly crisp, while the inside was soft, chewy, and full of that classic tangy sourdough flavor. It tasted super fresh and had the perfect texture — definitely a loaf I’d happily buy again!',
+    name: 'Nafeesa Brown',
+  },
+  {
+    text: "I can't say enough about Mercy's sourdough. Her dedication and the research she's put into perfecting her recipes shines through every flavourful, crunchy, chewy bite. She is unwilling to accept anything but perfection in her recipes, which is what makes her sourdough breads and stuffed bagels the ultimate favorites in our household. I would guess the English Muffins are too, but I wouldn't know since my kid ate them before I even got a chance. Next time I'm hiding them!",
+    name: 'Adelle',
+  },
+  {
+    text: '我今天已經迫不及待一買回來趕快先把麵包切開來試吃了兩片，麵包很好吃，裡面非常軟，非常Q，而且滿滿的材料，蔓越莓一點不會酸我很喜歡，核桃也好多，要是我有烤箱把皮烤得脆脆的，就會一百分了！我吃完腸胃覺得很舒服，謝謝你這麼好吃的麵包。我留了 ¼ 在外面，其他的我放進冷凍庫裡下次要吃再拿出來，希望下次可以試一下其他的口味！',
+    name: 'Jennifer',
+    cjk: true,
   },
 ];
 ---
 
-<section id="reviews" class="bg-cream-deep">
+<section id="reviews">
   <div class="container">
     <div class="reviews-head">
       <span class="eyebrow"><T en="Kind words" zh="顾客好评" /></span>
       <h2><T en="What our customers say" zh="顾客怎么说" /></h2>
     </div>
 
-    <div class="reviews-grid">
+    <div class="reviews-masonry">
       {reviews.map((r) => (
-        <figure class="review">
+        <figure class:list={['review', r.cjk && 'review-cjk']}>
           <div class="stars" aria-label="5 out of 5 stars">★★★★★</div>
-          <blockquote><T en={r.en} zh={r.zh} /></blockquote>
+          <blockquote>{r.text}</blockquote>
           <figcaption>— {r.name}</figcaption>
         </figure>
       ))}
@@ -43,29 +62,34 @@ const reviews = [
 </section>
 
 <style>
-  .reviews-head { max-width: 720px; margin-bottom: 3rem; }
-  .reviews-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(270px, 1fr));
-    gap: 1.5rem;
+  .reviews-head { max-width: 720px; margin-bottom: 2.5rem; }
+
+  /* Multi-column masonry handles the very different quote lengths gracefully */
+  .reviews-masonry {
+    columns: 3;
+    column-gap: 1.5rem;
   }
   .review {
-    margin: 0;
+    break-inside: avoid;
+    margin: 0 0 1.5rem;
     background: var(--white);
     border-radius: var(--radius);
-    padding: 1.8rem;
+    padding: 1.6rem 1.7rem;
     box-shadow: var(--shadow-sm);
     border: 1px solid rgba(58, 42, 30, 0.06);
-    display: flex;
-    flex-direction: column;
+    display: inline-block;
+    width: 100%;
   }
-  .stars { color: var(--amber); letter-spacing: 0.15em; margin-bottom: 0.8rem; }
+  .stars { color: var(--amber); letter-spacing: 0.15em; margin-bottom: 0.7rem; font-size: 0.95rem; }
   .review blockquote {
-    margin: 0 0 1rem;
-    font-size: 1.05rem;
+    margin: 0 0 0.9rem;
+    font-size: 1rem;
     color: var(--crust-soft);
-    line-height: 1.6;
-    flex: 1;
+    line-height: 1.65;
   }
-  .review figcaption { font-weight: 600; color: var(--crust); }
+  .review-cjk blockquote { line-height: 1.9; }
+  .review figcaption { font-weight: 600; color: var(--crust); font-size: 0.95rem; }
+
+  @media (max-width: 980px) { .reviews-masonry { columns: 2; } }
+  @media (max-width: 620px) { .reviews-masonry { columns: 1; } }
 </style>
