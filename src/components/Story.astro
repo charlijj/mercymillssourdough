@@ -1,0 +1,161 @@
+---
+import T from './T.astro';
+
+// "Why Choose Our Artisanal Sourdough?" — the owner's five points.
+const reasons = [
+  {
+    icon: '🌾',
+    title_en: '150-Year Historic Starter',
+    title_zh: '150 年歷史酵種',
+    body_en: 'Powered by our wild San Francisco sourdough starter for authentic depth and a classic, nuanced tang.',
+    body_zh: '以我們的舊金山天然酵種發酵，帶來道地的層次感與經典細緻的微酸風味。',
+  },
+  {
+    icon: '🧂',
+    title_en: 'Pure & Simple Ingredients',
+    title_zh: '純淨簡單的材料',
+    body_en: 'Made with only four basic elements — unbleached flour, pure water, salt, and starter. Never any oils, sugars, or artificial additives.',
+    body_zh: '僅用四種基本材料——無漂白麵粉、純淨水、鹽與酵種。絕不添加油脂、糖或人工添加物。',
+  },
+  {
+    icon: '🌱',
+    title_en: 'Freshly Milled Whole Grains',
+    title_zh: '現磨全穀物',
+    body_en: 'Choose from wholesome ancient or modern wheat, freshly milled on-site to preserve whole-grain nutrition and rich wheat aroma.',
+    body_zh: '可選用營養豐富的古老或現代小麥，於自家現磨，保留完整全穀營養與濃郁麥香。',
+  },
+  {
+    icon: '✅',
+    title_en: 'Certified Food Safety',
+    title_zh: '食品安全認證',
+    body_en: 'Prepared with care by a FOODSAFE Level 1 certified baker, ensuring every loaf is made to strict food safety standards.',
+    body_zh: '由通過 FOODSAFE 一級認證的烘焙師用心製作，確保每一個麵包都符合嚴格的食品安全標準。',
+  },
+  {
+    icon: '💛',
+    title_en: 'Gentle on Digestion',
+    title_zh: '溫和好消化',
+    body_en: 'Extended natural fermentation naturally breaks down gluten and starches, making every slice easy on your stomach.',
+    body_zh: '長時間自然發酵能分解麩質與澱粉，讓每一片麵包都更容易消化。',
+  },
+];
+---
+
+<section id="story" class="bg-cream-deep">
+  <div class="container">
+    <div class="story-top">
+      <div class="story-copy">
+        <span class="eyebrow"><T en="Our Story" zh="關於我們" /></span>
+        <h2><T en="It started with a starter — and a love for family" zh="從一份酵種，與對家人的愛開始" /></h2>
+        <p>
+          <T
+            en="It all started with a lively, 150-year-old San Francisco sourdough starter and a deep love for family."
+            zh="一切始於一份充滿活力、擁有 150 年歷史的舊金山酸種酵頭，以及對家人深深的愛。"
+          />
+        </p>
+        <p>
+          <T
+            en="There are no industrial assembly lines here — only simple, honest ingredients: unbleached flour, water, salt, and our historic starter. To offer you the purest nutrition, we provide options crafted with fresh whole wheat flour — both ancient and modern grains — milled right in our kitchen to lock in maximum nutrients, dietary fibre, and natural flavour."
+            zh="這裡沒有工業生產線——只有簡單誠實的材料：無漂白麵粉、水、鹽，以及我們的歷史酵種。為了提供最純淨的營養，我們也推出以新鮮全麥麵粉製作的選項——涵蓋古老與現代穀物——在自家廚房現磨，鎖住最豐富的營養、膳食纖維與天然風味。"
+          />
+        </p>
+        <p>
+          <T
+            en="Certified in FOODSAFE Level 1, we prepare every small batch in a clean, high-standard environment, giving you absolute peace of mind."
+            zh="我們具備 FOODSAFE 一級認證，每一個小批量都在乾淨、高標準的環境中製作，讓您完全安心。"
+          />
+        </p>
+      </div>
+      <figure class="story-photo">
+        <img src="/images/story-boules.jpg" alt="Freshly baked sourdough boules cooling on a rack" loading="lazy" />
+      </figure>
+    </div>
+
+    <div class="why">
+      <h3 class="why-title">
+        <T en="Why Choose Our Artisanal Sourdough?" zh="為什麼選擇我們的手工酸種麵包？" />
+      </h3>
+      <ul class="why-grid">
+        {reasons.map((r) => (
+          <li class="why-card">
+            <span class="why-icon" aria-hidden="true">{r.icon}</span>
+            <h4><T en={r.title_en} zh={r.title_zh} /></h4>
+            <p><T en={r.body_en} zh={r.body_zh} /></p>
+          </li>
+        ))}
+      </ul>
+    </div>
+
+    <div class="baked-warm">
+      <h3><T en="Baked Warmly for You" zh="為您溫暖烘焙" /></h3>
+      <p>
+        <T
+          en="Every golden loaf is handcrafted with care, safety, and passion for you and your loved ones. We hope this fresh, simple, and historic goodness brings comfort and warmth to your table."
+          zh="每一個金黃的麵包，都是為您與您所愛的人，用心、安全且充滿熱情地手工製作。希望這份新鮮、簡單而富有歷史的美好，能為您的餐桌帶來溫暖與慰藉。"
+        />
+      </p>
+    </div>
+  </div>
+</section>
+
+<style>
+  .story-top {
+    display: grid;
+    grid-template-columns: 1.15fr 0.85fr;
+    gap: 3rem;
+    align-items: center;
+    margin-bottom: 4rem;
+  }
+  .story-copy p { color: var(--crust-soft); font-size: 1.03rem; }
+  .story-photo { margin: 0; }
+  .story-photo img {
+    width: 100%;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    aspect-ratio: 4 / 5;
+    object-fit: cover;
+  }
+
+  .why-title {
+    font-size: clamp(1.5rem, 3vw, 2rem);
+    margin-bottom: 1.8rem;
+    text-align: center;
+  }
+  .why-grid {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(192px, 1fr));
+    gap: 1.2rem;
+  }
+  .why-card {
+    background: var(--white);
+    border-radius: var(--radius);
+    padding: 1.6rem 1.4rem;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid rgba(58, 42, 30, 0.06);
+  }
+  .why-icon { font-size: 1.6rem; display: block; margin-bottom: 0.6rem; }
+  .why-card h4 {
+    font-family: var(--font-display);
+    font-size: 1.05rem;
+    color: var(--crust);
+    margin: 0 0 0.45rem;
+    line-height: 1.25;
+  }
+  .why-card p { margin: 0; font-size: 0.93rem; color: var(--muted); line-height: 1.6; }
+
+  .baked-warm {
+    max-width: 720px;
+    margin: 3.5rem auto 0;
+    text-align: center;
+  }
+  .baked-warm h3 { font-size: 1.6rem; margin-bottom: 0.7rem; }
+  .baked-warm p { color: var(--crust-soft); font-size: 1.05rem; margin: 0; }
+
+  @media (max-width: 860px) {
+    .story-top { grid-template-columns: 1fr; gap: 2rem; }
+    .story-photo img { aspect-ratio: 16 / 10; }
+  }
+</style>

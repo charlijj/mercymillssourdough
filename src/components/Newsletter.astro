@@ -10,12 +10,12 @@ const ORDER_API = import.meta.env.PUBLIC_ORDER_API || '';
 <section id="newsletter" class="bg-cream-deep">
   <div class="container newsletter-inner">
     <div class="newsletter-card">
-      <span class="eyebrow"><T en="Stay in the loop" zh="保持联系" /></span>
-      <h2><T en="Fresh bakes, in your inbox" zh="新鲜烘焙，直达您的邮箱" /></h2>
+      <span class="eyebrow"><T en="Stay in the loop" zh="保持聯繫" /></span>
+      <h2><T en="Fresh bakes, in your inbox" zh="新鮮烘焙，直達您的信箱" /></h2>
       <p>
         <T
           en="Join our newsletter for new menu items, seasonal specials, and the occasional baking tip. Sent monthly — never spammy, unsubscribe anytime."
-          zh="订阅我们的邮件，获取新品菜单、季节特惠和偶尔的烘焙小贴士。每月一封——绝不打扰，随时可取消订阅。"
+          zh="訂閱我們的電子報，獲取新品菜單、季節特惠與偶爾的烘焙小訣竅。每月一封——絕不打擾，隨時可取消訂閱。"
         />
       </p>
 
@@ -27,10 +27,10 @@ const ORDER_API = import.meta.env.PUBLIC_ORDER_API || '';
           required
           aria-label="Email address"
           data-ph-en="you@example.com"
-          data-ph-zh="您的邮箱地址"
+          data-ph-zh="您的電子郵件地址"
           placeholder="you@example.com"
         />
-        <button type="submit" class="btn btn-primary"><T en="Subscribe" zh="订阅" /></button>
+        <button type="submit" class="btn btn-primary"><T en="Subscribe" zh="訂閱" /></button>
       </form>
       <p id="newsletter-status" class="newsletter-status" role="status" aria-live="polite"></p>
     </div>
@@ -79,10 +79,10 @@ const ORDER_API = import.meta.env.PUBLIC_ORDER_API || '';
   const status = document.getElementById('newsletter-status');
   const api = (form && form.dataset.api ? form.dataset.api : '').replace(/\/$/, '');
   const msg = {
-    sending: { en: 'Subscribing…', zh: '正在订阅……' },
-    ok: { en: 'Thanks for subscribing! 🍞', zh: '订阅成功，谢谢！🍞' },
-    err: { en: 'Something went wrong. Please try again.', zh: '出了点问题，请重试。' },
-    noapi: { en: 'Signup is not available right now. Please try again later.', zh: '暂时无法订阅，请稍后再试。' },
+    sending: { en: 'Subscribing…', zh: '正在訂閱……' },
+    ok: { en: 'Thanks for subscribing! 🍞', zh: '訂閱成功，謝謝！🍞' },
+    err: { en: 'Something went wrong. Please try again.', zh: '發生問題，請再試一次。' },
+    noapi: { en: 'Signup is not available right now. Please try again later.', zh: '暫時無法訂閱，請稍後再試。' },
   };
   const lang = () => (document.documentElement.getAttribute('data-lang') === 'zh' ? 'zh' : 'en');
 

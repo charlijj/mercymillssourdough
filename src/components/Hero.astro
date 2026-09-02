@@ -6,22 +6,24 @@ import T from './T.astro';
   <div class="hero-bg" aria-hidden="true"></div>
   <div class="container hero-inner">
     <span class="eyebrow hero-eyebrow">
-      <T en="Naturally leavened · Small batch" zh="天然发酵 · 小批量手作" />
+      <T en="Welcome to Mercy Mills" zh="歡迎來到 Mercy Mills" />
     </span>
-    <h1><T en="Small-batch sourdough, baked with patience." zh="小批量酸种面包，慢工细作。" /></h1>
+    <h1>
+      <T en="Handcrafted with Care, From My Home to Yours" zh="用心手作，從我家到您家" />
+    </h1>
     <p class="hero-sub">
       <T
-        en="Hand-shaped loaves and bakes made the slow way — wild yeast, long ferments, and a golden crust worth the wait. Baked in small batches, fresh for local pickup."
-        zh="手工塑形，慢火烘焙——天然野生酵母，长时间发酵，金黄酥脆的外壳值得等待。小批量制作，新鲜出炉，本地自取。"
+        en="I bake small-batch sourdough using a historic 150-year-old San Francisco starter, fresh-milled ancient grains, and pure, simple ingredients. In my certified home kitchen, I shape every loaf with patience to create bread that is naturally kind to your stomach — no shortcut additives or oils, just honest, living food baked warm for your table."
+        zh="我以擁有 150 年歷史的舊金山酵種、現磨的古老穀物與純淨簡單的材料，小批量烘焙酸種麵包。在我通過認證的家庭廚房裡，我耐心地為每一個麵包塑形，做出天然溫和、不傷腸胃的麵包——沒有任何速成添加劑或油脂，只有誠實的、活的食物，溫暖地端上您的餐桌。"
       />
     </p>
     <div class="hero-actions">
-      <a href="#order" class="btn btn-primary"><T en="Place an Order" zh="立即订购" /></a>
-      <a href="#menu" class="btn btn-outline hero-outline"><T en="See the Menu" zh="查看菜单" /></a>
+      <a href="#order" class="btn btn-primary"><T en="Place an Order" zh="立即訂購" /></a>
+      <a href="#menu" class="btn btn-outline hero-outline"><T en="See the Menu" zh="查看菜單" /></a>
     </div>
     <p class="hero-badge">
       <span class="badge-check" aria-hidden="true">✓</span>
-      <T en="FOODSAFE Level 1 Certified · British Columbia" zh="FOODSAFE 一级认证 · 卑诗省（BC）" />
+      <T en="FOODSAFE Level 1 Certified · British Columbia" zh="FOODSAFE 一級認證 · 卑詩省（BC）" />
     </p>
   </div>
 </section>
@@ -29,7 +31,7 @@ import T from './T.astro';
 <style>
   .hero {
     position: relative;
-    min-height: 88vh;
+    min-height: 92vh;
     display: flex;
     align-items: center;
     color: var(--cream);
@@ -38,27 +40,25 @@ import T from './T.astro';
   .hero-bg {
     position: absolute;
     inset: 0;
-    background:
-      linear-gradient(180deg, rgba(30, 20, 12, 0.55) 0%, rgba(30, 20, 12, 0.65) 100%),
-      radial-gradient(120% 120% at 70% 20%, #7a5a34 0%, #4a3320 55%, #2a1c10 100%);
+    background-image:
+      linear-gradient(180deg, rgba(30, 20, 12, 0.62) 0%, rgba(30, 20, 12, 0.74) 100%),
+      url('/images/hero-bread.jpg');
     background-size: cover;
     background-position: center;
   }
-  /* When a real hero photo is added, set it on .hero-bg like:
-     background-image: linear-gradient(...same overlay...), url('/images/hero.jpg'); */
   .hero-inner {
     position: relative;
     z-index: 1;
-    max-width: 760px;
-    padding-top: 3rem;
-    padding-bottom: 3rem;
+    max-width: 780px;
+    padding-top: 3.5rem;
+    padding-bottom: 3.5rem;
   }
   .hero-eyebrow { color: var(--wheat); }
   .hero h1 { color: var(--cream); }
   .hero-sub {
-    font-size: 1.2rem;
-    color: rgba(250, 244, 234, 0.92);
-    max-width: 620px;
+    font-size: 1.1rem;
+    color: rgba(250, 244, 234, 0.93);
+    max-width: 660px;
     margin-bottom: 2rem;
   }
   .hero-actions { display: flex; gap: 1rem; flex-wrap: wrap; }
@@ -81,8 +81,7 @@ import T from './T.astro';
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 18px;
-    height: 18px;
+    width: 18px; height: 18px;
     border-radius: 50%;
     background: var(--sage);
     color: var(--white);
