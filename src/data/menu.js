@@ -289,7 +289,7 @@ export const menu = [
 
 // Business / contact details used across the site. Edit these in one place.
 export const site = {
-  name: 'Mercy Mills Sourdough',
+  name: 'Mercy Mill Sourdough',
   domain: 'mercymillsourdough.com',
   tagline: 'Handcrafted with Care, From My Home to Yours',
   location: 'Baked fresh — local pickup',

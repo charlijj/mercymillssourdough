@@ -1,4 +1,4 @@
-# Mercy Mills Sourdough — Owner's Guide
+# Mercy Mill Sourdough — Owner's Guide
 
 Everything you'll need day to day. Nothing here requires writing code — you're
 editing text in one or two files and running two commands.

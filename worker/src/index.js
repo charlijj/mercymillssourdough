@@ -1,5 +1,5 @@
 // ============================================================================
-//  Mercy Mills Sourdough — order backend (Cloudflare Worker)
+//  Mercy Mill Sourdough — order backend (Cloudflare Worker)
 //
 //  Routes:
 //    POST /api/order   → receive an order; email the customer + email mom with
@@ -50,7 +50,7 @@ export default {
         return await handleSubscribe(request, env, cors);
       }
       if (url.pathname === '/') {
-        return new Response('Mercy Mills Sourdough order service is running.', {
+        return new Response('Mercy Mill Sourdough order service is running.', {
           headers: { 'content-type': 'text/plain' },
         });
       }
@@ -264,7 +264,7 @@ async function sendEmail(env, { to, subject, html, replyTo }) {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      from: `${env.FROM_NAME || 'Mercy Mills Sourdough'} <${env.FROM_EMAIL}>`,
+      from: `${env.FROM_NAME || 'Mercy Mill Sourdough'} <${env.FROM_EMAIL}>`,
       to: [to],
       subject,
       html,

@@ -5,7 +5,7 @@ workers_dev = true
 
 # Non-secret config. Edit these to match your setup.
 [vars]
-FROM_NAME = "Mercy Mills Sourdough"
+FROM_NAME = "Mercy Mill Sourdough"
 FROM_EMAIL = "orders@mercymillsourdough.com"   # must be on your Resend-verified domain
 SITE_URL = "https://mercymillsourdough.com"
 ALLOW_ORIGIN = "https://mercymillsourdough.com"  # your live site origin (CORS)

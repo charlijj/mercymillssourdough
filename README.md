@@ -1,6 +1,6 @@
-# Mercy Mills Sourdough
+# Mercy Mill Sourdough
 
-The public website for **Mercy Mills Sourdough** — a small-batch home bakery in
+The public website for **Mercy Mill Sourdough** — a small-batch home bakery in
 British Columbia. One scrolling page where customers read the story, browse the
 menu, view ingredients, place an order for local pickup, and subscribe to the
 newsletter. Fully bilingual (English / 中文).
@@ -11,20 +11,24 @@ Live domain: **https://mercymillsourdough.com**
 
 ## ⚠️ Name & domain spelling (read this first)
 
-Three names are involved and they are spelled differently on purpose — do not
-"correct" one to match another:
+The brand is **Mercy Mill Sourdough** — "Mill", singular. This matches Sarah's
+logo artwork and the registered domain. Do not "correct" it to "Mills".
 
 | Thing | Value | Notes |
 |-------|-------|-------|
-| Business name | **Mercy Mills Sourdough** | As used throughout the site. See the note below. |
-| Registered domain | **mercymillsourdough.com** | Note the **single "s"** joining `mill` + `sourdough`. |
-| GitHub repo | **mercymillssourdough** | Repo name has a **double "s"**. Does not affect the live site. |
+| Business name | **Mercy Mill Sourdough** | Singular "Mill". Matches the logo and the domain. |
+| Registered domain | **mercymillsourdough.com** | `mercymill` + `sourdough`. |
+| GitHub repo | **mercymillssourdough** | Legacy double "s". Does not affect the live site. |
 
-> **Open question:** Sarah's logo artwork reads **"Mercy Mill Sourdough"**
-> (singular "Mill"), which matches the domain. The site currently says
-> "Mercy Mills Sourdough" (plural). If the logo is authoritative, update
-> `site.name` in `src/data/menu.js` and the brand string in
-> `worker/src/templates.js`.
+Some **infrastructure identifiers** still contain the old `mercy-mills-` spelling
+and **must not be renamed** — doing so would break deployment:
+
+- `.firebaserc` → Firebase project `mercy-mills-sourdough`
+- `worker/wrangler.toml` → Worker `mercy-mills-orders`, which owns the live API
+  URL that `PUBLIC_ORDER_API` points at
+
+One customer review in `src/components/Reviews.astro` quotes the old spelling.
+It is left verbatim because testimonials are quoted as written.
 
 ---
 

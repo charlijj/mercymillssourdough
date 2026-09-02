@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "description": "Cloudflare Worker: order intake + accept/decline emails for Mercy Mills Sourdough",
+  "description": "Cloudflare Worker: order intake + accept/decline emails for Mercy Mill Sourdough",
   "scripts": {
     "dev": "wrangler dev",
     "deploy": "wrangler deploy"

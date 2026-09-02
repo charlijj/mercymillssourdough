@@ -1,5 +1,5 @@
 // ============================================================================
-//  Email templates — styled to match the Mercy Mills Sourdough website.
+//  Email templates — styled to match the Mercy Mill Sourdough website.
 //  Email HTML must be table-based with inline styles for broad client support.
 // ============================================================================
 
@@ -31,14 +31,14 @@ function wrap(preheader, bodyHtml, siteUrl) {
 <tr><td align="center">
 <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="width:600px;max-width:92%;">
   <tr><td style="background:${C.crust};border-radius:14px 14px 0 0;padding:22px 28px;">
-    <span style="font-family:Georgia,'Times New Roman',serif;font-size:20px;font-weight:bold;color:${C.wheat};">Mercy Mills Sourdough</span>
+    <span style="font-family:Georgia,'Times New Roman',serif;font-size:20px;font-weight:bold;color:${C.wheat};">Mercy Mill Sourdough</span>
   </td></tr>
   <tr><td style="background:#ffffff;padding:32px 28px;">
     ${bodyHtml}
   </td></tr>
   <tr><td style="background:${C.crust};border-radius:0 0 14px 14px;padding:18px 28px;">
     <span style="font-size:12px;color:rgba(250,244,234,0.6);">
-      Mercy Mills Sourdough &middot; <a href="${siteUrl}" style="color:${C.wheat};text-decoration:none;">mercymillsourdough.com</a><br>
+      Mercy Mill Sourdough &middot; <a href="${siteUrl}" style="color:${C.wheat};text-decoration:none;">mercymillsourdough.com</a><br>
       FOODSAFE Level 1 Certified &middot; British Columbia
     </span>
   </td></tr>
@@ -128,7 +128,7 @@ export function customerReceived(order, siteUrl) {
     ${para(`This is <strong>pickup only</strong>. We'll reply with your total and <strong>e-transfer</strong> details — your order is confirmed once your e-transfer has been received.`)}
     ${para(`Order reference: <span style="color:${C.muted};">${esc(order.id)}</span>`)}
   `;
-  return { subject: `We got your order — Mercy Mills Sourdough`, html: wrap('We received your order and will confirm shortly.', body, siteUrl) };
+  return { subject: `We got your order — Mercy Mill Sourdough`, html: wrap('We received your order and will confirm shortly.', body, siteUrl) };
 }
 
 // ---- Owner (mom): new order with Accept / Decline ------------------------
@@ -163,7 +163,7 @@ export function customerConfirmed(order, siteUrl, message) {
     ${para(`<strong>Payment received — thank you!</strong> We'll follow up with the pickup address and time. See you soon!`)}
     ${para(`Order reference: <span style="color:${C.muted};">${esc(order.id)}</span>`)}
   `;
-  return { subject: `Your order is confirmed — Mercy Mills Sourdough`, html: wrap('Your order is confirmed.', body, siteUrl) };
+  return { subject: `Your order is confirmed — Mercy Mill Sourdough`, html: wrap('Your order is confirmed.', body, siteUrl) };
 }
 
 // ---- Customer: declined --------------------------------------------------
@@ -176,17 +176,17 @@ export function customerDeclined(order, siteUrl, message) {
     ${para(`This can happen when we're fully booked or an item has sold out. Please feel free to reach out or try again for another date — we'd love to bake for you.`)}
     ${para(`Order reference: <span style="color:${C.muted};">${esc(order.id)}</span>`)}
   `;
-  return { subject: `Update on your order — Mercy Mills Sourdough`, html: wrap('An update on your recent order.', body, siteUrl) };
+  return { subject: `Update on your order — Mercy Mill Sourdough`, html: wrap('An update on your recent order.', body, siteUrl) };
 }
 
 // ---- Subscriber: welcome -------------------------------------------------
 export function subscriberWelcome(email, siteUrl) {
   const body = `
     ${heading("You're on the list 🍞")}
-    ${para(`Thanks for subscribing to Mercy Mills Sourdough! About once a month we'll share new menu items, seasonal specials, and the occasional baking tip.`)}
+    ${para(`Thanks for subscribing to Mercy Mill Sourdough! About once a month we'll share new menu items, seasonal specials, and the occasional baking tip.`)}
     ${para(`Hungry now? <a href="${siteUrl}/#order" style="color:${C.amberDeep};font-weight:bold;text-decoration:none;">Place an order &rarr;</a>`)}
   `;
-  return { subject: 'Welcome to Mercy Mills Sourdough', html: wrap('Thanks for subscribing!', body, siteUrl) };
+  return { subject: 'Welcome to Mercy Mill Sourdough', html: wrap('Thanks for subscribing!', body, siteUrl) };
 }
 
 // ---- Owner: new subscriber ----------------------------------------------
