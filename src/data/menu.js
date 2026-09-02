@@ -9,6 +9,13 @@
 //    description(_zh)  one or two sentences shown on the card
 //    image          file in /public/images
 //    tags           optional labels, English (translated in Menu.astro)
+//    details        shown in the "details" popup when a product is clicked.
+//                   Fill these in as the information becomes available; any
+//                   field left as '' simply shows a "coming soon" note.
+//                     ingredients / ingredients_zh  e.g. 'Unbleached flour, water, salt, starter'
+//                     allergens   / allergens_zh    e.g. 'Contains wheat and gluten'
+//                     netWeight                     e.g. '800 g'
+//                     about       / about_zh        a longer description
 //
 //  Optional:
 //    sizes    [{ id, label, label_zh, price }]
@@ -45,6 +52,7 @@ export const menu = [
       '我們的招牌歐包——僅用四種材料：無漂白麵粉、水、鹽，以及我們擁有 150 年歷史的舊金山酵種。',
     image: '/images/placeholder-loaf.svg',
     tags: ['Bestseller'],
+    details: { ingredients: '', ingredients_zh: '', allergens: '', allergens_zh: '', netWeight: '', about: '', about_zh: '' },
     options: [shapeOption],
   },
   {
@@ -56,8 +64,9 @@ export const menu = [
     unit_zh: '個',
     description: 'Sweet-tart cranberries and plenty of walnuts folded through a soft, open crumb.',
     description_zh: '酸甜蔓越莓與滿滿核桃，揉入柔軟通透的麵包心。',
-    image: '/images/placeholder-loaf.svg',
+    image: '/images/cranberry-walnut.jpg',
     tags: [],
+    details: { ingredients: '', ingredients_zh: '', allergens: '', allergens_zh: '', netWeight: '', about: '', about_zh: '' },
     options: [shapeOption],
   },
   {
@@ -69,8 +78,9 @@ export const menu = [
     unit_zh: '個',
     description: 'Savoury sun-dried tomatoes and olives throughout — wonderful with soup or cheese.',
     description_zh: '香濃油漬蕃茄與橄欖遍佈其中——搭配濃湯或起司特別美味。',
-    image: '/images/placeholder-loaf.svg',
+    image: '/images/tomato-olive.jpg',
     tags: [],
+    details: { ingredients: '', ingredients_zh: '', allergens: '', allergens_zh: '', netWeight: '', about: '', about_zh: '' },
     options: [shapeOption],
   },
   {
@@ -84,6 +94,7 @@ export const menu = [
     description_zh: '墨西哥辣椒帶來微辣風味，配上融化的切達起司與金黃起司外皮。',
     image: '/images/placeholder-loaf.svg',
     tags: [],
+    details: { ingredients: '', ingredients_zh: '', allergens: '', allergens_zh: '', netWeight: '', about: '', about_zh: '' },
     options: [shapeOption],
   },
   {
@@ -97,6 +108,7 @@ export const menu = [
     description_zh: '新鮮迷迭香與濃郁切達起司——香氣十足，鹹香誘人，令人停不下來。',
     image: '/images/placeholder-loaf.svg',
     tags: [],
+    details: { ingredients: '', ingredients_zh: '', allergens: '', allergens_zh: '', netWeight: '', about: '', about_zh: '' },
     options: [shapeOption],
   },
   {
@@ -110,6 +122,7 @@ export const menu = [
     description_zh: '外層裹滿芝麻與多種穀物種子，帶來堅果香氣與紮實口感。',
     image: '/images/placeholder-loaf.svg',
     tags: [],
+    details: { ingredients: '', ingredients_zh: '', allergens: '', allergens_zh: '', netWeight: '', about: '', about_zh: '' },
     options: [shapeOption],
   },
   {
@@ -124,6 +137,7 @@ export const menu = [
     description_zh: '採用自家廚房現磨的全麥麵粉，保留完整全穀營養與麥香。',
     image: '/images/placeholder-loaf.svg',
     tags: [],
+    details: { ingredients: '', ingredients_zh: '', allergens: '', allergens_zh: '', netWeight: '', about: '', about_zh: '' },
     options: [shapeOption],
   },
   {
@@ -137,6 +151,7 @@ export const menu = [
     description_zh: '鬆軟的橄欖油佛卡夏，表面凹凸金黃。以 8 吋方盤烘烤。',
     image: '/images/placeholder-loaf.svg',
     tags: [],
+    details: { ingredients: '', ingredients_zh: '', allergens: '', allergens_zh: '', netWeight: '', about: '', about_zh: '' },
   },
   {
     id: 'english-muffins',
@@ -149,6 +164,7 @@ export const menu = [
     description_zh: '以現磨全麥製作的英式馬芬。剖開烤香、抹上奶油最美味。6 個一組。',
     image: '/images/placeholder-loaf.svg',
     tags: [],
+    details: { ingredients: '', ingredients_zh: '', allergens: '', allergens_zh: '', netWeight: '', about: '', about_zh: '' },
   },
   {
     id: 'bagels',
@@ -160,6 +176,7 @@ export const menu = [
     description_zh: '有嚼勁的酸種貝果，先煮後烤。可選原味、芝麻或全料。',
     image: '/images/placeholder-loaf.svg',
     tags: [],
+    details: { ingredients: '', ingredients_zh: '', allergens: '', allergens_zh: '', netWeight: '', about: '', about_zh: '' },
     sizes: [
       { id: '6', label: '6 bagels', label_zh: '6 個', price: 15 },
       { id: '12', label: '12 bagels', label_zh: '12 個', price: 28 },
@@ -188,6 +205,7 @@ export const menu = [
     description_zh: '貝果內夾火腿與切達起司，份量十足。6 個一組。',
     image: '/images/placeholder-loaf.svg',
     tags: ['Bestseller'],
+    details: { ingredients: '', ingredients_zh: '', allergens: '', allergens_zh: '', netWeight: '', about: '', about_zh: '' },
   },
   {
     id: 'pizza-dough',
@@ -200,6 +218,7 @@ export const menu = [
     description_zh: '可直接使用的酸種披薩麵團，分份冷凍。每包 3 份。',
     image: '/images/placeholder-loaf.svg',
     tags: [],
+    details: { ingredients: '', ingredients_zh: '', allergens: '', allergens_zh: '', netWeight: '', about: '', about_zh: '' },
   },
   {
     id: 'bread-bowls',
@@ -212,6 +231,7 @@ export const menu = [
     description_zh: '專為濃湯設計的圓形酸種麵包碗。每份 3 個。',
     image: '/images/placeholder-loaf.svg',
     tags: [],
+    details: { ingredients: '', ingredients_zh: '', allergens: '', allergens_zh: '', netWeight: '', about: '', about_zh: '' },
   },
   {
     id: 'chocolate-cookies',
@@ -224,6 +244,7 @@ export const menu = [
     description_zh: '有嚼勁的酸種巧克力豆餅乾，一打裝。',
     image: '/images/placeholder-loaf.svg',
     tags: ['Sweet'],
+    details: { ingredients: '', ingredients_zh: '', allergens: '', allergens_zh: '', netWeight: '', about: '', about_zh: '' },
   },
 ];
 

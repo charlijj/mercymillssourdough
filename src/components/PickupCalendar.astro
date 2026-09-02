@@ -1,0 +1,229 @@
+---
+import { pickup } from '../data/pickup.js';
+import T from './T.astro';
+
+// Config is handed to the client as JSON; edit src/data/pickup.js to change it.
+const config = JSON.stringify(pickup);
+---
+
+<div class="cal-field">
+  <span class="cal-label"><T en="Preferred pickup date *" zh="希望取貨日期 *" /></span>
+
+  <div id="pickup-cal" class="cal" data-config={config}>
+    <div class="cal-head">
+      <button type="button" class="cal-nav" data-nav="-1" aria-label="Previous month">‹</button>
+      <span class="cal-title" aria-live="polite"></span>
+      <button type="button" class="cal-nav" data-nav="1" aria-label="Next month">›</button>
+    </div>
+    <div class="cal-dow" aria-hidden="true"></div>
+    <div class="cal-grid" role="grid"></div>
+  </div>
+
+  <input type="hidden" name="preferred_date" id="pickup-date" />
+
+  <p class="cal-selected" id="cal-selected"></p>
+  <small class="cal-hint">
+    <T
+      en="Pickup is available Tuesdays, Wednesdays and Thursdays. Orders must be placed at least 3 days in advance."
+      zh="取貨日為每週二、三、四。訂單須至少提前 3 天下單。"
+    />
+  </small>
+</div>
+
+<style>
+  .cal-field { display: flex; flex-direction: column; gap: 0.45rem; }
+  .cal-label { font-weight: 500; font-size: 0.92rem; color: var(--crust-soft); }
+  .cal {
+    background: var(--white);
+    border: 1.5px solid rgba(58, 42, 30, 0.15);
+    border-radius: 12px;
+    padding: 0.9rem;
+    max-width: 360px;
+  }
+  .cal-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.7rem;
+  }
+  .cal-title { font-weight: 600; color: var(--crust); font-size: 1rem; }
+  .cal-nav {
+    width: 32px; height: 32px;
+    border: none;
+    border-radius: 50%;
+    background: var(--cream);
+    color: var(--crust);
+    font-size: 1.1rem;
+    line-height: 1;
+    cursor: pointer;
+  }
+  .cal-nav:hover:not(:disabled) { background: var(--amber); color: var(--white); }
+  .cal-nav:disabled { opacity: 0.3; cursor: not-allowed; }
+
+  .cal-dow, .cal-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 3px;
+  }
+  .cal-dow {
+    margin-bottom: 4px;
+    font-size: 0.72rem;
+    color: var(--muted);
+    text-align: center;
+    font-weight: 600;
+  }
+
+  .cal-selected { margin: 0; font-size: 0.9rem; font-weight: 600; color: var(--sage-deep); min-height: 1.2em; }
+  .cal-hint { color: var(--muted); font-size: 0.8rem; }
+</style>
+
+<!--
+  The day cells are built in JavaScript, so they never receive Astro's scoping
+  attribute and scoped rules would not reach them. These rules are global but
+  namespaced under #pickup-cal so nothing leaks to the rest of the page.
+-->
+<style is:global>
+  #pickup-cal .cal-day {
+    aspect-ratio: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    border-radius: 8px;
+    background: var(--cream);
+    color: var(--ink);
+    font-family: var(--font-body);
+    font-size: 0.9rem;
+    cursor: pointer;
+    padding: 0;
+  }
+  #pickup-cal .cal-day:hover:not(:disabled) { background: var(--wheat); }
+  /* Greyed-out: unavailable weekday, too soon, past, or a blackout date */
+  #pickup-cal .cal-day:disabled {
+    background: transparent;
+    color: rgba(58, 42, 30, 0.28);
+    cursor: not-allowed;
+  }
+  /* :hover is listed with it so the selected day stays amber under the cursor */
+  #pickup-cal .cal-day.is-selected,
+  #pickup-cal .cal-day.is-selected:hover {
+    background: var(--amber);
+    color: var(--white);
+    font-weight: 700;
+  }
+  #pickup-cal .cal-day.is-empty { background: transparent; cursor: default; }
+</style>
+
+<script>
+  const root = document.getElementById('pickup-cal');
+  const hidden = document.getElementById('pickup-date');
+  const selectedOut = document.getElementById('cal-selected');
+
+  if (root && hidden) {
+    const cfg = JSON.parse(root.dataset.config);
+    const grid = root.querySelector('.cal-grid');
+    const dowRow = root.querySelector('.cal-dow');
+    const title = root.querySelector('.cal-title');
+
+    const lang = () => (document.documentElement.getAttribute('data-lang') === 'zh' ? 'zh' : 'en');
+    const locale = () => (lang() === 'zh' ? 'zh-TW' : 'en-CA');
+
+    // Local-date ISO (avoids the UTC off-by-one that toISOString causes).
+    const iso = (d) =>
+      `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const minDate = new Date(today);
+    minDate.setDate(minDate.getDate() + (cfg.minLeadDays || 0));
+
+    const maxDate = new Date(today);
+    maxDate.setMonth(maxDate.getMonth() + (cfg.monthsAhead || 3));
+
+    let view = new Date(minDate.getFullYear(), minDate.getMonth(), 1);
+    let selected = null;
+
+    function isSelectable(d) {
+      if (d < minDate || d > maxDate) return false;
+      if (!cfg.availableWeekdays.includes(d.getDay())) return false;
+      if ((cfg.blackoutDates || []).includes(iso(d))) return false;
+      return true;
+    }
+
+    function render() {
+      const loc = locale();
+      title.textContent = new Intl.DateTimeFormat(loc, { month: 'long', year: 'numeric' }).format(view);
+
+      // Weekday headers, starting Sunday.
+      const dowFmt = new Intl.DateTimeFormat(loc, { weekday: 'short' });
+      dowRow.innerHTML = '';
+      for (let i = 0; i < 7; i++) {
+        const d = new Date(2024, 8, 1 + i); // 2024-09-01 was a Sunday
+        const el = document.createElement('span');
+        el.textContent = dowFmt.format(d);
+        dowRow.appendChild(el);
+      }
+
+      grid.innerHTML = '';
+      const first = new Date(view.getFullYear(), view.getMonth(), 1);
+      const daysInMonth = new Date(view.getFullYear(), view.getMonth() + 1, 0).getDate();
+
+      for (let i = 0; i < first.getDay(); i++) {
+        const sp = document.createElement('span');
+        sp.className = 'cal-day is-empty';
+        grid.appendChild(sp);
+      }
+
+      for (let day = 1; day <= daysInMonth; day++) {
+        const d = new Date(view.getFullYear(), view.getMonth(), day);
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'cal-day';
+        btn.textContent = String(day);
+        const ok = isSelectable(d);
+        btn.disabled = !ok;
+        if (ok) {
+          btn.setAttribute('aria-label', new Intl.DateTimeFormat(loc, { dateStyle: 'full' }).format(d));
+          btn.addEventListener('click', () => select(d));
+        }
+        if (selected && iso(selected) === iso(d)) btn.classList.add('is-selected');
+        grid.appendChild(btn);
+      }
+
+      // Disable navigation outside the bookable range.
+      const prev = root.querySelector('[data-nav="-1"]');
+      const next = root.querySelector('[data-nav="1"]');
+      prev.disabled = view <= new Date(minDate.getFullYear(), minDate.getMonth(), 1);
+      next.disabled = view >= new Date(maxDate.getFullYear(), maxDate.getMonth(), 1);
+
+      if (selected) {
+        const label = new Intl.DateTimeFormat(loc, { dateStyle: 'full' }).format(selected);
+        selectedOut.textContent = (lang() === 'zh' ? '已選擇：' : 'Selected: ') + label;
+      } else {
+        selectedOut.textContent = '';
+      }
+    }
+
+    function select(d) {
+      selected = d;
+      hidden.value = iso(d);
+      render();
+    }
+
+    root.querySelectorAll('[data-nav]').forEach((b) =>
+      b.addEventListener('click', () => {
+        view = new Date(view.getFullYear(), view.getMonth() + Number(b.dataset.nav), 1);
+        render();
+      })
+    );
+
+    // Re-render when the site language toggles.
+    new MutationObserver(render).observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['data-lang'],
+    });
+
+    render();
+  }
+</script>

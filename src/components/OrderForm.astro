@@ -1,6 +1,7 @@
 ---
 import { menu } from '../data/menu.js';
 import T from './T.astro';
+import PickupCalendar from './PickupCalendar.astro';
 
 const quantities = [0, 1, 2, 3, 4, 5];
 const fmt = (n) => (Number.isInteger(n) ? `$${n}` : `$${n.toFixed(2)}`);
@@ -96,17 +97,14 @@ const fmt = (n) => (Number.isInteger(n) ? `$${n}` : `$${n.toFixed(2)}`);
           <span><T en="Email *" zh="電子郵件 *" /></span>
           <input type="email" name="email" required autocomplete="email" />
         </label>
+      </div>
+
+      <div class="grid-2 grid-start">
         <label class="field">
           <span><T en="Phone" zh="電話" /></span>
           <input type="tel" name="phone" autocomplete="tel" />
         </label>
-        <label class="field">
-          <span><T en="Preferred pickup date" zh="希望取貨日期" /></span>
-          <input type="date" name="preferred_date" id="pickup-date" />
-          <small class="field-hint">
-            <T en="Orders must be placed at least 3 days in advance." zh="訂單須至少提前 3 天下單。" />
-          </small>
-        </label>
+        <PickupCalendar />
       </div>
 
       <label class="field">
@@ -233,6 +231,7 @@ const fmt = (n) => (Number.isInteger(n) ? `$${n}` : `$${n.toFixed(2)}`);
     gap: 1rem;
     margin: 1.6rem 0;
   }
+  .grid-start { align-items: start; }
   .field { display: flex; flex-direction: column; gap: 0.35rem; }
   .field > span { font-weight: 500; font-size: 0.92rem; color: var(--crust-soft); }
   .field-hint { color: var(--muted); font-size: 0.8rem; }
@@ -284,7 +283,7 @@ const fmt = (n) => (Number.isInteger(n) ? `$${n}` : `$${n.toFixed(2)}`);
 
   const msg = {
     none: { en: 'Please choose a quantity for at least one item.', zh: '請至少為一項商品選擇數量。' },
-    date: { en: 'Please choose a pickup date at least 3 days away.', zh: '請選擇至少 3 天後的取貨日期。' },
+    date: { en: 'Please choose a pickup date from the calendar.', zh: '請從日曆中選擇取貨日期。' },
     noapi: { en: 'Ordering is not available right now. Please email us and we’ll help.', zh: '目前無法下單，請寄電子郵件給我們，我們會協助您。' },
     sending: { en: 'Sending your order…', zh: '正在送出您的訂單……' },
     ok: {
@@ -298,12 +297,6 @@ const fmt = (n) => (Number.isInteger(n) ? `$${n}` : `$${n.toFixed(2)}`);
   };
   const lang = () => (document.documentElement.getAttribute('data-lang') === 'zh' ? 'zh' : 'en');
   const fmt = (n) => (Number.isInteger(n) ? `$${n}` : `$${n.toFixed(2)}`);
-
-  // Earliest allowed pickup date = today + 3 days.
-  const minDate = new Date();
-  minDate.setDate(minDate.getDate() + 3);
-  const minIso = minDate.toISOString().split('T')[0];
-  if (dateInput) dateInput.min = minIso;
 
   const rows = form ? Array.from(form.querySelectorAll('.item-row')) : [];
 
@@ -387,7 +380,7 @@ const fmt = (n) => (Number.isInteger(n) ? `$${n}` : `$${n.toFixed(2)}`);
         status.className = 'order-status err';
         return;
       }
-      if (dateInput && dateInput.value && dateInput.value < minIso) {
+      if (dateInput && !dateInput.value) {
         status.textContent = msg.date[lang()];
         status.className = 'order-status err';
         return;

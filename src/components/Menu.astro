@@ -43,17 +43,26 @@ const tagZh = { Bestseller: '熱銷', Seasonal: '季節限定', Sweet: '甜點' 
           class="card"
           data-search={`${item.name} ${item.name_zh} ${item.description} ${item.description_zh}`.toLowerCase()}
         >
-          <div class="card-media">
+          <button
+            type="button"
+            class="card-media"
+            data-detail-for={item.id}
+            aria-label={`View details for ${item.name}`}
+          >
             <img src={item.image} alt={item.name} loading="lazy" />
             {item.tags && item.tags.length > 0 && (
               <span class="card-tag">
                 <T en={item.tags[0]} zh={tagZh[item.tags[0]] || item.tags[0]} />
               </span>
             )}
-          </div>
+          </button>
           <div class="card-body">
             <div class="card-title-row">
-              <h3><T en={item.name} zh={item.name_zh} /></h3>
+              <h3>
+                <button type="button" class="title-button" data-detail-for={item.id}>
+                  <T en={item.name} zh={item.name_zh} />
+                </button>
+              </h3>
               <span class="card-price">
                 {item.sizes ? (
                   item.sizes.map((s, i) => (
@@ -79,6 +88,9 @@ const tagZh = { Bestseller: '熱銷', Seasonal: '季節限定', Sweet: '甜點' 
                 ))}
               </p>
             ))}
+            <button type="button" class="card-details-link" data-detail-for={item.id}>
+              <T en="Ingredients & details →" zh="成分與詳細資訊 →" />
+            </button>
           </div>
         </article>
       ))}
@@ -86,6 +98,60 @@ const tagZh = { Bestseller: '熱銷', Seasonal: '季節限定', Sweet: '甜點' 
 
     <div class="text-center menu-cta">
       <a href="#order" class="btn btn-primary"><T en="Order Now" zh="立即下單" /></a>
+    </div>
+  </div>
+
+  <!-- Product detail popup. One panel per product; JS shows the matching one. -->
+  <div id="product-modal" class="modal" aria-hidden="true">
+    <div class="modal-backdrop" data-close></div>
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="modal-heading">
+      <button type="button" class="modal-close" data-close aria-label="Close">×</button>
+      <h3 id="modal-heading" class="visually-hidden">Product details</h3>
+      {menu.map((item) => (
+        <div class="modal-panel" data-panel={item.id} hidden>
+          <img class="modal-img" src={item.image} alt={item.name} />
+          <h4 class="modal-title"><T en={item.name} zh={item.name_zh} /></h4>
+          <p class="modal-price">
+            {item.sizes
+              ? item.sizes.map((s, i) => <>{i > 0 && ' · '}{fmt(s.price)}<small>/{s.id}</small></>)
+              : <>{fmt(item.price)}<small>/<T en={item.unit} zh={item.unit_zh} /></small></>}
+          </p>
+
+          <p class="modal-about">
+            <T
+              en={item.details?.about || item.description}
+              zh={item.details?.about_zh || item.description_zh}
+            />
+          </p>
+
+          <dl class="modal-facts">
+            <dt><T en="Ingredients" zh="成分" /></dt>
+            <dd>
+              {item.details?.ingredients
+                ? <T en={item.details.ingredients} zh={item.details.ingredients_zh || item.details.ingredients} />
+                : <span class="soon"><T en="Full ingredient list coming soon." zh="完整成分表即將公佈。" /></span>}
+            </dd>
+
+            <dt><T en="Allergens" zh="過敏原" /></dt>
+            <dd>
+              {item.details?.allergens
+                ? <T en={item.details.allergens} zh={item.details.allergens_zh || item.details.allergens} />
+                : <span class="soon"><T en="Allergen details coming soon — please note any allergies in your order." zh="過敏原資訊即將公佈——請在訂單中註明任何過敏情況。" /></span>}
+            </dd>
+
+            {item.details?.netWeight && (
+              <>
+                <dt><T en="Net weight" zh="淨重" /></dt>
+                <dd>{item.details.netWeight}</dd>
+              </>
+            )}
+          </dl>
+
+          <a href="#order" class="btn btn-primary modal-order" data-close>
+            <T en="Order this" zh="訂購此商品" />
+          </a>
+        </div>
+      ))}
     </div>
   </div>
 </section>
@@ -171,12 +237,126 @@ const tagZh = { Bestseller: '熱銷', Seasonal: '季節限定', Sweet: '甜點' 
     align-self: flex-start;
   }
   .menu-cta { margin-top: 3rem; }
+
+  /* Clickable card areas */
+  button.card-media {
+    border: none;
+    padding: 0;
+    display: block;
+    width: 100%;
+    cursor: pointer;
+    font: inherit;
+  }
+  .title-button {
+    background: none;
+    border: none;
+    padding: 0;
+    font: inherit;
+    color: inherit;
+    text-align: left;
+    cursor: pointer;
+  }
+  .title-button:hover { color: var(--amber-deep); }
+  .card-details-link {
+    margin-top: 0.9rem;
+    background: none;
+    border: none;
+    padding: 0;
+    align-self: flex-start;
+    font-family: var(--font-body);
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: var(--amber-deep);
+    cursor: pointer;
+  }
+  .card-details-link:hover { text-decoration: underline; }
+
+  /* Product detail popup */
+  .visually-hidden {
+    position: absolute; width: 1px; height: 1px;
+    overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap;
+  }
+  .modal { display: none; position: fixed; inset: 0; z-index: 100; }
+  .modal.is-open { display: flex; align-items: center; justify-content: center; padding: 1.2rem; }
+  .modal-backdrop { position: absolute; inset: 0; background: rgba(30, 20, 12, 0.6); }
+  .modal-card {
+    position: relative;
+    background: var(--white);
+    border-radius: var(--radius);
+    max-width: 520px;
+    width: 100%;
+    max-height: 88vh;
+    overflow-y: auto;
+    padding: 1.6rem;
+    box-shadow: var(--shadow);
+  }
+  .modal-close {
+    position: absolute; top: 0.7rem; right: 0.9rem;
+    background: none; border: none;
+    font-size: 1.9rem; line-height: 1;
+    color: var(--muted); cursor: pointer;
+  }
+  .modal-close:hover { color: var(--crust); }
+  .modal-panel[hidden] { display: none; }
+  .modal-img {
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    object-fit: cover;
+    border-radius: 10px;
+    background: var(--cream-deep);
+    margin-bottom: 1rem;
+  }
+  .modal-title { font-family: var(--font-display); font-size: 1.4rem; color: var(--crust); margin: 0 0 0.3rem; }
+  .modal-price { font-family: var(--font-display); font-weight: 700; color: var(--amber-deep); margin: 0 0 0.9rem; }
+  .modal-price small { font-size: 0.72rem; color: var(--muted); font-weight: 500; }
+  .modal-about { color: var(--crust-soft); margin: 0 0 1.1rem; }
+  .modal-facts { margin: 0 0 1.3rem; }
+  .modal-facts dt {
+    font-size: 0.75rem; letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--amber-deep); font-weight: 700; margin-top: 0.8rem;
+  }
+  .modal-facts dd { margin: 0.2rem 0 0; color: var(--crust-soft); font-size: 0.95rem; }
+  .modal-facts .soon { color: var(--muted); font-style: italic; }
+  .modal-order { width: 100%; text-align: center; }
 </style>
 
 <script>
   const search = document.getElementById('menu-search');
   const cards = Array.from(document.querySelectorAll('#menu .card'));
   const noResults = document.getElementById('menu-no-results');
+
+  // ---- Product detail popup -------------------------------------------
+  const modal = document.getElementById('product-modal');
+  if (modal) {
+    const panels = Array.from(modal.querySelectorAll('.modal-panel'));
+    let lastFocused = null;
+
+    function openDetail(id) {
+      panels.forEach((p) => (p.hidden = p.dataset.panel !== id));
+      modal.classList.add('is-open');
+      modal.setAttribute('aria-hidden', 'false');
+      document.body.style.overflow = 'hidden';
+      const close = modal.querySelector('.modal-close');
+      if (close) close.focus();
+    }
+    function closeDetail() {
+      modal.classList.remove('is-open');
+      modal.setAttribute('aria-hidden', 'true');
+      document.body.style.overflow = '';
+      if (lastFocused) lastFocused.focus();
+    }
+
+    document.querySelectorAll('[data-detail-for]').forEach((btn) =>
+      btn.addEventListener('click', () => {
+        lastFocused = btn;
+        openDetail(btn.dataset.detailFor);
+      })
+    );
+    modal.querySelectorAll('[data-close]').forEach((el) => el.addEventListener('click', closeDetail));
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && modal.classList.contains('is-open')) closeDetail();
+    });
+  }
 
   if (search) {
     search.addEventListener('input', () => {
