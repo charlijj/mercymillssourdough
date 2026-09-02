@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" role="img" aria-label="Mercy Mills Sourdough">
+  <!-- Neutral, on-brand placeholder for products that don't have a photo yet.
+       Deliberately carries no instructional text, since customers see it. -->
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#f7efe0"/>
+      <stop offset="1" stop-color="#eeddc2"/>
+    </linearGradient>
+  </defs>
+  <rect width="800" height="600" fill="url(#bg)"/>
+  <g transform="translate(400 300)" opacity="0.42">
+    <!-- wheat sheaf -->
+    <g stroke="#a86a1c" stroke-width="7" stroke-linecap="round" fill="none">
+      <path d="M0 -95 V 78"/>
+      <path d="M0 -60 L -34 -86 M0 -60 L 34 -86"/>
+      <path d="M0 -22 L -34 -48 M0 -22 L 34 -48"/>
+      <path d="M0 16 L -34 -10 M0 16 L 34 -10"/>
+    </g>
+    <ellipse cx="0" cy="96" rx="104" ry="34" fill="#c8862d"/>
+    <path d="M-72 88 Q 0 62 72 88" stroke="#8a5a1e" stroke-width="6" fill="none" opacity="0.55" stroke-linecap="round"/>
+  </g>
+</svg>
