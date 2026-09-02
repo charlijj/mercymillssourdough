@@ -1,9 +1,9 @@
 # Mercy Mills Sourdough
 
-The public website for **Mercy Mills Sourdough** — a small-batch sourdough
-business. It's a single-page, modern "farmers-market" style site where customers
-can read about the bakery, browse the menu and prices, view a photo catalog,
-place an order, and subscribe to a newsletter.
+The public website for **Mercy Mills Sourdough** — a small-batch home bakery in
+British Columbia. One scrolling page where customers read the story, browse the
+menu, view ingredients, place an order for local pickup, and subscribe to the
+newsletter. Fully bilingual (English / 中文).
 
 Live domain: **https://mercymillsourdough.com**
 
@@ -11,138 +11,124 @@ Live domain: **https://mercymillsourdough.com**
 
 ## ⚠️ Name & domain spelling (read this first)
 
-Three names are involved and they are **intentionally spelled differently** — do
-not "correct" one to match another:
+Three names are involved and they are spelled differently on purpose — do not
+"correct" one to match another:
 
 | Thing | Value | Notes |
 |-------|-------|-------|
-| Business name | **Mercy Mills Sourdough** | Three words, "Mills" with a double-L and trailing **s**. |
-| Registered domain | **mercymillsourdough.com** | Registered via Namecheap. Note the **single "s"** joining `mill` + `sourdough` (i.e. `mercymill` + `sourdough`). |
-| GitHub repo | **mercymillssourdough** | The repo name has a **double "s"** (`mills` + `sourdough`). |
+| Business name | **Mercy Mills Sourdough** | As used throughout the site. See the note below. |
+| Registered domain | **mercymillsourdough.com** | Note the **single "s"** joining `mill` + `sourdough`. |
+| GitHub repo | **mercymillssourdough** | Repo name has a **double "s"**. Does not affect the live site. |
 
-The domain (`mercymillsourdough.com`, one "s") is the source of truth for the
-live site and is what all site config points to. The repository name keeping the
-double "s" is harmless — GitHub repo names don't affect the deployed site.
-
-> If the single-"s" domain is ever discovered to be a typo and the real
-> registered domain is `mercymillssourdough.com`, update `site` in
-> `astro.config.mjs`, `src/data/menu.js`, `public/robots.txt`, and the DNS
-> instructions in `docs/HANDOFF.md`.
+> **Open question:** Sarah's logo artwork reads **"Mercy Mill Sourdough"**
+> (singular "Mill"), which matches the domain. The site currently says
+> "Mercy Mills Sourdough" (plural). If the logo is authoritative, update
+> `site.name` in `src/data/menu.js` and the brand string in
+> `worker/src/templates.js`.
 
 ---
 
 ## Architecture
 
-This site is deliberately architected to be **$0/month to run**, require **no
-server or database**, and stay **simple to maintain**, while still delivering the
-three business goals: take orders, send newsletters, and present information.
-
-### High-level design
+Two deployables, both on free tiers, no credit card required:
 
 ```
-                    ┌─────────────────────────────┐
-                    │        Visitor's browser      │
-                    │   (loads one static HTML page)│
+                    ┌───────────────────────────────┐
+                    │        Visitor's browser       │
                     └───────────────┬───────────────┘
                                     │
-             static files (HTML/CSS/JS/images) over HTTPS
+             static HTML/CSS/JS/images over HTTPS
                                     │
                     ┌───────────────▼───────────────┐
-                    │      Firebase Hosting (Spark)   │
-                    │   free tier · global CDN · SSL  │
-                    │   serves the pre-built ./dist   │
+                    │   Firebase Hosting (Spark)     │
+                    │   free CDN · free SSL · ./dist │
                     └───────────────┬───────────────┘
-                                    │
-        the page talks directly to third-party services from the browser:
-                                    │
-       ┌────────────────────────────┼────────────────────────────┐
-       │                            │                            │
-┌──────▼───────┐          ┌─────────▼─────────┐        ┌─────────▼─────────┐
-│  Web3Forms    │          │  MailerLite       │        │  Google Fonts     │
-│ order form +  │          │  (optional) for   │        │ (Fraunces/Inter/  │
-│ newsletter →  │          │  sending campaign │        │  Noto Sans SC)    │
-│ Gmail inbox   │          │  emails to a list │        │                   │
-└──────────────┘          └───────────────────┘        └───────────────────┘
+                                    │  fetch() for orders + signups
+                    ┌───────────────▼───────────────┐
+                    │  Cloudflare Worker (free)      │
+                    │  /api/order  /api/decide       │
+                    │  /api/subscribe                │
+                    └───────────────┬───────────────┘
+                                    │  transactional email
+                    ┌───────────────▼───────────────┐
+                    │        Resend (free tier)      │
+                    │  customer + owner emails       │
+                    └───────────────────────────────┘
 ```
 
-**Key architectural decision — no backend.** Modern Firebase requires the paid
-(Blaze) plan to run server-side Cloud Functions. To guarantee the site stays
-free with no credit card, we avoid a backend entirely. Everything server-like is
-delegated to free third-party services that the static page calls directly from
-the browser. At ~50 customers this comfortably fits inside every free tier.
+### The order lifecycle
 
-### The three business functions
+1. Customer submits the order form → `POST /api/order` on the Worker.
+2. The Worker emails the **customer** ("order received") and the **owner** (the
+   full order plus **Accept** / **Decline** buttons).
+3. Those buttons are **HMAC-signed links**. Opening one shows a review page with
+   a "message to the customer" box — nothing is sent on that GET, so mail
+   scanners that pre-fetch links cannot decide an order.
+4. Submitting that page (`POST /api/decide`) emails the customer the
+   confirmation or decline, including the owner's optional message.
 
-1. **Information (story, menu, prices, photo catalog)** — Pure static content.
-   The menu, prices, and descriptions live in a single data file
-   (`src/data/menu.js`); Astro renders them into the page at build time. Updating
-   the menu means editing that one file and re-deploying.
+Payment is **e-transfer only**, and an order is confirmed only once payment has
+been received.
 
-2. **Ordering** — The order form (`src/components/OrderForm.astro`) submits
-   directly to **[Web3Forms](https://web3forms.com)**, a free form-to-email
-   relay. Each submission is emailed to the bakery's Gmail inbox. A public access
-   key (not a secret) identifies which inbox to deliver to. There is no order
-   database — orders arrive as emails and are handled by replying. A honeypot
-   field and required-field validation reduce spam and empty orders.
+### Newsletter
 
-3. **Newsletter** — The signup box (`src/components/Newsletter.astro`) collects
-   subscriber emails through the **same Web3Forms key** used for orders, so each
-   signup is emailed to the bakery inbox with no extra service to set up. The
-   owner keeps that list and sends campaigns when ready — from Gmail (Bcc) for a
-   small list, or optionally a free tool like
-   **[MailerLite](https://mailerlite.com)** for scheduled sends and automatic
-   unsubscribe handling as the list grows.
+The signup box posts to `POST /api/subscribe` on the same Worker: the subscriber
+gets a welcome email and the owner is notified. There is no third-party signup
+service. Campaigns are sent separately — from Gmail for a small list, or by
+importing addresses into a tool like MailerLite. A ready-made, on-brand HTML
+template lives in `email-templates/newsletter.html`.
 
-### Bilingual (English / Mandarin)
+### Bilingual (English / 中文)
 
-The whole site is bilingual with a header toggle (中文 / EN). Both languages are
-rendered into the HTML; a tiny script flips `<html data-lang>` and CSS shows only
-the active language (choice remembered in `localStorage`). Section copy uses a
-small `<T en="…" zh="…" />` helper (`src/components/T.astro`); menu items carry
-`_zh` fields in `src/data/menu.js`. No translation API or network call is
-involved — it works offline and adds virtually no page weight.
+Both languages are rendered into the HTML; a small script flips
+`<html data-lang>` and CSS shows only the active one (remembered in
+`localStorage`). Section copy uses `<T en="…" zh="…" />`
+(`src/components/T.astro`); menu items carry `_zh` fields. No translation API,
+no network call. **Chinese is Traditional throughout**, matching the owner's own
+product labels.
 
 ### Tech stack
 
-| Layer | Choice | Why |
-|-------|--------|-----|
-| Framework | **[Astro](https://astro.build)** | Builds to plain static HTML (perfect for free hosting), component-based, near-zero client JS, automatic asset handling for large photos. |
-| Styling | Hand-written modern CSS | Warm farmers-market palette, big display type (Fraunces) + clean body type (Inter). No CSS framework needed. |
-| Hosting | **Firebase Hosting** (Spark/free) | Free global CDN, free SSL, free custom domain, generous free bandwidth. |
-| Orders | **Web3Forms** (free) | Form → email, no backend. |
-| Newsletter | **Web3Forms** (free) | Signups emailed to the inbox; MailerLite optional for sending. |
-| i18n | Custom CSS/JS toggle | English ⇄ Mandarin, no external service. |
-| Fonts | Google Fonts | Fraunces + Inter, loaded via `<link>`. |
+| Layer | Choice |
+|-------|--------|
+| Framework | [Astro](https://astro.build) — static HTML output |
+| Styling | Hand-written CSS (warm farmers-market palette) |
+| Hosting | Firebase Hosting (Spark/free) |
+| Order + newsletter backend | Cloudflare Worker (free) |
+| Email | Resend (free tier) |
+| Fonts | Google Fonts — Fraunces, Inter, Noto Sans SC |
 
 ### Project layout
 
 ```
 .
-├── astro.config.mjs         # Astro + site URL config
-├── firebase.json            # Firebase Hosting config (serves ./dist)
-├── .firebaserc              # Firebase project id (replace with yours)
-├── .env.example             # Public keys for the form + newsletter services
-├── public/                  # Static assets copied as-is
-│   ├── images/              # Photos (placeholders until real ones are added)
-│   ├── favicon.svg
-│   └── robots.txt
+├── astro.config.mjs
+├── firebase.json / .firebaserc     # Firebase Hosting (serves ./dist)
+├── .env.example                    # PUBLIC_ORDER_API
+├── email-templates/newsletter.html # paste into your email tool each issue
+├── public/images/                  # logo, hero, product photos
 ├── src/
-│   ├── data/menu.js         # ← EDIT THIS to change menu items, prices, contact
-│   ├── layouts/Base.astro   # <head>, fonts, SEO meta
-│   ├── components/          # Header, Hero, Process, Menu, Gallery, OrderForm,
-│   │                        #   Newsletter, Footer
-│   ├── styles/global.css    # Design system (colors, type, buttons)
-│   └── pages/index.astro    # The single page — composes the components
-└── docs/HANDOFF.md          # Non-technical guide: edit menu, send newsletters,
-                             #   read orders, add photos
+│   ├── data/
+│   │   ├── menu.js                 # ← products, prices, EN/中文 names, details
+│   │   └── pickup.js               # ← pickup weekdays, lead time, blackout dates
+│   ├── components/                 # Header, Hero, Reviews, Story, Process,
+│   │                               #   Menu, PickupCalendar, OrderForm,
+│   │                               #   Newsletter, Footer, T
+│   ├── styles/global.css
+│   └── pages/index.astro
+├── worker/                         # Cloudflare Worker (order + email backend)
+│   ├── src/index.js                # routes
+│   ├── src/templates.js            # HTML email templates
+│   └── wrangler.toml
+└── docs/
+    ├── HANDOFF.md                  # day-to-day owner's guide
+    └── EMAIL_BACKEND.md            # Resend + Cloudflare setup
 ```
 
-### Data flow at a glance
+### Page sections
 
-- **Build time:** `menu.js` + components → Astro → static HTML/CSS/JS in `dist/`.
-- **Deploy:** `dist/` is uploaded to Firebase Hosting.
-- **Runtime:** visitor loads static page; order submissions POST to Web3Forms;
-  newsletter signups POST to MailerLite. No server of ours is involved.
+Hero → Reviews → Our Story → How It's Made → Menu → Order → Newsletter → Footer.
+(There is no Gallery section; it was removed at the owner's request.)
 
 ---
 
@@ -151,30 +137,31 @@ involved — it works offline and adds virtually no page weight.
 Requires Node.js 18+.
 
 ```bash
-npm install        # install dependencies
-npm run dev        # local dev server at http://localhost:4321
-npm run build      # production build into ./dist
-npm run preview    # preview the production build locally
+npm install
+npm run dev        # http://localhost:4321
+npm run build      # static output into ./dist
+npm run preview    # preview the production build
 ```
 
 ### Configuration
 
-Copy `.env.example` to `.env` and fill in:
+Copy `.env.example` to `.env` **in the project root** (not `src/` — Astro only
+reads the root) and set:
 
-- `PUBLIC_WEB3FORMS_KEY` — free key from web3forms.com. Both the order form and
-  the newsletter signup email to this inbox.
+- `PUBLIC_ORDER_API` — the Cloudflare Worker base URL, e.g.
+  `https://mercy-mills-orders.<subdomain>.workers.dev`. Powers both the order
+  form and the newsletter signup.
 
-This is a public identifier, not a secret, so committing built output is fine.
+Worker secrets (`RESEND_API_KEY`, `SIGNING_SECRET`, `OWNER_EMAIL`) are set with
+`wrangler secret put` and never live in the repo — see `docs/EMAIL_BACKEND.md`.
 
 ---
 
 ## Deployment
 
-See **[docs/HANDOFF.md](docs/HANDOFF.md)** for the full step-by-step, including
-the first-time Firebase setup and pointing the Namecheap domain at Firebase.
-Quick version once set up:
-
 ```bash
-npm run build
-firebase deploy
+npm run build && firebase deploy      # the website
+cd worker && npx wrangler deploy      # the order/email backend
 ```
+
+The two are independent: content and design changes need only the first.

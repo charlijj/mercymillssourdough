@@ -1,206 +1,192 @@
-# Mercy Mills Sourdough — Setup, Deployment & Owner's Guide
+# Mercy Mills Sourdough — Owner's Guide
 
-This guide has two audiences:
+Everything you'll need day to day. Nothing here requires writing code — you're
+editing text in one or two files and running two commands.
 
-- **Part A–D**: one-time technical setup (services, Firebase, domain, launch).
-- **Part E**: the day-to-day owner's guide — how to update the menu, read
-  orders, and send newsletters. No coding required for most of it.
-
----
-
-## Part A — Connect the order email (Web3Forms)
-
-Orders are emailed straight to a Gmail inbox. No backend, free forever.
-
-1. Go to <https://web3forms.com>.
-2. Enter **Mom's Gmail address** and click to create an Access Key. Confirm via
-   the email they send.
-3. Copy the **Access Key** (looks like `a1b2c3d4-....`).
-4. In the project, copy `.env.example` to `.env` and set:
-   ```
-   PUBLIC_WEB3FORMS_KEY=your-access-key-here
-   ```
-   (Or paste it directly into `src/components/OrderForm.astro` where it says
-   `YOUR_WEB3FORMS_ACCESS_KEY`.)
-5. Rebuild (`npm run build`) and submit a test order — it should arrive in the
-   Gmail inbox within a minute. Check the spam folder the first time and mark it
-   "not spam" so future orders land in the inbox.
-
-> Web3Forms is the recommended free option. Formspree works the same way if you
-> prefer it — just swap the form `action` URL and key.
+For first-time setup of the email/order backend, see
+**[EMAIL_BACKEND.md](EMAIL_BACKEND.md)**.
 
 ---
 
-## Part B — Newsletter signups
+## The two commands
 
-Newsletter signups are collected the same simple way as orders: the signup box
-emails each new subscriber's address to the bakery inbox using the **same
-Web3Forms key from Part A** (the email subject says "New newsletter signup").
-So once Part A is done, the newsletter box already works — no extra service to
-set up.
-
-- Each signup arrives as an email; keep a list (or a Google Sheet) of addresses.
-- Test it: enter an email in the signup box on the live site and confirm the
-  "New newsletter signup" email lands in the inbox.
-
-**Sending the actual newsletter** to that list is a separate step you do when you
-have something to announce. Two easy options:
-
-- **Gmail:** paste the collected addresses into the **Bcc** field and send. Fine
-  for a small list.
-- **A free email tool (optional, for scheduling + unsubscribe links):** create a
-  free account at <https://www.mailerlite.com>, import your collected addresses,
-  and use **Campaigns → Create campaign → Schedule** for weekly/monthly sends.
-  Recommended once the list grows, since it handles unsubscribes automatically.
-
----
-
-## Part C — Firebase Hosting (step by step)
-
-This is the core of the "host it on Firebase, free" plan. Do these once.
-
-### C1. Install the tools (on your own computer)
+From the project folder:
 
 ```bash
-# Requires Node.js 18+ (https://nodejs.org)
-npm install -g firebase-tools
-firebase --version        # confirm it installed
+npm run build && firebase deploy      # publish website changes
 ```
-
-### C2. Create the Firebase project
-
-1. Go to <https://console.firebase.google.com> and sign in with the Google
-   account you want to own the site.
-2. Click **Add project**, name it (e.g. `mercy-mills-sourdough`), and finish.
-   You can **disable Google Analytics** — it's not needed.
-3. You'll stay on the **Spark (free)** plan. Do **not** upgrade to Blaze; this
-   site never needs it.
-
-### C3. Point the local project at your Firebase project
 
 ```bash
-firebase login            # opens a browser to authorize your Google account
+cd worker && npx wrangler deploy      # publish email-wording changes
 ```
 
-Then edit `.firebaserc` and replace the project id with the one you created:
+Website content (menu, prices, photos, text, pickup days) only needs the
+**first**. The second is only for changes to the emails customers receive.
 
-```json
+---
+
+## Update the menu, prices, or descriptions
+
+Open **`src/data/menu.js`**. Each product is a block like this:
+
+```js
 {
-  "projects": { "default": "your-firebase-project-id" }
-}
+  id: 'artisan-loaf',              // never change once orders exist
+  name: 'Artisan Regular Loaf',
+  name_zh: '原味酸種歐包',           // Chinese name
+  price: 11,
+  unit: 'loaf',
+  unit_zh: '個',
+  description: '...',
+  description_zh: '...',
+  image: '/images/artisan-loaf.jpg',
+  tags: ['Bestseller'],            // or [] , or ['Sweet']
+  details: { ... },                // see "Ingredients & allergens" below
+  options: [shapeOption],          // optional
+},
 ```
 
-> You can find the exact project id in the Firebase console (Project settings →
-> Project ID). `firebase.json` is already configured to serve the `dist/` folder,
-> so you don't need to run `firebase init` — but if you do, choose **Hosting**,
-> set the public directory to **`dist`**, and answer **No** to "configure as a
-> single-page app" and **No** to overwriting `dist/index.html`.
+- **Change a price:** edit `price`.
+- **Add a product:** copy a whole block, change the values, give it a new `id`.
+- **Remove one:** delete its block (keep the commas tidy).
+- Always update **both** the English and the `_zh` Chinese fields.
 
-### C4. Build and deploy
+### Products with choices
+
+- **`options`** — a choice that does *not* change the price. The loaves use
+  `shapeOption` (Boule / Sandwich). Bagels add a flavour choice.
+- **`sizes`** — a choice that *does* change the price, e.g. bagels:
+
+```js
+sizes: [
+  { id: '6',  label: '6 bagels',  label_zh: '6 個',  price: 15 },
+  { id: '12', label: '12 bagels', label_zh: '12 個', price: 28 },
+],
+```
+
+The order form and the total update automatically, and the customer's choice
+appears in the order email.
+
+### Ingredients & allergens (the product popup)
+
+Clicking a product opens a popup. Fill in its `details` block as information
+becomes available:
+
+```js
+details: {
+  ingredients: 'Unbleached flour, water, salt, sourdough starter',
+  ingredients_zh: '無漂白麵粉、水、鹽、酸種酵種',
+  allergens: 'Contains wheat and gluten',
+  allergens_zh: '含小麥與麩質',
+  netWeight: '800 g',
+  about: '', about_zh: '',          // optional longer description
+},
+```
+
+Any field left as `''` shows a polite "coming soon" note instead — so it is
+safe to fill these in gradually. **Do not guess allergen information.**
+
+---
+
+## Change the pickup days
+
+Open **`src/data/pickup.js`**:
+
+```js
+availableWeekdays: [2, 3, 4],   // 0=Sun 1=Mon 2=Tue 3=Wed 4=Thu 5=Fri 6=Sat
+minLeadDays: 3,                 // how far ahead orders must be placed
+monthsAhead: 3,                 // how far ahead customers can book
+blackoutDates: ['2026-12-24'],  // holidays / vacation, 'YYYY-MM-DD'
+```
+
+Every other day is automatically greyed out in the customer's calendar.
+
+---
+
+## Add or change photos
+
+1. Put the image in **`public/images/`** (JPG; roughly 1200px on the long side
+   keeps pages fast).
+2. Point the product's `image:` at it, e.g. `'/images/my-photo.jpg'`.
+3. Build and deploy.
+
+- **Hero banner:** replace `public/images/hero-bread.jpg` (keep the name).
+- **Our Story photo:** `public/images/story-boules.jpg`.
+- **Behind-the-scenes photos:** add a block to `progressPhotos` at the top of
+  `src/components/Process.astro`; they appear in the "In the kitchen" strip.
+- **Logo:** replace `public/images/logo.svg` (a PNG works too — change the
+  extension in the `<img src>` in `src/components/Header.astro`).
+
+---
+
+## Read and fulfil orders
+
+1. An order email arrives with the items, chosen options, total, customer
+   contact, requested pickup date and any allergy notes.
+2. Reply with the total and your **e-transfer** details.
+3. **When the e-transfer arrives**, open that same order email and press
+   **"Accept"**. A page opens showing the order with a **message box** — add a
+   note (pickup address and time, say), then press
+   **"Payment received — confirm order"**. The customer is emailed
+   automatically.
+4. To turn an order down, press **"Decline"** instead and optionally explain
+   why; the customer is emailed that too.
+
+Nothing is sent to the customer until you press the button on that page.
+
+---
+
+## Newsletter
+
+- New signups arrive as **"New newsletter signup"** emails. Keep those
+  addresses in a list or a spreadsheet.
+- To send an issue, use `email-templates/newsletter.html`: paste it into your
+  email tool (Gmail, or a free service like MailerLite), replace only the text
+  inside `[[ double brackets ]]`, and send. The design stays the same each time.
+
+---
+
+## Change the email address orders go to
 
 ```bash
-npm install               # first time only
-npm run build             # produces ./dist
-firebase deploy           # uploads ./dist to Firebase Hosting
+cd worker
+npx wrangler secret put OWNER_EMAIL     # type the new address when prompted
 ```
 
-When it finishes, the console prints a **Hosting URL** like
-`https://your-project-id.web.app`. Open it — the live site is up on the free
-`.web.app` domain. Every future update is just `npm run build && firebase deploy`.
+Takes effect immediately — no rebuild or deploy needed.
 
 ---
 
-## Part D — Point mercymillsourdough.com at Firebase (Namecheap)
+## Update contact details
 
-The domain is registered at Namecheap; Firebase provides free SSL for it.
-
-1. In the Firebase console: **Hosting → Add custom domain**.
-2. Enter `mercymillsourdough.com` and follow the wizard. Also add
-   `www.mercymillsourdough.com` and set it to redirect to the root (the wizard
-   offers this).
-3. Firebase shows **DNS records** to add — usually:
-   - A **TXT** record (to verify you own the domain), and then
-   - Two **A** records pointing to Firebase's IP addresses.
-4. In **Namecheap → Domain List → Manage → Advanced DNS**:
-   - Remove any default "parking" records.
-   - Add the TXT record Firebase gave you (Host `@`).
-   - Add the two A records (Host `@`) with Firebase's IPs.
-   - For `www`, add a **CNAME** (or A records) exactly as Firebase instructs.
-5. Save. DNS changes can take from a few minutes up to 24–48 hours to
-   propagate. Firebase automatically provisions a free SSL certificate once it
-   detects the records — the domain will show "Connected" in the console.
-6. Visit <https://mercymillsourdough.com> — you should see the site over HTTPS.
-
-> Double-check the spelling when typing the domain into Firebase: it's
-> `mercymillsourdough.com` (single "s"). See the note in the README.
+Edit the `site` block at the bottom of `src/data/menu.js` — business name,
+public email, Instagram and Facebook links, and the "Baked fresh" line. Leaving
+a social link as `''` simply hides it.
 
 ---
 
-## Part E — Owner's guide (day to day)
+## Editing the Chinese
 
-You mostly won't touch code. Here's what changes and how.
-
-### Update the menu, prices, or descriptions
-1. Open `src/data/menu.js`.
-2. Edit an item's `name`, `price`, `unit`, or `description`. Each item also has
-   Mandarin fields (`name_zh`, `unit_zh`, `description_zh`) — update those too so
-   the Chinese version stays in sync. To add an item, copy an existing block; to
-   remove one, delete its block. Keep the commas.
-3. Save, then run `npm run build && firebase deploy`.
-
-### Add real photos
-1. Put photo files in `public/images/` (JPG or WebP; aim for ~1600px wide,
-   under ~400 KB each so pages stay fast).
-2. In `src/data/menu.js`, set each item's `image` to `/images/your-file.jpg`.
-3. For the gallery, edit the `photos` list in
-   `src/components/Gallery.astro`.
-4. For the big hero photo, follow the comment in `src/components/Hero.astro`
-   (set a `background-image` on `.hero-bg`).
-5. Build and deploy.
-
-### Add the real logo
-- The header shows a placeholder logo. To use Sarah's design, replace
-  `public/images/logo.svg` with the real file (keep the name `logo.svg`, or
-  update the path in `src/components/Header.astro`). PNG works too — just change
-  the extension in the `<img src>`.
-- Optionally replace `public/favicon.svg` with a small square version of the
-  logo for the browser tab.
-- Build and deploy.
-
-### Read and fulfill orders
-- Orders arrive as emails in the Gmail inbox (from Web3Forms). Each email lists
-  the items and quantities, customer contact, preferred pickup date, and notes.
-  Ordering is **pickup only** — reply to the customer's email to confirm the
-  total, the pickup address, and the time.
-
-### Send a newsletter
-- New signups arrive as "New newsletter signup" emails — keep those addresses in
-  a list. To send an update, either Bcc the list from Gmail, or use a free tool
-  like MailerLite (import the list, then Campaigns → Create → Schedule). See
-  Part B.
-
-### Edit the Mandarin translation
-- Every visitor-facing phrase is bilingual. Section text lives in the
-  components as `<T en="…" zh="…" />` — edit the `zh="…"` value to change the
-  Chinese. Menu items use the `_zh` fields in `src/data/menu.js`.
-- The 中文 / EN button in the header toggles languages; the choice is remembered
-  in the visitor's browser.
-
-### Update contact info / social links
-- Edit the `site` object at the bottom of `src/data/menu.js` (email, Instagram,
-  Facebook, tagline, location). Build and deploy.
+The site is bilingual and the Chinese is **Traditional**. Section text lives in
+the components as `<T en="…" zh="…" />` — edit the `zh` value. Menu items use
+the `_zh` fields in `src/data/menu.js`. The 中文 / EN button in the header
+switches languages and remembers the visitor's choice.
 
 ---
 
 ## Quick reference
 
-| Task | Command |
-|------|---------|
-| Run locally | `npm run dev` |
-| Build for production | `npm run build` |
-| Deploy to Firebase | `firebase deploy` |
-| Build + deploy in one go | `npm run build && firebase deploy` |
+| Task | Where |
+|------|-------|
+| Prices, products, Chinese names, ingredients | `src/data/menu.js` |
+| Pickup days, lead time, holidays | `src/data/pickup.js` |
+| Behind-the-scenes photos | `src/components/Process.astro` |
+| Photos | `public/images/` |
+| Wording of customer emails | `worker/src/templates.js` |
+| Newsletter design | `email-templates/newsletter.html` |
+| Publish the website | `npm run build && firebase deploy` |
+| Publish email changes | `cd worker && npx wrangler deploy` |
 
-Free-tier limits (plenty for ~50 customers): Firebase Hosting ~10 GB storage &
-~360 MB/day transfer; Web3Forms free submissions (orders + newsletter signups);
-MailerLite (optional, for sending campaigns) up to ~1,000 subscribers.
+Free-tier limits, all comfortable at this scale: Firebase Hosting ~10 GB storage
+and ~360 MB/day transfer; Cloudflare Workers 100,000 requests/day; Resend 3,000
+emails/month (100/day).
