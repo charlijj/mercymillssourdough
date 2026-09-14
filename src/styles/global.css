@@ -1,5 +1,5 @@
 /* ==========================================================================
-   Mercy Mills Sourdough — global styles
+   Mercy Mill Sourdough — global styles
    A warm, modern farmers-market aesthetic: earthy tones, big type, airy layout.
    ========================================================================== */
 
@@ -11,8 +11,11 @@
   --crust-soft: #5b4636;
   --amber: #c8862d;
   --amber-deep: #a86a1c;
-  --sage: #7d8a6a;
-  --sage-deep: #5f6b50;
+  /* Olive sampled from the banner's call-to-action button */
+  --olive: #77784a;
+  --olive-deep: #5f6039;
+  /* The banner's bright ivory ground */
+  --ivory: #fbf9f4;
   --wheat: #e6c98f;
   --ink: #2b2018;
   --muted: #7a6a5a;
@@ -55,7 +58,7 @@ h2 { font-size: clamp(2rem, 4vw, 3rem); letter-spacing: -0.01em; }
 h3 { font-size: 1.3rem; }
 
 p { margin: 0 0 1rem; }
-a { color: var(--amber-deep); text-decoration: none; }
+a { color: var(--olive-deep); text-decoration: none; }
 a:hover { text-decoration: underline; }
 img { max-width: 100%; display: block; }
 
@@ -75,7 +78,7 @@ section { padding: clamp(3.5rem, 8vw, 6.5rem) 0; }
   font-size: 0.8rem;
   letter-spacing: 0.18em;
   text-transform: uppercase;
-  color: var(--amber-deep);
+  color: var(--olive-deep);
   margin-bottom: 0.75rem;
 }
 
@@ -90,26 +93,48 @@ section { padding: clamp(3.5rem, 8vw, 6.5rem) 0; }
   display: inline-block;
   font-family: var(--font-body);
   font-weight: 600;
-  font-size: 1rem;
-  padding: 0.85rem 1.8rem;
-  border-radius: 999px;
-  border: 2px solid transparent;
+  font-size: 0.92rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 0.95rem 2rem;
+  border-radius: 3px;
+  border: 1.5px solid transparent;
   cursor: pointer;
-  transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
   text-decoration: none;
 }
-.btn:hover { text-decoration: none; transform: translateY(-2px); }
-.btn-primary { background: var(--amber); color: var(--white); box-shadow: var(--shadow-sm); }
-.btn-primary:hover { background: var(--amber-deep); }
+.btn:hover { text-decoration: none; }
+.btn-primary { background: var(--olive); color: #fff; }
+.btn-primary:hover { background: var(--olive-deep); }
 .btn-outline { background: transparent; border-color: var(--crust); color: var(--crust); }
 .btn-outline:hover { background: var(--crust); color: var(--cream); }
 
+/* Secondary call to action: plain text with an arrow, as on the banner */
+.btn-link {
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 0.92rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--crust);
+  text-decoration: none;
+  border-bottom: 1.5px solid transparent;
+  padding-bottom: 2px;
+}
+.btn-link:hover { text-decoration: none; color: var(--olive-deep); border-bottom-color: var(--olive-deep); }
+
 /* Alternating section backgrounds */
+.bg-ivory { background: var(--ivory); }
 .bg-cream-deep { background: var(--cream-deep); }
 .bg-crust { background: var(--crust); color: var(--cream); }
 .bg-crust h2, .bg-crust h3 { color: var(--wheat); }
 
 /* Utility */
+/* Available to screen readers, invisible on screen */
+.visually-hidden {
+  position: absolute; width: 1px; height: 1px;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap;
+}
 .text-center { text-align: center; }
 .mx-auto { margin-left: auto; margin-right: auto; }
 

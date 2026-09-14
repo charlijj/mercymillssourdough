@@ -110,7 +110,8 @@ product labels.
 ├── firebase.json / .firebaserc     # Firebase Hosting (serves ./dist)
 ├── .env.example                    # PUBLIC_ORDER_API
 ├── email-templates/newsletter.html # paste into your email tool each issue
-├── public/images/                  # logo, hero, product photos
+├── assets-source/                  # originals kept out of the build (see its README)
+├── public/images/                  # logo, banner, product photos
 ├── src/
 │   ├── data/
 │   │   ├── menu.js                 # ← products, prices, EN/中文 names, details
@@ -133,6 +134,25 @@ product labels.
 
 Hero → Reviews → Our Story → How It's Made → Menu → Order → Newsletter → Footer.
 (There is no Gallery section; it was removed at the owner's request.)
+
+### The banner, and why the hero repeats it
+
+`public/images/banner.jpg` is the brand artwork, and the site's palette is
+sampled from it (`--olive` is its button green, `--ivory` its background).
+
+Everything the artwork *says*, though, is painted into the pixels: the tagline,
+the five benefits along the bottom, and two buttons. Baked-in text cannot be
+translated into 中文, is unreadable at phone width, and is invisible to search
+engines and screen readers. So the crop in `public/` stops above the benefit
+strip, and `Hero.astro` re-states all of it as real HTML underneath — heading,
+tagline, buttons, and an icon strip — which is why the page appears to say
+some things twice on a wide screen. The image is decorative; the text below it
+is the actual content.
+
+The artwork's own two painted-on buttons would otherwise be dead pixels that
+look clickable, so two invisible links sit exactly on top of them. They are
+positioned in percentages measured from the 1904×740 crop — re-measure them if
+the banner is ever re-cropped.
 
 ---
 

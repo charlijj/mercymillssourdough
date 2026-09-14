@@ -7,7 +7,7 @@ const quantities = [0, 1, 2, 3, 4, 5];
 const fmt = (n) => (Number.isInteger(n) ? `$${n}` : `$${n.toFixed(2)}`);
 ---
 
-<section id="order">
+<section id="order" class="bg-cream-deep">
   <div class="container order-wrap">
     <div class="order-head">
       <span class="eyebrow"><T en="Place an order" zh="線上下單" /></span>
@@ -262,7 +262,7 @@ const fmt = (n) => (Number.isInteger(n) ? `$${n}` : `$${n.toFixed(2)}`);
   .pickup-note p:last-child { margin: 0; }
   .order-submit { width: 100%; margin-top: 0.25rem; font-size: 1.05rem; }
   .order-status { margin: 1rem 0 0; font-weight: 600; text-align: center; }
-  .order-status.ok { color: var(--sage-deep); }
+  .order-status.ok { color: var(--olive-deep); }
   .order-status.err { color: #b23b2e; }
   .order-fineprint { font-size: 0.85rem; color: var(--muted); text-align: center; margin: 0.8rem 0 0; }
 

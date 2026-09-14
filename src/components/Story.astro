@@ -4,35 +4,35 @@ import T from './T.astro';
 // "Why Choose Our Artisanal Sourdough?" — the owner's five points.
 const reasons = [
   {
-    icon: '🌾',
+    icon: 'M12 3v18M12 7c-2-1.4-4-1.6-4-1.6S8.2 8 10 9M12 7c2-1.4 4-1.6 4-1.6S15.8 8 14 9M12 12c-2-1.4-4-1.6-4-1.6s.2 2.6 2 3.6M12 12c2-1.4 4-1.6 4-1.6s-.2 2.6-2 3.6',
     title_en: '150-Year Historic Starter',
     title_zh: '150 年歷史酵種',
     body_en: 'Powered by our wild San Francisco sourdough starter for authentic depth and a classic, nuanced tang.',
     body_zh: '以我們的舊金山天然酵種發酵，帶來道地的層次感與經典細緻的微酸風味。',
   },
   {
-    icon: '🧂',
+    icon: 'M9 3h6l1 4H8l1-4ZM7 7h10l-1 13a1 1 0 0 1-1 1H9a1 1 0 0 1-1-1L7 7Z',
     title_en: 'Pure & Simple Ingredients',
     title_zh: '純淨簡單的材料',
     body_en: 'Made with only four basic elements — unbleached flour, pure water, salt, and starter. Never any oils, sugars, or artificial additives.',
     body_zh: '僅用四種基本材料——無漂白麵粉、純淨水、鹽與酵種。絕不添加油脂、糖或人工添加物。',
   },
   {
-    icon: '🌱',
+    icon: 'M5 19C5 11 11 5 19 5c0 8-6 14-14 14ZM9 15c2-3 4-5 7-6',
     title_en: 'Freshly Milled Whole Grains',
     title_zh: '現磨全穀物',
     body_en: 'Choose from wholesome ancient or modern wheat, freshly milled on-site to preserve whole-grain nutrition and rich wheat aroma.',
     body_zh: '可選用營養豐富的古老或現代小麥，於自家現磨，保留完整全穀營養與濃郁麥香。',
   },
   {
-    icon: '✅',
+    icon: 'M12 3 4 6.4v5c0 4.6 3.4 8.4 8 9.6 4.6-1.2 8-5 8-9.6v-5L12 3Zm-2.4 8.6 1.9 1.9 3.9-3.9',
     title_en: 'Certified Food Safety',
     title_zh: '食品安全認證',
     body_en: 'Prepared with care by a FOODSAFE Level 1 certified baker, ensuring every loaf is made to strict food safety standards.',
     body_zh: '由通過 FOODSAFE 一級認證的烘焙師用心製作，確保每一個麵包都符合嚴格的食品安全標準。',
   },
   {
-    icon: '💛',
+    icon: 'M12 20s-7-4.6-7-9.4A3.9 3.9 0 0 1 12 8a3.9 3.9 0 0 1 7 2.6C19 15.4 12 20 12 20Z',
     title_en: 'Gentle on Digestion',
     title_zh: '溫和好消化',
     body_en: 'Extended natural fermentation naturally breaks down gluten and starches, making every slice easy on your stomach.',
@@ -78,7 +78,7 @@ const reasons = [
       <ul class="why-grid">
         {reasons.map((r) => (
           <li class="why-card">
-            <span class="why-icon" aria-hidden="true">{r.icon}</span>
+            <svg class="why-icon" viewBox="0 0 24 24" aria-hidden="true"><path d={r.icon} /></svg>
             <h4><T en={r.title_en} zh={r.title_zh} /></h4>
             <p><T en={r.body_en} zh={r.body_zh} /></p>
           </li>
@@ -136,7 +136,16 @@ const reasons = [
     box-shadow: var(--shadow-sm);
     border: 1px solid rgba(58, 42, 30, 0.06);
   }
-  .why-icon { font-size: 1.6rem; display: block; margin-bottom: 0.6rem; }
+  .why-icon {
+    display: block;
+    width: 28px; height: 28px;
+    margin-bottom: 0.7rem;
+    fill: none;
+    stroke: var(--olive);
+    stroke-width: 1.3;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
   .why-card h4 {
     font-family: var(--font-display);
     font-size: 1.05rem;

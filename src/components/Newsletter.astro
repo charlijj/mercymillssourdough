@@ -7,7 +7,7 @@ import T from './T.astro';
 const ORDER_API = import.meta.env.PUBLIC_ORDER_API || '';
 ---
 
-<section id="newsletter" class="bg-cream-deep">
+<section id="newsletter">
   <div class="container newsletter-inner">
     <div class="newsletter-card">
       <span class="eyebrow"><T en="Stay in the loop" zh="保持聯繫" /></span>
@@ -70,7 +70,7 @@ const ORDER_API = import.meta.env.PUBLIC_ORDER_API || '';
     box-shadow: 0 0 0 3px rgba(200, 134, 45, 0.15);
   }
   .newsletter-status { margin: 1rem 0 0; font-weight: 600; min-height: 1.2em; }
-  .newsletter-status.ok { color: var(--sage-deep); }
+  .newsletter-status.ok { color: var(--olive-deep); }
   .newsletter-status.err { color: #b23b2e; }
 </style>
 

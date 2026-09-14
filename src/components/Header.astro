@@ -54,6 +54,7 @@ import T from './T.astro';
     letter-spacing: -0.01em;
   }
   .brand-logo { display: block; height: 54px; width: auto; flex-shrink: 0; }
+  .brand-name { white-space: nowrap; }
   .brand:hover { text-decoration: none; color: var(--amber-deep); }
   .brand:hover .brand-name { color: var(--amber-deep); }
 
@@ -69,6 +70,7 @@ import T from './T.astro';
     color: var(--crust-soft);
     font-weight: 500;
     font-size: 0.98rem;
+    white-space: nowrap;
   }
   .site-nav a:hover { color: var(--amber-deep); text-decoration: none; }
   .nav-cta { color: var(--white) !important; padding: 0.5rem 1.2rem; }
@@ -81,7 +83,9 @@ import T from './T.astro';
     transition: transform 0.2s ease, opacity 0.2s ease;
   }
 
-  @media (max-width: 760px) {
+  /* The full nav needs ~910px to sit on one line beside the brand; below that
+     it wraps and the Order Now button gets clipped, so collapse to the burger. */
+  @media (max-width: 980px) {
     .nav-burger { display: flex; }
     .site-nav {
       position: absolute;

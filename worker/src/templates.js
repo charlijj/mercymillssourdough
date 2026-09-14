@@ -11,7 +11,7 @@ const C = {
   amber: '#c8862d',
   amberDeep: '#a86a1c',
   wheat: '#e6c98f',
-  sage: '#5f6b50',
+  olive: '#5f6039',
   ink: '#2b2018',
   muted: '#7a6a5a',
 };
@@ -140,7 +140,7 @@ export function ownerNewOrder(order, acceptUrl, declineUrl, siteUrl) {
     ${detailsBlock(order)}
     ${para('Choose one — you can add a message to the customer on the next screen:')}
     <table role="presentation" cellpadding="0" cellspacing="0"><tr>
-      <td style="padding-right:10px;">${button('✓ Accept order', acceptUrl, C.sage)}</td>
+      <td style="padding-right:10px;">${button('✓ Accept order', acceptUrl, C.olive)}</td>
       <td>${button('✕ Decline order', declineUrl, '#a23b2e')}</td>
     </tr></table>
     <p style="margin:18px 0 0;font-size:12px;color:${C.muted};">Order ${esc(order.id)}. If the buttons don't work, reply to this email.</p>
@@ -205,7 +205,7 @@ export function decisionForm(action, order, token, siteUrl) {
   const accepted = action === 'accept';
   const title = accepted ? 'Confirm this order?' : 'Decline this order?';
   const cta = accepted ? 'Payment received — confirm order' : 'Decline & notify customer';
-  const btnColor = accepted ? C.sage : '#a23b2e';
+  const btnColor = accepted ? C.olive : '#a23b2e';
   const hint = accepted
     ? 'Only confirm once the e-transfer has arrived. Add a note — pickup address, time, or anything else. (Optional)'
     : 'Let the customer know why, or suggest another date. (Optional)';

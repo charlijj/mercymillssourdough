@@ -1,91 +1,226 @@
 ---
 import T from './T.astro';
+
+// The banner artwork carries the wordmark and tagline, but its text is baked
+// into the image: not clickable, not translatable, unreadable on a phone.
+// So the buttons and the benefit strip below are real HTML — the image is
+// decorative, and everything it says is also available as text.
+const benefits = [
+  {
+    // wheat
+    icon: 'M12 3v18M12 7c-2-1.4-4-1.6-4-1.6S8.2 8 10 9M12 7c2-1.4 4-1.6 4-1.6S15.8 8 14 9M12 12c-2-1.4-4-1.6-4-1.6s.2 2.6 2 3.6M12 12c2-1.4 4-1.6 4-1.6s-.2 2.6-2 3.6',
+    en1: 'Fresh Flour', en2: 'From Grain to Bread',
+    zh1: '現磨麵粉', zh2: '從穀物到麵包',
+  },
+  {
+    // leaf
+    icon: 'M5 19C5 11 11 5 19 5c0 8-6 14-14 14ZM9 15c2-3 4-5 7-6',
+    en1: 'Natural', en2: 'Ingredients',
+    zh1: '天然食材', zh2: '純粹簡單',
+  },
+  {
+    // jar
+    icon: 'M9 3h6M8 6h8a1 1 0 0 1 1 1v12a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2V7a1 1 0 0 1 1-1ZM7 12h10',
+    en1: 'Slow Fermented', en2: 'For Flavour',
+    zh1: '慢速發酵', zh2: '風味更佳',
+  },
+  {
+    // heart
+    icon: 'M12 20s-7-4.6-7-9.4A3.9 3.9 0 0 1 12 8a3.9 3.9 0 0 1 7 2.6C19 15.4 12 20 12 20Z',
+    en1: 'Good Bread', en2: 'Happy Life',
+    zh1: '好麵包', zh2: '好生活',
+  },
+  {
+    // globe
+    icon: 'M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18ZM3 12h18M12 3c2.5 2.6 2.5 15.4 0 18M12 3c-2.5 2.6-2.5 15.4 0 18',
+    en1: 'For a Healthier', en2: 'You & Planet',
+    zh1: '對您與地球', zh2: '都更健康',
+  },
+];
 ---
 
 <section id="top" class="hero">
-  <div class="hero-bg" aria-hidden="true"></div>
-  <div class="container hero-inner">
-    <span class="eyebrow hero-eyebrow">
-      <T en="Welcome to Mercy Mill" zh="歡迎來到 Mercy Mill" />
-    </span>
-    <h1>
-      <T en="Handcrafted with Care, From My Home to Yours" zh="用心手作，從我家到您家" />
-    </h1>
-    <p class="hero-sub">
+  <div class="hero-banner">
+    <img
+      src="/images/banner.jpg"
+      alt="Mercy Mill Sourdough — freshly milled flour and naturally fermented bread, with loaves, bagels, English muffins and focaccia laid out in a bright kitchen"
+      width="1904"
+      height="740"
+      fetchpriority="high"
+    />
+    <!-- The artwork has two painted-on buttons. Their positions were measured
+         from the source image (1904x740) and expressed as percentages, so these
+         invisible links stay glued to them at any width. Without this, the
+         buttons look clickable and do nothing. -->
+    <a href="#order" class="banner-hit banner-hit-shop"><span class="visually-hidden">Shop our bread</span></a>
+    <a href="#story" class="banner-hit banner-hit-story"><span class="visually-hidden">Learn our story</span></a>
+  </div>
+
+  <div class="container hero-intro">
+    <h1><T en="Handcrafted with Care, From My Home to Yours" zh="用心手作，從我家到您家" /></h1>
+    <p class="hero-tagline">
       <T
-        en="I bake small-batch sourdough using a historic 150-year-old San Francisco starter, fresh-milled ancient grains, and pure, simple ingredients. In my certified home kitchen, I shape every loaf with patience to create bread that is naturally kind to your stomach — no shortcut additives or oils, just honest, living food baked warm for your table."
-        zh="我以擁有 150 年歷史的舊金山酵種、現磨的古老穀物與純淨簡單的材料，小批量烘焙酸種麵包。在我通過認證的家庭廚房裡，我耐心地為每一個麵包塑形，做出天然溫和、不傷腸胃的麵包——沒有任何速成添加劑或油脂，只有誠實的、活的食物，溫暖地端上您的餐桌。"
+        en="Milled fresh, fermented slow, and baked in small batches in my own home kitchen."
+        zh="現磨麵粉，慢速發酵，在我的家庭廚房以小批量細心烘焙。"
       />
     </p>
     <div class="hero-actions">
-      <a href="#order" class="btn btn-primary"><T en="Place an Order" zh="立即訂購" /></a>
-      <a href="#menu" class="btn btn-outline hero-outline"><T en="See the Menu" zh="查看菜單" /></a>
+      <a href="#order" class="btn btn-primary"><T en="Order Now" zh="立即訂購" /></a>
+      <a href="#story" class="btn-link">
+        <T en="Our Story" zh="關於我們" /> <span aria-hidden="true">→</span>
+      </a>
     </div>
     <p class="hero-badge">
       <span class="badge-check" aria-hidden="true">✓</span>
       <T en="FOODSAFE Level 1 Certified · British Columbia" zh="FOODSAFE 一級認證 · 卑詩省（BC）" />
     </p>
   </div>
+
+  <div class="benefits">
+    <div class="container benefits-row">
+      {benefits.map((b) => (
+        <div class="benefit">
+          <svg class="benefit-icon" viewBox="0 0 24 24" aria-hidden="true">
+            <path d={b.icon} />
+          </svg>
+          <span class="benefit-text">
+            <strong><T en={b.en1} zh={b.zh1} /></strong>
+            <span><T en={b.en2} zh={b.zh2} /></span>
+          </span>
+        </div>
+      ))}
+    </div>
+  </div>
 </section>
 
 <style>
-  .hero {
-    position: relative;
-    min-height: 92vh;
-    display: flex;
-    align-items: center;
-    color: var(--cream);
-    overflow: hidden;
+  /* Full-bleed: override the global section padding so the banner sits
+     flush beneath the header and the benefit strip flush at the bottom. */
+  .hero { background: var(--ivory); padding: 0; }
+
+  .hero-banner { width: 100%; background: var(--ivory); position: relative; }
+  .hero-banner img {
+    display: block;
+    width: 100%;
+    height: auto;
   }
-  .hero-bg {
-    position: absolute;
-    inset: 0;
-    background-image:
-      linear-gradient(180deg, rgba(30, 20, 12, 0.62) 0%, rgba(30, 20, 12, 0.74) 100%),
-      url('/images/hero-bread.jpg');
-    background-size: cover;
-    background-position: center;
+
+  /* Clickable regions over the artwork's painted-on buttons.
+     Hidden on small screens, where the banner text is too small to read and
+     the real buttons below do the job. */
+  .banner-hit { display: none; }
+  @media (min-width: 761px) {
+    .banner-hit {
+      display: block;
+      position: absolute;
+      top: 49.86%;
+      height: 5.81%;
+      border-radius: 3px;
+    }
+    .banner-hit-shop { left: 22.37%; width: 9.61%; }
+    .banner-hit-story { left: 34.03%; width: 10%; }
+    .banner-hit:focus-visible { outline: 2px solid var(--crust); outline-offset: 3px; }
   }
-  .hero-inner {
-    position: relative;
-    z-index: 1;
+
+  .hero-intro {
+    text-align: center;
+    padding-top: 2.6rem;
+    padding-bottom: 2.4rem;
     max-width: 780px;
-    padding-top: 3.5rem;
-    padding-bottom: 3.5rem;
   }
-  .hero-eyebrow { color: var(--wheat); }
-  .hero h1 { color: var(--cream); }
-  .hero-sub {
-    font-size: 1.1rem;
-    color: rgba(250, 244, 234, 0.93);
-    max-width: 660px;
-    margin-bottom: 2rem;
+  .hero-intro h1 {
+    font-size: clamp(1.8rem, 3.6vw, 2.7rem);
+    margin-bottom: 0.6rem;
   }
-  .hero-actions { display: flex; gap: 1rem; flex-wrap: wrap; }
-  .hero-outline { border-color: var(--cream); color: var(--cream); }
-  .hero-outline:hover { background: var(--cream); color: var(--crust); }
+  .hero-tagline {
+    font-size: 1.08rem;
+    color: var(--crust-soft);
+    margin-bottom: 1.6rem;
+  }
+  .hero-actions {
+    display: flex;
+    gap: 1.6rem;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
   .hero-badge {
     display: inline-flex;
     align-items: center;
     gap: 0.5rem;
     margin: 1.8rem 0 0;
-    padding: 0.45rem 0.95rem;
-    background: rgba(250, 244, 234, 0.12);
-    border: 1px solid rgba(250, 244, 234, 0.3);
+    padding: 0.4rem 0.9rem;
+    border: 1px solid rgba(58, 42, 30, 0.18);
     border-radius: 999px;
-    font-size: 0.85rem;
-    font-weight: 500;
-    color: var(--cream);
+    font-size: 0.82rem;
+    color: var(--crust-soft);
   }
   .badge-check {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 18px; height: 18px;
+    width: 17px; height: 17px;
     border-radius: 50%;
-    background: var(--sage);
-    color: var(--white);
-    font-size: 0.7rem;
+    background: var(--olive);
+    color: #fff;
+    font-size: 0.65rem;
     font-weight: 700;
+  }
+
+  /* Benefit strip — the same five points the banner shows, as real text */
+  .benefits {
+    border-top: 1px solid rgba(58, 42, 30, 0.12);
+    border-bottom: 1px solid rgba(58, 42, 30, 0.12);
+    background: var(--cream);
+  }
+  .benefits-row {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 0;
+  }
+  .benefit {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    padding: 1.1rem 0.9rem;
+    border-left: 1px solid rgba(58, 42, 30, 0.12);
+  }
+  .benefit:first-child { border-left: none; }
+  .benefit-icon {
+    width: 26px; height: 26px;
+    flex-shrink: 0;
+    fill: none;
+    stroke: var(--crust-soft);
+    stroke-width: 1.3;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .benefit-text { display: flex; flex-direction: column; line-height: 1.3; }
+  .benefit-text strong {
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--crust);
+  }
+  .benefit-text > span {
+    font-size: 0.78rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  @media (max-width: 900px) {
+    .benefits-row { grid-template-columns: repeat(2, 1fr); }
+    .benefit:nth-child(odd) { border-left: none; }
+    .benefit:nth-child(n + 3) { border-top: 1px solid rgba(58, 42, 30, 0.12); }
+    .benefit:last-child { grid-column: 1 / -1; justify-content: center; }
+  }
+  @media (max-width: 560px) {
+    .hero-intro { padding-top: 2rem; }
+    .benefits-row { grid-template-columns: 1fr; }
+    .benefit { border-left: none; justify-content: center; }
+    .benefit:not(:first-child) { border-top: 1px solid rgba(58, 42, 30, 0.12); }
+    .benefit:last-child { grid-column: auto; }
   }
 </style>
