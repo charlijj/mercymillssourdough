@@ -7,7 +7,14 @@ const year = new Date().getFullYear();
 <footer class="site-footer">
   <div class="container footer-inner">
     <div class="footer-brand">
-      <span class="footer-name">{site.name}</span>
+      <img
+        src="/images/logo-full.jpg"
+        class="footer-logo"
+        alt={`${site.name} logo`}
+        width="900"
+        height="438"
+        loading="lazy"
+      />
       <p><T en={site.location} zh={site.location_zh} /></p>
       <p class="footer-cert">
         <T en="FOODSAFE Level 1 Certified · British Columbia" zh="FOODSAFE 一級認證 · 卑詩省（BC）" />
@@ -46,11 +53,18 @@ const year = new Date().getFullYear();
     padding-top: 3.5rem;
     padding-bottom: 2.5rem;
   }
-  .footer-name {
-    font-family: var(--font-display);
-    font-weight: 700;
-    font-size: 1.3rem;
-    color: var(--wheat);
+  /* The logo artwork is painted on cream, so it sits on its own light panel
+     rather than floating a pale rectangle on the dark footer. */
+  .footer-logo {
+    width: 100%;
+    max-width: 280px;
+    height: auto;
+    border-radius: var(--radius);
+    /* The artwork's own paper colour, so the padding blends into the image
+       instead of ringing it with a slightly different cream. */
+    background: #fff9e9;
+    padding: 0.6rem 0.9rem;
+    margin-bottom: 1rem;
   }
   .footer-brand p { color: rgba(250, 244, 234, 0.7); margin-top: 0.4rem; }
   .footer-cert { font-size: 0.85rem; color: rgba(250, 244, 234, 0.55); }

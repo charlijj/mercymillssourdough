@@ -152,8 +152,7 @@ html[data-lang='zh'] body { line-height: 1.75; }
 html[data-lang='zh'] h1,
 html[data-lang='zh'] h2,
 html[data-lang='zh'] h3,
-html[data-lang='zh'] .brand,
-html[data-lang='zh'] .footer-name {
+html[data-lang='zh'] .brand {
   font-family: 'Noto Sans SC', 'Fraunces', sans-serif;
   font-weight: 700;
 }
