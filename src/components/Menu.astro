@@ -132,13 +132,6 @@ const tagZh = { Bestseller: '熱銷', Seasonal: '季節限定', Sweet: '甜點' 
                 : <span class="soon"><T en="Full ingredient list coming soon." zh="完整成分表即將公佈。" /></span>}
             </dd>
 
-            <dt><T en="Allergens" zh="過敏原" /></dt>
-            <dd>
-              {item.details?.allergens
-                ? <T en={item.details.allergens} zh={item.details.allergens_zh || item.details.allergens} />
-                : <span class="soon"><T en="Allergen details coming soon — please note any allergies in your order." zh="過敏原資訊即將公佈——請在訂單中註明任何過敏情況。" /></span>}
-            </dd>
-
             {item.details?.netWeight && (
               <>
                 <dt><T en="Net weight" zh="淨重" /></dt>

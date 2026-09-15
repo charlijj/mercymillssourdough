@@ -38,6 +38,14 @@ const reasons = [
     body_en: 'Extended natural fermentation naturally breaks down gluten and starches, making every slice easy on your stomach.',
     body_zh: '長時間自然發酵能分解麩質與澱粉，讓每一片麵包都更容易消化。',
   },
+  {
+    // gift
+    icon: 'M3 9h18v11a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9ZM2 5.5h20V9H2V5.5ZM12 5.5V21M12 5.5S9.6 2.6 8.1 3.7 9.2 5.5 12 5.5Zm0 0s2.4-2.9 3.9-1.8-.8 1.8-3.9 1.8Z',
+    title_en: 'Custom-made for you',
+    title_zh: '為您量身訂製',
+    body_en: 'Every golden loaf is handcrafted with care, safety, and your preferred ingredients for you and your loved ones. We hope this fresh, simple, and historic goodness brings comfort and warmth to your table.',
+    body_zh: '每一個金黃的麵包，都是依您偏好的食材，為您與您所愛的人用心且安全地手工製作。希望這份新鮮、簡單而富有歷史的美好，能為您的餐桌帶來溫暖與慰藉。',
+  },
 ];
 ---
 
@@ -86,15 +94,6 @@ const reasons = [
       </ul>
     </div>
 
-    <div class="baked-warm">
-      <h3><T en="Baked Warmly for You" zh="為您溫暖烘焙" /></h3>
-      <p>
-        <T
-          en="Every golden loaf is handcrafted with care, safety, and passion for you and your loved ones. We hope this fresh, simple, and historic goodness brings comfort and warmth to your table."
-          zh="每一個金黃的麵包，都是為您與您所愛的人，用心、安全且充滿熱情地手工製作。希望這份新鮮、簡單而富有歷史的美好，能為您的餐桌帶來溫暖與慰藉。"
-        />
-      </p>
-    </div>
   </div>
 </section>
 
@@ -121,14 +120,19 @@ const reasons = [
     margin-bottom: 1.8rem;
     text-align: center;
   }
+  /* Six columns across, as the owner asked. They get narrow, so the count
+     steps down rather than letting the text squeeze to a ribbon. */
   .why-grid {
     list-style: none;
     margin: 0;
     padding: 0;
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(192px, 1fr));
-    gap: 1.2rem;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 1.1rem;
   }
+  @media (max-width: 1080px) { .why-grid { grid-template-columns: repeat(3, 1fr); } }
+  @media (max-width: 700px)  { .why-grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 460px)  { .why-grid { grid-template-columns: 1fr; } }
   .why-card {
     background: var(--white);
     border-radius: var(--radius);
@@ -154,14 +158,6 @@ const reasons = [
     line-height: 1.25;
   }
   .why-card p { margin: 0; font-size: 0.93rem; color: var(--muted); line-height: 1.6; }
-
-  .baked-warm {
-    max-width: 720px;
-    margin: 3.5rem auto 0;
-    text-align: center;
-  }
-  .baked-warm h3 { font-size: 1.6rem; margin-bottom: 0.7rem; }
-  .baked-warm p { color: var(--crust-soft); font-size: 1.05rem; margin: 0; }
 
   @media (max-width: 860px) {
     .story-top { grid-template-columns: 1fr; gap: 2rem; }

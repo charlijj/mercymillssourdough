@@ -108,18 +108,18 @@ const fmt = (n) => (Number.isInteger(n) ? `$${n}` : `$${n.toFixed(2)}`);
       </div>
 
       <label class="field">
-        <span><T en="Notes & allergy concerns" zh="備註與過敏事項" /></span>
+        <span><T en="Notes & preferred pickup location" zh="備註與希望取貨地點" /></span>
         <textarea
           name="notes"
           rows="3"
-          data-ph-en="Please note any allergy concerns or special requests here."
-          data-ph-zh="請在此註明任何過敏事項或特殊需求。"
-          placeholder="Please note any allergy concerns or special requests here."
+          data-ph-en="Preferred pickup location, e.g. Fraser Heights Recreation Centre — plus any allergy concerns or special requests."
+          data-ph-zh="希望的取貨地點，例如 Fraser Heights Recreation Centre——以及任何過敏事項或特殊需求。"
+          placeholder="Preferred pickup location, e.g. Fraser Heights Recreation Centre — plus any allergy concerns or special requests."
         ></textarea>
         <small class="field-hint">
           <T
-            en="Have allergies? Our breads may contain wheat, gluten, and eggs. Please list any concerns above so we can help."
-            zh="有過敏情況嗎？我們的麵包可能含有小麥、麩質與雞蛋。請在上方列出任何顧慮，以便我們協助。"
+            en="Please be sure to give your preferred pickup location. Have allergies? Our breads may contain wheat, gluten, and eggs — list any concerns above so we can help."
+            zh="請務必填寫您希望的取貨地點。有過敏情況嗎？我們的麵包可能含有小麥、麩質與雞蛋——請在上方列出任何顧慮，以便我們協助。"
           />
         </small>
       </label>

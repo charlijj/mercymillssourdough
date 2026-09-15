@@ -13,7 +13,6 @@
 //                   Fill these in as the information becomes available; any
 //                   field left as '' simply shows a "coming soon" note.
 //                     ingredients / ingredients_zh  e.g. 'Unbleached flour, water, salt, starter'
-//                     allergens   / allergens_zh    e.g. 'Contains wheat and gluten'
 //                     netWeight                     e.g. '800 g'
 //                     about       / about_zh        a longer description
 //
@@ -52,7 +51,7 @@ export const menu = [
       '我們的招牌歐包——僅用四種材料：無漂白麵粉、水、鹽，以及我們擁有 150 年歷史的舊金山酵種。',
     image: '/images/artisan-loaf.jpg',
     tags: ['Bestseller'],
-    details: { ingredients: '', ingredients_zh: '', allergens: '', allergens_zh: '', netWeight: '', about: '', about_zh: '' },
+    details: { ingredients: 'Unbleached flour, filtered water, sourdough starter, pinch of salt', ingredients_zh: '無漂白麵粉、過濾水、天然酵種、少許鹽', netWeight: '', about: '', about_zh: '' },
     options: [shapeOption],
   },
   {
@@ -66,7 +65,7 @@ export const menu = [
     description_zh: '酸甜蔓越莓與滿滿核桃，揉入柔軟通透的麵包心。',
     image: '/images/cranberry-walnut.jpg',
     tags: [],
-    details: { ingredients: '', ingredients_zh: '', allergens: '', allergens_zh: '', netWeight: '', about: '', about_zh: '' },
+    details: { ingredients: 'Unbleached flour, filtered water, sourdough starter, dried cranberries, roasted walnuts, pinch of salt', ingredients_zh: '無漂白麵粉、過濾水、天然酵種、蔓越莓乾、烘烤核桃、少許鹽', netWeight: '', about: '', about_zh: '' },
     options: [shapeOption],
   },
   {
@@ -80,7 +79,7 @@ export const menu = [
     description_zh: '香濃油漬蕃茄與橄欖遍佈其中——搭配濃湯或起司特別美味。',
     image: '/images/tomato-olive.jpg',
     tags: [],
-    details: { ingredients: '', ingredients_zh: '', allergens: '', allergens_zh: '', netWeight: '', about: '', about_zh: '' },
+    details: { ingredients: 'Unbleached flour, filtered water, sourdough starter, sun-dried tomatoes, olives, pinch of salt', ingredients_zh: '無漂白麵粉、過濾水、天然酵種、油漬番茄、橄欖、少許鹽', netWeight: '', about: '', about_zh: '' },
     options: [shapeOption],
   },
   {
@@ -94,7 +93,7 @@ export const menu = [
     description_zh: '墨西哥辣椒帶來微辣風味，配上融化的切達起司與金黃起司外皮。',
     image: '/images/jalapeno-cheddar.jpg',
     tags: [],
-    details: { ingredients: '', ingredients_zh: '', allergens: '', allergens_zh: '', netWeight: '', about: '', about_zh: '' },
+    details: { ingredients: 'Unbleached flour, filtered water, sourdough starter, jalapeño, cheddar, pinch of salt', ingredients_zh: '無漂白麵粉、過濾水、天然酵種、墨西哥辣椒、切達起司、少許鹽', netWeight: '', about: '', about_zh: '' },
     options: [shapeOption],
   },
   {
@@ -108,7 +107,7 @@ export const menu = [
     description_zh: '新鮮迷迭香與濃郁切達起司——香氣十足，鹹香誘人，令人停不下來。',
     image: '/images/rosemary-cheddar.jpg',
     tags: [],
-    details: { ingredients: '', ingredients_zh: '', allergens: '', allergens_zh: '', netWeight: '', about: '', about_zh: '' },
+    details: { ingredients: 'Unbleached flour, filtered water, sourdough starter, rosemary, cheddar, pinch of salt', ingredients_zh: '無漂白麵粉、過濾水、天然酵種、迷迭香、切達起司、少許鹽', netWeight: '', about: '', about_zh: '' },
     options: [shapeOption],
   },
   {
@@ -122,7 +121,7 @@ export const menu = [
     description_zh: '外層裹滿芝麻與多種穀物種子，帶來堅果香氣與紮實口感。',
     image: '/images/sesame-seeds.jpg',
     tags: [],
-    details: { ingredients: '', ingredients_zh: '', allergens: '', allergens_zh: '', netWeight: '', about: '', about_zh: '' },
+    details: { ingredients: 'Unbleached flour, filtered water, sourdough starter, flaxseeds, sunflower seeds, pumpkin seeds, black sesame seeds, pinch of salt', ingredients_zh: '無漂白麵粉、過濾水、天然酵種、亞麻籽、葵花籽、南瓜籽、黑芝麻、少許鹽', netWeight: '', about: '', about_zh: '' },
     options: [shapeOption],
   },
   {
@@ -137,7 +136,7 @@ export const menu = [
     description_zh: '採用自家廚房現磨的全麥麵粉，保留完整全穀營養與麥香。',
     image: '/images/whole-wheat-loaf.jpg',
     tags: [],
-    details: { ingredients: '', ingredients_zh: '', allergens: '', allergens_zh: '', netWeight: '', about: '', about_zh: '' },
+    details: { ingredients: 'Fresh-milled flour, unbleached flour, filtered water, sourdough starter, olive oil, honey, pinch of salt', ingredients_zh: '現磨麵粉、無漂白麵粉、過濾水、天然酵種、橄欖油、蜂蜜、少許鹽', netWeight: '', about: '', about_zh: '' },
     options: [shapeOption],
   },
   {
@@ -151,7 +150,7 @@ export const menu = [
     description_zh: '鬆軟的橄欖油佛卡夏，表面凹凸金黃。以 8 吋方盤烘烤。',
     image: '/images/focaccia.jpg',
     tags: [],
-    details: { ingredients: '', ingredients_zh: '', allergens: '', allergens_zh: '', netWeight: '', about: '', about_zh: '' },
+    details: { ingredients: 'Unbleached flour, filtered water, sourdough starter, pinch of salt. Topping choices: vegetables, herbs', ingredients_zh: '無漂白麵粉、過濾水、天然酵種、少許鹽。配料可選：蔬菜、香草', netWeight: '', about: '', about_zh: '' },
   },
   {
     id: 'english-muffins',
@@ -164,7 +163,7 @@ export const menu = [
     description_zh: '以現磨全麥製作的英式馬芬。剖開烤香、抹上奶油最美味。6 個一組。',
     image: '/images/english-muffins.jpg',
     tags: [],
-    details: { ingredients: '', ingredients_zh: '', allergens: '', allergens_zh: '', netWeight: '', about: '', about_zh: '' },
+    details: { ingredients: 'Fresh-milled flour, unbleached flour, filtered water, sourdough starter, pinch of salt', ingredients_zh: '現磨麵粉、無漂白麵粉、過濾水、天然酵種、少許鹽', netWeight: '', about: '', about_zh: '' },
   },
   {
     id: 'bagels',
@@ -176,7 +175,7 @@ export const menu = [
     description_zh: '有嚼勁的酸種貝果，先煮後烤。可選原味、芝麻或全料。',
     image: '/images/bagels.jpg',
     tags: [],
-    details: { ingredients: '', ingredients_zh: '', allergens: '', allergens_zh: '', netWeight: '', about: '', about_zh: '' },
+    details: { ingredients: 'Unbleached flour, filtered water, sourdough starter, maple syrup, sugar, pinch of salt. Inclusions: sesame seeds or everything bagel spices', ingredients_zh: '無漂白麵粉、過濾水、天然酵種、楓糖漿、糖、少許鹽。可加：芝麻或全料貝果香料', netWeight: '', about: '', about_zh: '' },
     sizes: [
       { id: '6', label: '6 bagels', label_zh: '6 個', price: 15 },
       { id: '12', label: '12 bagels', label_zh: '12 個', price: 28 },
@@ -198,14 +197,14 @@ export const menu = [
     id: 'stuffed-bagels',
     name: 'Stuffed Bagels (Ham & Cheddar)',
     name_zh: '火腿切達起司夾餡貝果',
-    price: 28,
+    price: 30,
     unit: '6',
     unit_zh: '6 個',
     description: 'Our bagels stuffed with ham and cheddar — a meal in itself. Sold by the six.',
     description_zh: '貝果內夾火腿與切達起司，份量十足。6 個一組。',
     image: '/images/stuffed-bagels.jpg',
     tags: ['Bestseller'],
-    details: { ingredients: '', ingredients_zh: '', allergens: '', allergens_zh: '', netWeight: '', about: '', about_zh: '' },
+    details: { ingredients: 'Unbleached flour, filtered water, sourdough starter, ham, cheddar, maple syrup, sugar, pinch of salt', ingredients_zh: '無漂白麵粉、過濾水、天然酵種、火腿、切達起司、楓糖漿、糖、少許鹽', netWeight: '', about: '', about_zh: '' },
   },
   {
     id: 'pizza-dough',
@@ -218,7 +217,7 @@ export const menu = [
     description_zh: '可直接使用的酸種披薩麵團，分份冷凍。每包 3 份。',
     image: '/images/product-placeholder.svg',
     tags: [],
-    details: { ingredients: '', ingredients_zh: '', allergens: '', allergens_zh: '', netWeight: '', about: '', about_zh: '' },
+    details: { ingredients: 'Unbleached flour, filtered water, sourdough starter, pinch of salt', ingredients_zh: '無漂白麵粉、過濾水、天然酵種、少許鹽', netWeight: '', about: '', about_zh: '' },
   },
   {
     id: 'bread-bowls',
@@ -231,7 +230,7 @@ export const menu = [
     description_zh: '專為濃湯設計的圓形酸種麵包碗。每份 3 個。',
     image: '/images/product-placeholder.svg',
     tags: [],
-    details: { ingredients: '', ingredients_zh: '', allergens: '', allergens_zh: '', netWeight: '', about: '', about_zh: '' },
+    details: { ingredients: 'Unbleached flour, filtered water, sourdough starter, pinch of salt', ingredients_zh: '無漂白麵粉、過濾水、天然酵種、少許鹽', netWeight: '', about: '', about_zh: '' },
   },
   {
     id: 'sourdough-buns',
@@ -244,7 +243,7 @@ export const menu = [
     description_zh: '柔軟的全穀酸種餐包，點綴黑芝麻——夾三明治或搭配濃湯都很適合。',
     image: '/images/sourdough-buns.jpg',
     tags: [],
-    details: { ingredients: '', ingredients_zh: '', allergens: '', allergens_zh: '', netWeight: '', about: '', about_zh: '' },
+    details: { ingredients: '', ingredients_zh: '', netWeight: '', about: '', about_zh: '' },
   },
   {
     id: 'sourdough-muffins',
@@ -257,7 +256,7 @@ export const menu = [
     description_zh: '鬆軟的酸種馬芬，以紙杯烘烤——口感柔軟微甜，最適合當早餐或點心。',
     image: '/images/sourdough-muffins.jpg',
     tags: ['Sweet'],
-    details: { ingredients: '', ingredients_zh: '', allergens: '', allergens_zh: '', netWeight: '', about: '', about_zh: '' },
+    details: { ingredients: '', ingredients_zh: '', netWeight: '', about: '', about_zh: '' },
   },
   {
     id: 'cinnamon-buns',
@@ -270,20 +269,20 @@ export const menu = [
     description_zh: '柔軟的酸種麵團捲入肉桂，烘烤至金黃焦香。',
     image: '/images/cinnamon-buns.jpg',
     tags: ['Sweet'],
-    details: { ingredients: '', ingredients_zh: '', allergens: '', allergens_zh: '', netWeight: '', about: '', about_zh: '' },
+    details: { ingredients: '', ingredients_zh: '', netWeight: '', about: '', about_zh: '' },
   },
   {
     id: 'chocolate-cookies',
     name: 'Sourdough Chocolate Cookies',
     name_zh: '酸種巧克力餅乾',
-    price: 20,
+    price: 18,
     unit: '12',
     unit_zh: '12 片',
     description: 'Chewy sourdough chocolate chip cookies, baked by the dozen.',
     description_zh: '有嚼勁的酸種巧克力豆餅乾，一打裝。',
     image: '/images/chocolate-cookies.jpg',
     tags: ['Sweet'],
-    details: { ingredients: '', ingredients_zh: '', allergens: '', allergens_zh: '', netWeight: '', about: '', about_zh: '' },
+    details: { ingredients: 'Unbleached flour, filtered water, chocolate chips, sourdough starter, brown sugar, butter, egg yolk, baking soda, pinch of salt', ingredients_zh: '無漂白麵粉、過濾水、巧克力豆、天然酵種、黑糖、奶油、蛋黃、小蘇打、少許鹽', netWeight: '', about: '', about_zh: '' },
   },
 ];
 

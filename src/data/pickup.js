@@ -7,7 +7,7 @@ export const pickup = {
   // Days of the week available for pickup.
   // 0 = Sunday, 1 = Monday, 2 = Tuesday, 3 = Wednesday,
   // 4 = Thursday, 5 = Friday, 6 = Saturday
-  availableWeekdays: [2, 3, 4], // Tuesday, Wednesday, Thursday
+  availableWeekdays: [0, 3], // Sunday, Wednesday
 
   // Orders must be placed at least this many days before pickup.
   minLeadDays: 3,
