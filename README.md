@@ -116,8 +116,8 @@ product labels.
 │   ├── data/
 │   │   ├── menu.js                 # ← products, prices, EN/中文 names, details
 │   │   └── pickup.js               # ← pickup weekdays, lead time, blackout dates
-│   ├── components/                 # Header, Hero, Reviews, Story, Process,
-│   │                               #   Menu, PickupCalendar, OrderForm,
+│   ├── components/                 # Header, Hero, Reviews, Story, Menu,
+│   │                               #   PickupCalendar, OrderForm,
 │   │                               #   Newsletter, Footer, T
 │   ├── styles/global.css
 │   └── pages/index.astro
@@ -132,8 +132,9 @@ product labels.
 
 ### Page sections
 
-Hero → Reviews → Our Story → How It's Made → Menu → Order → Newsletter → Footer.
-(There is no Gallery section; it was removed at the owner's request.)
+Hero → Reviews → Our Story → Menu → Order → Newsletter → Footer.
+(There is no Gallery section, and no "How it's made" section; both were removed
+at the owner's request.)
 
 ### The banner, and why the hero repeats it
 

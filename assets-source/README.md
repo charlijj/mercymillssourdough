@@ -9,6 +9,7 @@ serves what lives in `public/`, so these large files stay out of the build.
 | `logo-small-original.jpeg` | The round badge logo, as supplied on a white square. `public/images/logo.png` is its circle cut out to a transparent PNG (so it sits on the cream header without a white box), and `public/favicon.png` is the same at 128px. |
 | `logo-large-original.jpeg` | The wide logo lockup, as supplied. `public/images/logo-full.jpg` is it trimmed to the artwork and resized to 900px for the footer; `public/images/og-image.jpg` is it centred on a 1200×630 social-share card. |
 | `sarahs-logo-original.png` | Sarah's earlier logo, superseded by the two above. Kept for reference. |
+| `making-focaccia-unused.jpg` | In-progress focaccia photo that lived in the "How it's made" section. That section was removed, so the photo has no home on the page. Kept so it can be placed somewhere else. |
 | `hero-bread-unused.jpg` | The photo used in the hero before the banner replaced it. Kept in case it's wanted elsewhere. |
 
 If you re-crop the banner, keep the output at the same aspect ratio — the two

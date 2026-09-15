@@ -124,10 +124,7 @@ section { padding: clamp(3.5rem, 8vw, 6.5rem) 0; }
 .btn-link:hover { text-decoration: none; color: var(--olive-deep); border-bottom-color: var(--olive-deep); }
 
 /* Alternating section backgrounds */
-.bg-ivory { background: var(--ivory); }
 .bg-cream-deep { background: var(--cream-deep); }
-.bg-crust { background: var(--crust); color: var(--cream); }
-.bg-crust h2, .bg-crust h3 { color: var(--wheat); }
 
 /* Utility */
 /* Available to screen readers, invisible on screen */
