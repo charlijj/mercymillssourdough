@@ -127,7 +127,8 @@ product labels.
 │   └── wrangler.toml
 └── docs/
     ├── HANDOFF.md                  # day-to-day owner's guide
-    └── EMAIL_BACKEND.md            # Resend + Cloudflare setup
+    ├── EMAIL_BACKEND.md            # Resend + Cloudflare setup
+    └── owner/                      # the owner's own content briefs, newest last
 ```
 
 ### Page sections
@@ -135,6 +136,30 @@ product labels.
 Hero → Reviews → Our Story → Menu → Order → Newsletter → Footer.
 (There is no Gallery section, and no "How it's made" section; both were removed
 at the owner's request.)
+
+### Menu and Order are one flow
+
+The menu card *is* the order row. Each card carries its own size, option and
+quantity selects, so customers choose quantities while browsing instead of
+meeting a second copy of all fifteen products further down the page.
+
+That means the quantity controls live outside `<form id="order-form">`. The
+form's script therefore collects rows with `document.querySelectorAll('.item-row')`
+rather than querying inside the form, and reads their values directly from the
+DOM — nothing depends on native form submission for those fields. The Order
+section renders a read-only summary of what was picked, plus the running total,
+the customer's details, the pickup calendar and the notes box.
+
+Two things worth knowing if you edit this:
+
+- `<option>` can only contain text, so `<T>` cannot be used inside one. Each
+  translatable option carries `data-label` and `data-label-zh`, and a small
+  observer in `Menu.astro` swaps the text when the language changes. The order
+  summary reads those attributes directly rather than the rendered text, so it
+  does not depend on which observer runs first.
+- The summary rows are built in JavaScript, so they never receive Astro's
+  scoping attribute. Their CSS lives in a `<style is:global>` block namespaced
+  under `#order-summary`. Scoped rules would silently not apply.
 
 ### The banner, and why the hero repeats it
 

@@ -1,10 +1,6 @@
 ---
-import { menu } from '../data/menu.js';
 import T from './T.astro';
 import PickupCalendar from './PickupCalendar.astro';
-
-const quantities = [0, 1, 2, 3, 4, 5];
-const fmt = (n) => (Number.isInteger(n) ? `$${n}` : `$${n.toFixed(2)}`);
 ---
 
 <section id="order" class="bg-cream-deep">
@@ -14,8 +10,8 @@ const fmt = (n) => (Number.isInteger(n) ? `$${n}` : `$${n.toFixed(2)}`);
       <h2><T en="Order fresh sourdough" zh="訂購新鮮酸種麵包" /></h2>
       <p class="section-lead">
         <T
-          en="Tell us what you'd like and when. We'll email you back with your total and e-transfer details. Please order at least 3 days before your pickup date."
-          zh="告訴我們您想要什麼、何時取貨。我們會以電子郵件回覆總金額與電子轉帳資訊。請至少在取貨日期前 3 天下單。"
+          en="Add your details and pickup date below. We'll email you back with your total and e-transfer details. Please order at least 3 days before your pickup date."
+          zh="請在下方填寫您的資料與取貨日期。我們會以電子郵件回覆總金額與電子轉帳資訊。請至少在取貨日期前 3 天下單。"
         />
       </p>
     </div>
@@ -24,63 +20,18 @@ const fmt = (n) => (Number.isInteger(n) ? `$${n}` : `$${n.toFixed(2)}`);
       <!-- Honeypot spam trap (leave empty) -->
       <input type="checkbox" name="botcheck" style="display:none" tabindex="-1" autocomplete="off" />
 
+      <!-- Quantities are chosen on the menu cards above; this is the summary
+           of what was picked there, so nothing is listed twice. -->
       <fieldset class="fs-items">
-        <legend><T en="What would you like?" zh="您想要點什麼？" /></legend>
-        <div class="item-list">
-          {menu.map((item) => (
-            <div class="item-row" data-id={item.id} data-name={item.name} data-price={item.price ?? ''}>
-              <img class="item-thumb" src={item.image} alt="" loading="lazy" />
-
-              <div class="item-main">
-                <span class="item-title"><T en={item.name} zh={item.name_zh} /></span>
-                <small class="item-price">
-                  <span class="unit-price">
-                    {item.sizes ? fmt(item.sizes[0].price) : fmt(item.price)}
-                  </span>
-                  {!item.sizes && (
-                    <> / <T en={item.unit} zh={item.unit_zh} /></>
-                  )}
-                </small>
-
-                {(item.sizes || item.options) && (
-                  <div class="item-opts">
-                    {item.sizes && (
-                      <label class="opt">
-                        <span class="opt-label"><T en="Size" zh="份量" /></span>
-                        <select data-role="size" aria-label={`Size for ${item.name}`}>
-                          {item.sizes.map((s) => (
-                            <option value={s.id} data-price={s.price} data-label={s.label}>
-                              {s.label}
-                            </option>
-                          ))}
-                        </select>
-                      </label>
-                    )}
-                    {item.options && item.options.map((opt) => (
-                      <label class="opt">
-                        <span class="opt-label"><T en={opt.label} zh={opt.label_zh} /></span>
-                        <select
-                          data-role="option"
-                          data-opt-id={opt.id}
-                          data-opt-label={opt.label}
-                          aria-label={`${opt.label} for ${item.name}`}
-                        >
-                          {opt.choices.map((c) => (
-                            <option value={c.id} data-label={c.label}>{c.label}</option>
-                          ))}
-                        </select>
-                      </label>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              <select data-role="qty" aria-label={`Quantity of ${item.name}`}>
-                {quantities.map((q) => <option value={q}>{q}</option>)}
-              </select>
-            </div>
-          ))}
-        </div>
+        <legend><T en="Your order" zh="您的訂單" /></legend>
+        <ul id="order-summary" class="order-summary">
+          <li class="order-summary-empty">
+            <T
+              en="Nothing chosen yet — pick your quantities on the menu above."
+              zh="尚未選擇商品——請在上方菜單選擇數量。"
+            />
+          </li>
+        </ul>
 
         <div class="order-total">
           <span><T en="Total" zh="總計" /></span>
@@ -109,6 +60,12 @@ const fmt = (n) => (Number.isInteger(n) ? `$${n}` : `$${n.toFixed(2)}`);
 
       <label class="field">
         <span><T en="Notes & preferred pickup location" zh="備註與希望取貨地點" /></span>
+        <small class="field-note">
+          <T
+            en="Please be sure to provide your preferred pickup location, e.g. Fraser Heights Recreation Centre."
+            zh="請務必提供您希望的取貨地點，例如 Fraser Heights Recreation Centre。"
+          />
+        </small>
         <textarea
           name="notes"
           rows="3"
@@ -118,8 +75,8 @@ const fmt = (n) => (Number.isInteger(n) ? `$${n}` : `$${n.toFixed(2)}`);
         ></textarea>
         <small class="field-hint">
           <T
-            en="Please be sure to give your preferred pickup location. Have allergies? Our breads may contain wheat, gluten, and eggs — list any concerns above so we can help."
-            zh="請務必填寫您希望的取貨地點。有過敏情況嗎？我們的麵包可能含有小麥、麩質與雞蛋——請在上方列出任何顧慮，以便我們協助。"
+            en="Have allergies? Our breads may contain wheat, gluten, and eggs — list any concerns above so we can help."
+            zh="有過敏情況嗎？我們的麵包可能含有小麥、麩質與雞蛋——請在上方列出任何顧慮，以便我們協助。"
           />
         </small>
       </label>
@@ -172,42 +129,6 @@ const fmt = (n) => (Number.isInteger(n) ? `$${n}` : `$${n.toFixed(2)}`);
     padding: 0;
     margin-bottom: 0.9rem;
   }
-  .item-list { display: grid; gap: 0.6rem; }
-  .item-row {
-    display: flex;
-    align-items: center;
-    gap: 0.9rem;
-    padding: 0.7rem 0.9rem;
-    background: var(--cream);
-    border-radius: 10px;
-    border: 1px solid rgba(58, 42, 30, 0.06);
-  }
-  .item-thumb {
-    width: 54px; height: 54px;
-    border-radius: 8px;
-    object-fit: cover;
-    background: var(--cream-deep);
-    flex-shrink: 0;
-  }
-  .item-main { display: flex; flex-direction: column; flex: 1; min-width: 0; gap: 0.15rem; }
-  .item-title { font-weight: 600; }
-  .item-price { color: var(--muted); font-size: 0.85rem; }
-  .item-opts { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.35rem; }
-  .opt { display: flex; align-items: center; gap: 0.35rem; }
-  .opt-label { font-size: 0.78rem; color: var(--muted); }
-  .item-opts select {
-    width: auto;
-    font-size: 0.85rem;
-    padding: 0.3rem 0.5rem;
-    border-radius: 7px;
-  }
-  .item-row > select[data-role='qty'] {
-    width: 78px;
-    text-align: center;
-    padding: 0.55rem 0.6rem;
-    cursor: pointer;
-    flex-shrink: 0;
-  }
   .order-total {
     display: flex;
     justify-content: space-between;
@@ -235,6 +156,13 @@ const fmt = (n) => (Number.isInteger(n) ? `$${n}` : `$${n.toFixed(2)}`);
   .field { display: flex; flex-direction: column; gap: 0.35rem; }
   .field > span { font-weight: 500; font-size: 0.92rem; color: var(--crust-soft); }
   .field-hint { color: var(--muted); font-size: 0.8rem; }
+  /* Sits above the notes box, as the owner asked */
+  .field-note {
+    color: var(--crust-soft);
+    font-size: 0.82rem;
+    font-weight: 600;
+    margin-bottom: 0.35rem;
+  }
   input, textarea, select {
     font-family: var(--font-body);
     font-size: 1rem;
@@ -268,8 +196,37 @@ const fmt = (n) => (Number.isInteger(n) ? `$${n}` : `$${n.toFixed(2)}`);
 
   @media (max-width: 620px) {
     .grid-2 { grid-template-columns: 1fr; }
-    .item-row { flex-wrap: wrap; }
-    .item-main { flex-basis: calc(100% - 150px); }
+  }
+</style>
+
+<!-- The summary rows are built by JavaScript, so they never receive Astro's
+     scoping attribute and scoped rules would not reach them. These are global,
+     namespaced under #order-summary so nothing else is affected. -->
+<style is:global>
+  #order-summary { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.4rem; }
+  #order-summary .order-summary-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 1rem;
+    padding: 0.6rem 0.9rem;
+    background: var(--cream);
+    border-radius: 10px;
+    border: 1px solid rgba(58, 42, 30, 0.06);
+  }
+  #order-summary .summary-name { font-weight: 600; color: var(--crust); }
+  #order-summary .summary-name small { font-weight: 400; color: var(--muted); }
+  #order-summary .summary-amount {
+    font-family: var(--font-display);
+    font-weight: 700;
+    color: var(--amber-deep);
+    white-space: nowrap;
+  }
+  #order-summary .order-summary-empty {
+    padding: 0.9rem;
+    color: var(--muted);
+    font-size: 0.95rem;
+    text-align: center;
   }
 </style>
 
@@ -298,7 +255,11 @@ const fmt = (n) => (Number.isInteger(n) ? `$${n}` : `$${n.toFixed(2)}`);
   const lang = () => (document.documentElement.getAttribute('data-lang') === 'zh' ? 'zh' : 'en');
   const fmt = (n) => (Number.isInteger(n) ? `$${n}` : `$${n.toFixed(2)}`);
 
-  const rows = form ? Array.from(form.querySelectorAll('.item-row')) : [];
+  // The quantity controls live on the menu cards above this form, so look them
+  // up across the document rather than inside the form element.
+  const rows = Array.from(document.querySelectorAll('.item-row'));
+  const summary = document.getElementById('order-summary');
+  const menuTotal = document.getElementById('menu-total-amount');
 
   // Unit price for a row: the selected size's price, or the item's flat price.
   function unitPrice(row) {
@@ -312,29 +273,114 @@ const fmt = (n) => (Number.isInteger(n) ? `$${n}` : `$${n.toFixed(2)}`);
     if (el) el.textContent = fmt(unitPrice(row));
   }
 
+  function rowQty(row) {
+    return Number(row.querySelector('select[data-role="qty"]').value) || 0;
+  }
+
   function recalcTotal() {
     let t = 0;
     rows.forEach((row) => {
-      const qty = Number(row.querySelector('select[data-role="qty"]').value) || 0;
-      t += qty * unitPrice(row);
+      t += rowQty(row) * unitPrice(row);
     });
     if (totalAmount) totalAmount.textContent = fmt(t);
+    if (menuTotal) menuTotal.textContent = fmt(t);
     return t;
+  }
+
+  // Mirror the chosen items into the form so the customer can check their
+  // order without scrolling back up through the menu.
+  function renderSummary() {
+    if (!summary) return;
+    const chosen = rows.filter(rowQty);
+    summary.textContent = '';
+
+    if (!chosen.length) {
+      const li = document.createElement('li');
+      li.className = 'order-summary-empty';
+      li.textContent =
+        lang() === 'zh'
+          ? '尚未選擇商品——請在上方菜單選擇數量。'
+          : 'Nothing chosen yet — pick your quantities on the menu above.';
+      summary.appendChild(li);
+      return;
+    }
+
+    chosen.forEach((row) => {
+      const qty = rowQty(row);
+      const titleEl = row.querySelector('.title-button');
+      const name = titleEl ? titleEl.innerText.trim() : row.dataset.name;
+
+      // Read the label from the data attributes rather than the rendered text,
+      // so this does not depend on the option translator having run first.
+      const optText = (opt) =>
+        (lang() === 'zh' && opt.dataset.labelZh) || opt.dataset.label || opt.textContent.trim();
+
+      const bits = [];
+      const size = row.querySelector('select[data-role="size"]');
+      if (size) bits.push(optText(size.selectedOptions[0]));
+      row.querySelectorAll('select[data-role="option"]').forEach((sel) => {
+        bits.push(optText(sel.selectedOptions[0]));
+      });
+
+      const li = document.createElement('li');
+      li.className = 'order-summary-row';
+
+      const label = document.createElement('span');
+      label.className = 'summary-name';
+      label.textContent = `${qty} × ${name}`;
+      if (bits.length) {
+        const meta = document.createElement('small');
+        meta.textContent = ` (${bits.join(', ')})`;
+        label.appendChild(meta);
+      }
+
+      const amount = document.createElement('span');
+      amount.className = 'summary-amount';
+      amount.textContent = fmt(qty * unitPrice(row));
+
+      li.append(label, amount);
+      summary.appendChild(li);
+    });
+  }
+
+  function refreshAll() {
+    recalcTotal();
+    renderSummary();
   }
 
   rows.forEach((row) => {
     row.querySelectorAll('select').forEach((sel) =>
       sel.addEventListener('change', () => {
         refreshRow(row);
-        recalcTotal();
+        row.classList.toggle('has-qty', rowQty(row) > 0);
+        refreshAll();
       })
     );
+  });
+
+  // The detail popup's "Add one to my order" button.
+  document.querySelectorAll('[data-add-for]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const row = rows.find((r) => r.dataset.id === btn.dataset.addFor);
+      if (!row) return;
+      const qty = row.querySelector('select[data-role="qty"]');
+      qty.value = String(Math.min(Number(qty.value || 0) + 1, qty.options.length - 1));
+      row.classList.toggle('has-qty', rowQty(row) > 0);
+      refreshAll();
+    });
+  });
+
+  // Quantities and the summary are language-independent except for the labels,
+  // so re-render when the visitor switches language.
+  new MutationObserver(renderSummary).observe(document.documentElement, {
+    attributes: true,
+    attributeFilter: ['data-lang'],
   });
 
   function buildOrder() {
     const items = rows
       .map((row) => {
-        const qty = Number(row.querySelector('select[data-role="qty"]').value) || 0;
+        const qty = rowQty(row);
         if (qty <= 0) return null;
         const size = row.querySelector('select[data-role="size"]');
         const options = {};
@@ -370,7 +416,7 @@ const fmt = (n) => (Number.isInteger(n) ? `$${n}` : `$${n.toFixed(2)}`);
 
   if (form && status) {
     rows.forEach(refreshRow);
-    recalcTotal();
+    refreshAll();
 
     form.addEventListener('submit', async (e) => {
       e.preventDefault();

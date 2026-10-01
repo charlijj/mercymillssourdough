@@ -11,6 +11,7 @@ serves what lives in `public/`, so these large files stay out of the build.
 | `sarahs-logo-original.png` | Sarah's earlier logo, superseded by the two above. Kept for reference. |
 | `making-focaccia-unused.jpg` | In-progress focaccia photo that lived in the "How it's made" section. That section was removed, so the photo has no home on the page. Kept so it can be placed somewhere else. |
 | `hero-bread-unused.jpg` | The photo used in the hero before the banner replaced it. Kept in case it's wanted elsewhere. |
+| `sourdough-buns-unused.jpg`, `sourdough-muffins-unused.jpg`, `cinnamon-buns-unused.jpg` | Sourdough buns, muffins and cinnamon buns. The owner set the launch menu at fifteen products and these three are not on it, so they are out of the build. Put the photo back in `public/images/` and restore the product block in `src/data/menu.js` to bring an item back. |
 
 If you re-crop the banner, keep the output at the same aspect ratio — the two
 invisible links in `Hero.astro` that sit over the artwork's painted-on

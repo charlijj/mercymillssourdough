@@ -3,6 +3,7 @@ import { menu } from '../data/menu.js';
 import T from './T.astro';
 
 const fmt = (n) => (Number.isInteger(n) ? `$${n}` : `$${n.toFixed(2)}`);
+const quantities = [0, 1, 2, 3, 4, 5];
 
 // Chinese labels for the short product tags.
 const tagZh = { Bestseller: '熱銷', Seasonal: '季節限定', Sweet: '甜點' };
@@ -15,8 +16,8 @@ const tagZh = { Bestseller: '熱銷', Seasonal: '季節限定', Sweet: '甜點' 
       <h2><T en="Our breads & bakes" zh="麵包與烘焙" /></h2>
       <p class="section-lead">
         <T
-          en="Everything is baked to order in small batches. Order below for local pickup."
-          zh="所有產品皆為小批量接單製作。請於下方下單，到店自取。"
+          en="Everything is baked to order in small batches. Choose your quantities here, then add your details below to finish your order for local pickup."
+          zh="所有產品皆為小批量接單製作。請在此選擇數量，再於下方填寫您的資料完成訂購，到店自取。"
         />
       </p>
     </div>
@@ -40,7 +41,10 @@ const tagZh = { Bestseller: '熱銷', Seasonal: '季節限定', Sweet: '甜點' 
     <div class="menu-grid">
       {menu.map((item) => (
         <article
-          class="card"
+          class="card item-row"
+          data-id={item.id}
+          data-name={item.name}
+          data-price={item.price ?? ''}
           data-search={`${item.name} ${item.name_zh} ${item.description} ${item.description_zh}`.toLowerCase()}
         >
           <button
@@ -64,40 +68,77 @@ const tagZh = { Bestseller: '熱銷', Seasonal: '季節限定', Sweet: '甜點' 
                 </button>
               </h3>
               <span class="card-price">
-                {item.sizes ? (
-                  item.sizes.map((s, i) => (
-                    <>
-                      {i > 0 && <span class="price-sep">·</span>}
-                      {fmt(s.price)}<small>/{s.id}</small>
-                    </>
-                  ))
-                ) : (
-                  <>{fmt(item.price)}<small>/<T en={item.unit} zh={item.unit_zh} /></small></>
+                <span class="unit-price">
+                  {item.sizes ? fmt(item.sizes[0].price) : fmt(item.price)}
+                </span>
+                {!item.sizes && (
+                  <small>/<T en={item.unit} zh={item.unit_zh} /></small>
                 )}
               </span>
             </div>
             <p><T en={item.description} zh={item.description_zh} /></p>
-            {item.options && item.options.map((opt) => (
-              <p class="card-options">
-                <T en={opt.label} zh={opt.label_zh} />:
-                {opt.choices.map((c, i) => (
-                  <>
-                    {i > 0 && ' / '}
-                    <T en={c.label} zh={c.label_zh} />
-                  </>
-                ))}
-              </p>
-            ))}
+
             <button type="button" class="card-details-link" data-detail-for={item.id}>
               <T en="Ingredients & details →" zh="成分與詳細資訊 →" />
             </button>
+
+            {/* Order controls live on the card itself, so customers choose
+                quantities while browsing instead of in a second list below. */}
+            <div class="card-order">
+              {item.sizes && (
+                <label class="opt">
+                  <span class="opt-label"><T en="Size" zh="份量" /></span>
+                  <select data-role="size" aria-label={`Size for ${item.name}`}>
+                    {item.sizes.map((s) => (
+                      <option
+                        value={s.id}
+                        data-price={s.price}
+                        data-label={s.label}
+                        data-label-zh={s.label_zh || s.label}
+                      >
+                        {s.label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              )}
+              {item.options && item.options.map((opt) => (
+                <label class="opt">
+                  <span class="opt-label"><T en={opt.label} zh={opt.label_zh} /></span>
+                  <select
+                    data-role="option"
+                    data-opt-id={opt.id}
+                    data-opt-label={opt.label}
+                    aria-label={`${opt.label} for ${item.name}`}
+                  >
+                    {opt.choices.map((c) => (
+                      <option value={c.id} data-label={c.label} data-label-zh={c.label_zh || c.label}>
+                        {c.label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              ))}
+              <label class="opt opt-qty">
+                <span class="opt-label"><T en="Quantity" zh="數量" /></span>
+                <select data-role="qty" aria-label={`Quantity of ${item.name}`}>
+                  {quantities.map((q) => <option value={q}>{q}</option>)}
+                </select>
+              </label>
+            </div>
           </div>
         </article>
       ))}
     </div>
 
     <div class="text-center menu-cta">
-      <a href="#order" class="btn btn-primary"><T en="Order Now" zh="立即下單" /></a>
+      <p class="menu-running-total">
+        <T en="Your order so far:" zh="目前您的訂單：" />
+        <strong id="menu-total-amount">$0</strong>
+      </p>
+      <a href="#order" class="btn btn-primary">
+        <T en="Continue to your details →" zh="繼續填寫您的資料 →" />
+      </a>
     </div>
   </div>
 
@@ -140,9 +181,9 @@ const tagZh = { Bestseller: '熱銷', Seasonal: '季節限定', Sweet: '甜點' 
             )}
           </dl>
 
-          <a href="#order" class="btn btn-primary modal-order" data-close>
-            <T en="Order this" zh="訂購此商品" />
-          </a>
+          <button type="button" class="btn btn-primary modal-order" data-add-for={item.id} data-close>
+            <T en="Add one to my order" zh="加入一件到訂單" />
+          </button>
         </div>
       ))}
     </div>
@@ -230,19 +271,58 @@ const tagZh = { Bestseller: '熱銷', Seasonal: '季節限定', Sweet: '甜點' 
     text-align: right;
   }
   .card-price small { font-size: 0.72rem; color: var(--muted); font-weight: 500; }
-  .price-sep { margin: 0 0.3rem; color: var(--muted); }
   .card-body p { margin: 0; color: var(--muted); font-size: 0.96rem; }
-  .card-options {
-    margin-top: 0.7rem !important;
-    font-size: 0.85rem;
-    color: var(--crust-soft);
-    background: var(--cream);
-    padding: 0.4rem 0.7rem;
-    border-radius: 8px;
-    display: inline-block;
-    align-self: flex-start;
+
+  /* Order controls on the card */
+  .card-order {
+    margin-top: auto;
+    padding-top: 0.9rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+    align-items: flex-end;
+    border-top: 1px solid rgba(58, 42, 30, 0.08);
   }
+  .card-order .opt { display: flex; flex-direction: column; gap: 0.25rem; flex: 1 1 auto; }
+  .card-order .opt-qty { flex: 0 0 5.2rem; }
+  .card-order .opt-label {
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .card-order select {
+    font-family: var(--font-body);
+    font-size: 0.9rem;
+    padding: 0.45rem 0.5rem;
+    border: 1px solid rgba(58, 42, 30, 0.2);
+    border-radius: 8px;
+    background: var(--white);
+    color: var(--ink);
+    width: 100%;
+  }
+  /* A chosen quantity should be obvious at a glance while scrolling */
+  .card.has-qty { outline: 2px solid var(--olive); outline-offset: -2px; }
+  .card.has-qty .card-order select[data-role='qty'] {
+    border-color: var(--olive);
+    background: var(--olive);
+    color: #fff;
+    font-weight: 700;
+  }
+
   .menu-cta { margin-top: 3rem; }
+  .menu-running-total {
+    margin: 0 0 1rem;
+    color: var(--crust-soft);
+    font-size: 1rem;
+  }
+  .menu-running-total strong {
+    font-family: var(--font-display);
+    font-size: 1.3rem;
+    color: var(--amber-deep);
+    margin-left: 0.3rem;
+  }
 
   /* Clickable card areas */
   button.card-media {
@@ -326,6 +406,22 @@ const tagZh = { Bestseller: '熱銷', Seasonal: '季節限定', Sweet: '甜點' 
   const search = document.getElementById('menu-search');
   const cards = Array.from(document.querySelectorAll('#menu .card'));
   const noResults = document.getElementById('menu-no-results');
+
+  // ---- Translate dropdown options -------------------------------------
+  // <option> can only hold text, so <T> cannot be used inside one. Both
+  // labels ride along as data attributes and are swapped on language change.
+  const translatableOptions = Array.from(document.querySelectorAll('option[data-label-zh]'));
+  function applyOptionLanguage() {
+    const zh = document.documentElement.getAttribute('data-lang') === 'zh';
+    translatableOptions.forEach((o) => {
+      o.textContent = zh ? o.dataset.labelZh : o.dataset.label;
+    });
+  }
+  applyOptionLanguage();
+  new MutationObserver(applyOptionLanguage).observe(document.documentElement, {
+    attributes: true,
+    attributeFilter: ['data-lang'],
+  });
 
   // ---- Product detail popup -------------------------------------------
   const modal = document.getElementById('product-modal');
