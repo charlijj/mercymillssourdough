@@ -216,7 +216,7 @@ export function decisionForm(action, order, token, siteUrl) {
   const rows = order.items
     .map(
       (it) =>
-        `<tr><td style="padding:6px 0;border-bottom:1px solid ${C.creamDeep};font-size:14px;">${esc(it.name)} <span style="color:${C.muted};">&times; ${Number(it.qty)}</span></td>
+        `<tr><td style="padding:6px 0;border-bottom:1px solid ${C.creamDeep};font-size:14px;">${esc(it.name)} <span style="color:${C.muted};">&times; ${Number(it.qty)}</span>${itemChoices(it)}</td>
          <td align="right" style="padding:6px 0;border-bottom:1px solid ${C.creamDeep};font-size:14px;white-space:nowrap;">${money(Number(it.price) * Number(it.qty))}</td></tr>`
     )
     .join('');

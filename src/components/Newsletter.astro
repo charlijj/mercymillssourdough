@@ -1,9 +1,13 @@
 ---
 import T from './T.astro';
 
-// Newsletter signups go through the same Cloudflare Worker as orders
-// (POST /api/subscribe): the subscriber gets a welcome email and the owner is
-// notified. Configured via PUBLIC_ORDER_API (the Worker base URL).
+// ---------------------------------------------------------------------------
+//  Newsletter signup is paused for launch. Flip this to true to turn the form
+//  back on — the signup code below is untouched and still posts to the same
+//  Worker (POST /api/subscribe), configured via PUBLIC_ORDER_API.
+// ---------------------------------------------------------------------------
+const SIGNUP_ENABLED = false;
+
 const ORDER_API = import.meta.env.PUBLIC_ORDER_API || '';
 ---
 
@@ -19,20 +23,28 @@ const ORDER_API = import.meta.env.PUBLIC_ORDER_API || '';
         />
       </p>
 
-      <form id="newsletter-form" class="newsletter-form" data-api={ORDER_API}>
-        <input type="checkbox" name="botcheck" style="display:none" tabindex="-1" autocomplete="off" />
-        <input
-          type="email"
-          name="email"
-          required
-          aria-label="Email address"
-          data-ph-en="you@example.com"
-          data-ph-zh="您的電子郵件地址"
-          placeholder="you@example.com"
-        />
-        <button type="submit" class="btn btn-primary"><T en="Subscribe" zh="訂閱" /></button>
-      </form>
-      <p id="newsletter-status" class="newsletter-status" role="status" aria-live="polite"></p>
+      {SIGNUP_ENABLED ? (
+        <>
+          <form id="newsletter-form" class="newsletter-form" data-api={ORDER_API}>
+            <input type="checkbox" name="botcheck" style="display:none" tabindex="-1" autocomplete="off" />
+            <input
+              type="email"
+              name="email"
+              required
+              aria-label="Email address"
+              data-ph-en="you@example.com"
+              data-ph-zh="您的電子郵件地址"
+              placeholder="you@example.com"
+            />
+            <button type="submit" class="btn btn-primary"><T en="Subscribe" zh="訂閱" /></button>
+          </form>
+          <p id="newsletter-status" class="newsletter-status" role="status" aria-live="polite"></p>
+        </>
+      ) : (
+        <p class="newsletter-soon">
+          <T en="Coming Soon" zh="即將推出" />
+        </p>
+      )}
     </div>
   </div>
 </section>
@@ -72,6 +84,22 @@ const ORDER_API = import.meta.env.PUBLIC_ORDER_API || '';
   .newsletter-status { margin: 1rem 0 0; font-weight: 600; min-height: 1.2em; }
   .newsletter-status.ok { color: var(--olive-deep); }
   .newsletter-status.err { color: #b23b2e; }
+
+  /* Shown while signup is paused */
+  .newsletter-soon {
+    display: inline-block;
+    margin: 1.6rem 0 0;
+    padding: 0.6rem 1.5rem;
+    border: 1.5px solid var(--olive);
+    border-radius: 999px;
+    font-family: var(--font-body);
+    font-weight: 600;
+    font-size: 0.92rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--olive-deep);
+  }
+  .newsletter-card p.newsletter-soon { color: var(--olive-deep); }
 </style>
 
 <script>

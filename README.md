@@ -76,11 +76,31 @@ been received.
 
 ### Newsletter
 
-The signup box posts to `POST /api/subscribe` on the same Worker: the subscriber
-gets a welcome email and the owner is notified. There is no third-party signup
-service. Campaigns are sent separately — from Gmail for a small list, or by
-importing addresses into a tool like MailerLite. A ready-made, on-brand HTML
-template lives in `email-templates/newsletter.html`.
+**Signup is paused for launch.** The section shows a "Coming Soon" badge
+instead of the form. To turn it back on, set `SIGNUP_ENABLED = true` at the top
+of `src/components/Newsletter.astro` — the form, its script and the Worker
+route are all still in place and untouched.
+
+When enabled, the signup box posts to `POST /api/subscribe` on the same Worker:
+the subscriber gets a welcome email and the owner is notified. There is no
+third-party signup service. Campaigns are sent separately — from Gmail for a
+small list, or by importing addresses into a tool like MailerLite. A
+ready-made, on-brand HTML template lives in `email-templates/newsletter.html`.
+
+### Tests
+
+```bash
+npm test        # node --test worker/test/*.test.mjs
+```
+
+`worker/test/lifecycle.test.mjs` runs the real Worker in-process against a
+fake KV, with `fetch` stubbed so the Resend calls are captured rather than
+sent. It covers the whole order lifecycle and the things that are expensive to
+get wrong: that the server recomputes the total rather than trusting the
+browser, that `GET /api/decide` only renders a form (a mail scanner prefetching
+the link must not decide an order), that deciding twice emails the customer
+once, that forged or re-signed tokens are refused, and that the shape/flavour
+the customer picked survives onto the owner's email.
 
 ### Bilingual (English / 中文)
 

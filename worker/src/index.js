@@ -95,6 +95,10 @@ async function handleOrder(request, env, cors) {
       id: String(it.id || ''),
       name: String(it.name || 'Item'),
       unit: String(it.unit || ''),
+      // The shape, size and flavour the customer picked. Mom bakes from this,
+      // so it has to survive onto the order and into both emails.
+      size: cleanText(it.size),
+      options: cleanOptions(it.options),
       price: Number(it.price) || 0,
       qty: Number(it.qty) || 0,
     })),
@@ -298,6 +302,27 @@ function shortId() {
   const t = Date.now().toString(36).slice(-4).toUpperCase();
   const r = Math.random().toString(36).slice(2, 5).toUpperCase();
   return `MM-${t}${r}`;
+}
+
+// The order body comes from the browser, so anything we keep is coerced to a
+// bounded string. The email templates escape on the way out; this keeps the
+// stored record tidy too.
+function cleanText(v, max = 120) {
+  if (v === null || v === undefined) return '';
+  if (typeof v === 'object') return '';
+  return String(v).trim().slice(0, max);
+}
+
+function cleanOptions(obj, maxKeys = 8) {
+  if (!obj || typeof obj !== 'object' || Array.isArray(obj)) return {};
+  const out = {};
+  for (const [k, v] of Object.entries(obj)) {
+    if (Object.keys(out).length >= maxKeys) break;
+    const key = cleanText(k, 40);
+    const val = cleanText(v);
+    if (key && val) out[key] = val;
+  }
+  return out;
 }
 
 function b64urlEncode(str) {
