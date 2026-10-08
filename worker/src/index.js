@@ -2,24 +2,35 @@
 //  Mercy Mill Sourdough — order backend (Cloudflare Worker)
 //
 //  Routes:
-//    POST /api/order   → receive an order; email the customer + email mom with
-//                        signed Accept/Decline links.
-//    GET  /api/decide  → mom clicks Accept/Decline; email the customer the
-//                        confirmation/decline; show mom a done page.
-//    GET  /            → health check.
+//    POST /api/order        → receive an order; email the customer + email mom
+//                             with signed Accept/Decline links.
+//    GET  /api/decide       → mom opens Accept/Decline; shows the order. Sends
+//                             nothing (mail scanners prefetch links).
+//    POST /api/decide/code  → emails a one-time security code to OWNER_EMAIL.
+//    POST /api/decide       → token + security code (+ optional message):
+//                             email the customer; show mom a done page.
+//    GET  /                 → health check.
+//
+//  Why a code as well as the signed link: the link travels inside an email,
+//  and emails get replied to and forwarded with the original quoted. A signed
+//  link proves only that someone *has* the email. The code goes to the owner's
+//  inbox alone, so a leaked link — quoted in a reply to the customer, say —
+//  cannot accept or decline anything on its own.
 //
 //  Secrets (set with `npx wrangler secret put NAME`):
 //    RESEND_API_KEY   Resend API key (if absent, emails are logged, not sent)
-//    SIGNING_SECRET   random string used to sign the decision links
-//    OWNER_EMAIL      where orders are sent (mom's email)
+//    SIGNING_SECRET   random string used to sign links and hash codes
+//    OWNER_EMAIL      where orders and security codes are sent (mom's email)
 //  Vars (wrangler.toml):
 //    FROM_EMAIL, FROM_NAME, SITE_URL, ALLOW_ORIGIN
-//  Optional KV binding `ORDERS` for record-keeping + idempotency.
+//  KV binding `ORDERS` — REQUIRED. Holds orders, decisions and security codes.
+//  Without it the decision pages refuse to work rather than run unprotected.
 // ============================================================================
 
 import {
   customerReceived,
   ownerNewOrder,
+  ownerSecurityCode,
   customerConfirmed,
   customerDeclined,
   subscriberWelcome,
@@ -28,6 +39,14 @@ import {
   decisionPage,
   messagePage,
 } from './templates.js';
+
+// Decision-link and security-code limits.
+const TOKEN_TTL_MS = 30 * 24 * 60 * 60 * 1000; // links work for 30 days
+const CODE_TTL_SECONDS = 10 * 60; // a code is good for 10 minutes
+const MAX_TRIES_PER_CODE = 5; // wrong guesses before a code is thrown away
+const MAX_CODES_PER_ORDER = 5; // codes that can ever be sent for one order
+const MAX_FAILS_PER_ORDER = 10; // wrong guesses ever, before the order locks
+const RECORD_TTL_SECONDS = 60 * 60 * 24 * 30;
 
 export default {
   async fetch(request, env) {
@@ -43,6 +62,9 @@ export default {
       if (url.pathname === '/api/decide' && request.method === 'GET') {
         return await handleDecideForm(url, env);
       }
+      if (url.pathname === '/api/decide/code' && request.method === 'POST') {
+        return await handleSendCode(request, env);
+      }
       if (url.pathname === '/api/decide' && request.method === 'POST') {
         return await handleDecide(request, env);
       }
@@ -50,9 +72,11 @@ export default {
         return await handleSubscribe(request, env, cors);
       }
       if (url.pathname === '/') {
-        return new Response('Mercy Mill Sourdough order service is running.', {
-          headers: { 'content-type': 'text/plain' },
-        });
+        const off = decisionsUnavailable(env);
+        const text = off
+          ? `Mercy Mill Sourdough order service is running.\nWarning: ${off}`
+          : 'Mercy Mill Sourdough order service is running.';
+        return new Response(text, { headers: { 'content-type': 'text/plain' } });
       }
       return json({ success: false, error: 'Not found' }, 404, cors);
     } catch (err) {
@@ -122,8 +146,9 @@ async function handleOrder(request, env, cors) {
   }
 
   const apiBase = new URL(request.url).origin;
-  const acceptUrl = `${apiBase}/api/decide?token=${await makeToken({ id: order.id, action: 'accept', order }, env.SIGNING_SECRET)}`;
-  const declineUrl = `${apiBase}/api/decide?token=${await makeToken({ id: order.id, action: 'decline', order }, env.SIGNING_SECRET)}`;
+  const exp = Date.now() + TOKEN_TTL_MS;
+  const acceptUrl = `${apiBase}/api/decide?token=${await makeToken({ id: order.id, action: 'accept', order, exp }, env.SIGNING_SECRET)}`;
+  const declineUrl = `${apiBase}/api/decide?token=${await makeToken({ id: order.id, action: 'decline', order, exp }, env.SIGNING_SECRET)}`;
 
   const siteUrl = env.SITE_URL || 'https://mercymillsourdough.com';
   const ownerEmail = env.OWNER_EMAIL;
@@ -134,7 +159,10 @@ async function handleOrder(request, env, cors) {
 
   if (ownerEmail) {
     const own = ownerNewOrder(order, acceptUrl, declineUrl, siteUrl);
-    await sendEmail(env, { to: ownerEmail, ...own });
+    // Reply goes back to the owner, never to the customer: a reply quotes the
+    // whole email, Accept and Decline buttons included. The email carries its
+    // own "Email the customer" button that starts a fresh, unquoted message.
+    await sendEmail(env, { to: ownerEmail, ...own, replyTo: ownerEmail });
   } else {
     console.warn('OWNER_EMAIL not set — owner notification skipped.');
   }
@@ -143,59 +171,201 @@ async function handleOrder(request, env, cors) {
 }
 
 // --------------------------------------------------------------------------
-// GET /api/decide?token=...  → show the review page with an optional message.
-// Nothing is sent on GET: link scanners/prefetchers must not trigger a decision.
+// Shared checks for the three decision routes
+// --------------------------------------------------------------------------
+
+// The decision pages refuse to run without the pieces that make them safe,
+// rather than quietly falling back to "the link alone is enough".
+function decisionsUnavailable(env) {
+  if (!env.ORDERS) {
+    return 'order decisions are switched off because the ORDERS storage (KV) is not connected to the Worker.';
+  }
+  if (!env.SIGNING_SECRET) return 'order decisions are switched off because SIGNING_SECRET is not set.';
+  if (!env.OWNER_EMAIL) return 'order decisions are switched off because OWNER_EMAIL is not set.';
+  return null;
+}
+
+async function readDecisionToken(token, env) {
+  const p = token ? await verifyToken(token, env.SIGNING_SECRET) : null;
+  if (!p || !p.order || !p.order.id || !['accept', 'decline'].includes(p.action)) return null;
+  // Links issued before expiry was added carry no `exp`; they still need a
+  // security code, which is the real protection.
+  if (p.exp && Date.now() > Number(p.exp)) return null;
+  return p;
+}
+
+const invalidLink = () =>
+  html(messagePage('Invalid link', 'This confirmation link is invalid or has expired.'), 400);
+
+const unavailable = (reason) =>
+  html(messagePage('Not available', `Sorry — ${reason} Please contact the site administrator.`), 503);
+
+const alreadyHandled = (status) =>
+  html(messagePage('Already handled', `This order was already ${status}. No further email was sent.`));
+
+const lockedPage = () =>
+  html(
+    messagePage(
+      'Order locked',
+      'Too many security codes were requested or entered for this order, so the buttons are locked to keep it safe. Please reply to the customer by email directly.'
+    ),
+    429
+  );
+
+// --------------------------------------------------------------------------
+// GET /api/decide?token=...  → show the order and the "email me a code" step.
+// Nothing is sent on GET: link scanners/prefetchers must not trigger anything.
 // --------------------------------------------------------------------------
 async function handleDecideForm(url, env) {
-  const token = url.searchParams.get('token');
-  const payload = token ? await verifyToken(token, env.SIGNING_SECRET) : null;
-  if (!payload || !payload.order || !['accept', 'decline'].includes(payload.action)) {
-    return html(messagePage('Invalid link', 'This confirmation link is invalid or has expired.'), 400);
-  }
+  const off = decisionsUnavailable(env);
+  if (off) return unavailable(off);
+
+  const token = url.searchParams.get('token') || '';
+  const payload = await readDecisionToken(token, env);
+  if (!payload) return invalidLink();
 
   const already = await alreadyDecided(env, payload.order.id);
-  if (already) {
-    return html(
-      messagePage('Already handled', `This order was already ${already}. No further email was sent.`)
-    );
-  }
+  if (already) return alreadyHandled(already);
+
+  const guard = await readGuard(env, payload.order.id);
+  if (isLocked(guard)) return lockedPage();
 
   const siteUrl = env.SITE_URL || 'https://mercymillsourdough.com';
-  return html(decisionForm(payload.action, payload.order, token, siteUrl));
+  return html(decisionForm(payload.action, payload.order, token, siteUrl, { step: 'send' }));
 }
 
 // --------------------------------------------------------------------------
-// POST /api/decide  (token + optional message) → send the customer's email.
+// POST /api/decide/code  (token) → email a one-time code to OWNER_EMAIL only.
+// Whoever presses the button, the code only ever goes to the owner's inbox.
 // --------------------------------------------------------------------------
-async function handleDecide(request, env) {
+async function handleSendCode(request, env) {
+  const off = decisionsUnavailable(env);
+  if (off) return unavailable(off);
+
   const form = await request.formData();
   const token = String(form.get('token') || '');
-  const message = String(form.get('message') || '').trim().slice(0, 2000);
+  const message = String(form.get('message') || '').slice(0, 2000);
 
-  const payload = token ? await verifyToken(token, env.SIGNING_SECRET) : null;
-  if (!payload || !payload.order || !['accept', 'decline'].includes(payload.action)) {
-    return html(messagePage('Invalid link', 'This confirmation link is invalid or has expired.'), 400);
-  }
+  const payload = await readDecisionToken(token, env);
+  if (!payload) return invalidLink();
+  const { order, action } = payload;
+
+  const already = await alreadyDecided(env, order.id);
+  if (already) return alreadyHandled(already);
+
+  const guard = await readGuard(env, order.id);
+  if (isLocked(guard) || guard.sends >= MAX_CODES_PER_ORDER) return lockedPage();
+
+  const code = randomCode();
+  await env.ORDERS.put(
+    codeKey(order.id, action),
+    JSON.stringify({
+      h: await codeHash(env, order.id, action, code),
+      exp: Date.now() + CODE_TTL_SECONDS * 1000,
+      tries: 0,
+    }),
+    { expirationTtl: CODE_TTL_SECONDS }
+  );
+  guard.sends += 1;
+  await writeGuard(env, order.id, guard);
 
   const siteUrl = env.SITE_URL || 'https://mercymillsourdough.com';
-  const order = payload.order;
+  await sendEmail(env, { to: env.OWNER_EMAIL, ...ownerSecurityCode(order, action, code, siteUrl) });
+
+  return html(
+    decisionForm(action, order, token, siteUrl, {
+      step: 'code',
+      message,
+      notice: `We emailed a 6-digit security code to ${maskEmail(env.OWNER_EMAIL)}. It works for 10 minutes.`,
+    })
+  );
+}
+
+// --------------------------------------------------------------------------
+// POST /api/decide  (token + code + optional message) → email the customer.
+// --------------------------------------------------------------------------
+async function handleDecide(request, env) {
+  const off = decisionsUnavailable(env);
+  if (off) return unavailable(off);
+
+  const form = await request.formData();
+  const token = String(form.get('token') || '');
+  const code = String(form.get('code') || '').replace(/\s+/g, '');
+  const message = String(form.get('message') || '').trim().slice(0, 2000);
+
+  const payload = await readDecisionToken(token, env);
+  if (!payload) return invalidLink();
+  const { order, action } = payload;
+  const siteUrl = env.SITE_URL || 'https://mercymillsourdough.com';
 
   // Idempotency: never decide (or email) twice.
   const already = await alreadyDecided(env, order.id);
-  if (already) {
+  if (already) return alreadyHandled(already);
+
+  const guard = await readGuard(env, order.id);
+  if (isLocked(guard)) return lockedPage();
+
+  const key = codeKey(order.id, action);
+  const raw = await env.ORDERS.get(key);
+  const rec = raw ? JSON.parse(raw) : null;
+
+  if (!rec || Date.now() > rec.exp) {
     return html(
-      messagePage('Already handled', `This order was already ${already}. No further email was sent.`)
+      decisionForm(action, order, token, siteUrl, {
+        step: 'send',
+        message,
+        error: 'That security code has expired, or none has been sent yet. Send yourself a new one.',
+      }),
+      403
     );
   }
-  await markDecided(env, order.id, payload.action === 'accept' ? 'accepted' : 'declined');
+
+  const ok =
+    /^\d{6}$/.test(code) && timingSafeEqual(await codeHash(env, order.id, action, code), rec.h);
+
+  if (!ok) {
+    rec.tries += 1;
+    guard.fails += 1;
+    await writeGuard(env, order.id, guard);
+    if (isLocked(guard)) {
+      await env.ORDERS.delete(key);
+      return lockedPage();
+    }
+    if (rec.tries >= MAX_TRIES_PER_CODE) {
+      await env.ORDERS.delete(key);
+      return html(
+        decisionForm(action, order, token, siteUrl, {
+          step: 'send',
+          message,
+          error: 'Too many wrong tries for that code, so it has been cancelled. Send yourself a new one.',
+        }),
+        403
+      );
+    }
+    const ttl = Math.max(60, Math.ceil((rec.exp - Date.now()) / 1000));
+    await env.ORDERS.put(key, JSON.stringify(rec), { expirationTtl: ttl });
+    const left = MAX_TRIES_PER_CODE - rec.tries;
+    return html(
+      decisionForm(action, order, token, siteUrl, {
+        step: 'code',
+        message,
+        error: `That code isn't right. ${left} ${left === 1 ? 'try' : 'tries'} left.`,
+      }),
+      403
+    );
+  }
+
+  // Codes are single use.
+  await env.ORDERS.delete(key);
+  await markDecided(env, order, action === 'accept' ? 'accepted' : 'declined');
 
   const mail =
-    payload.action === 'accept'
+    action === 'accept'
       ? customerConfirmed(order, siteUrl, message)
       : customerDeclined(order, siteUrl, message);
   await sendEmail(env, { to: order.customer.email, ...mail });
 
-  return html(decisionPage(payload.action, order, siteUrl, message));
+  return html(decisionPage(action, order, siteUrl, message));
 }
 
 // Returns the existing status ("accepted"/"declined") if already handled.
@@ -207,16 +377,60 @@ async function alreadyDecided(env, orderId) {
   return stored.status && stored.status !== 'pending' ? stored.status : null;
 }
 
-async function markDecided(env, orderId, status) {
-  if (!env.ORDERS) return;
-  const raw = await env.ORDERS.get(`order:${orderId}`);
-  if (!raw) return;
-  const stored = JSON.parse(raw);
+// Records the decision. If the stored order is missing (placed before the
+// storage was connected, say), the order from the signed link is written
+// instead, so "never decide twice" still holds.
+async function markDecided(env, order, status) {
+  const raw = await env.ORDERS.get(`order:${order.id}`);
+  const stored = raw ? JSON.parse(raw) : { ...order };
   stored.status = status;
   stored.decidedAt = new Date().toISOString();
-  await env.ORDERS.put(`order:${orderId}`, JSON.stringify(stored), {
-    expirationTtl: 60 * 60 * 24 * 30,
+  await env.ORDERS.put(`order:${order.id}`, JSON.stringify(stored), {
+    expirationTtl: RECORD_TTL_SECONDS,
   });
+}
+
+// Per-order counters that cap how many codes can ever be sent and how many
+// wrong guesses can ever be made. With 10 guesses at a one-in-a-million code,
+// the odds of guessing in are about 1 in 100,000.
+const guardKey = (orderId) => `guard:${orderId}`;
+const codeKey = (orderId, action) => `code:${orderId}:${action}`;
+
+async function readGuard(env, orderId) {
+  const raw = await env.ORDERS.get(guardKey(orderId));
+  const g = raw ? JSON.parse(raw) : {};
+  return { sends: Number(g.sends) || 0, fails: Number(g.fails) || 0 };
+}
+async function writeGuard(env, orderId, guard) {
+  await env.ORDERS.put(guardKey(orderId), JSON.stringify(guard), {
+    expirationTtl: RECORD_TTL_SECONDS,
+  });
+}
+const isLocked = (guard) => guard.fails >= MAX_FAILS_PER_ORDER;
+
+// Only a keyed hash of the code is stored, bound to the order and the action,
+// so a code requested for "accept" cannot be used to decline.
+const codeHash = (env, orderId, action, code) =>
+  hmac(env.SIGNING_SECRET, `code|${orderId}|${action}|${code}`);
+
+// Uniform 6-digit code from the platform CSPRNG (rejection sampling avoids
+// the slight bias of a plain modulo).
+function randomCode() {
+  const buf = new Uint32Array(1);
+  const limit = Math.floor(0x100000000 / 1e6) * 1e6;
+  let n;
+  do {
+    crypto.getRandomValues(buf);
+    n = buf[0];
+  } while (n >= limit);
+  return String(n % 1e6).padStart(6, '0');
+}
+
+// Shown on the decision page, which anyone holding the link can open.
+function maskEmail(email) {
+  const [user, domain] = String(email).split('@');
+  if (!domain) return 'the bakery inbox';
+  return `${user.slice(0, 1)}${'•'.repeat(Math.max(3, user.length - 1))}@${domain}`;
 }
 
 // --------------------------------------------------------------------------
@@ -295,8 +509,24 @@ function json(obj, status = 200, extra = {}) {
     headers: { 'content-type': 'application/json', ...extra },
   });
 }
+// Every HTML page here is a decision page or follows one, and the decision
+// link carries its token in the URL. So: never cached, never sent on as a
+// Referer (the "back to website" link would otherwise hand the token to the
+// site's host), never framed, never indexed, and forms may only post here.
 function html(str, status = 200) {
-  return new Response(str, { status, headers: { 'content-type': 'text/html; charset=utf-8' } });
+  return new Response(str, {
+    status,
+    headers: {
+      'content-type': 'text/html; charset=utf-8',
+      'cache-control': 'no-store',
+      'referrer-policy': 'no-referrer',
+      'x-frame-options': 'DENY',
+      'x-content-type-options': 'nosniff',
+      'x-robots-tag': 'noindex, nofollow',
+      'content-security-policy':
+        "default-src 'none'; style-src 'unsafe-inline'; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
+    },
+  });
 }
 function shortId() {
   const t = Date.now().toString(36).slice(-4).toUpperCase();

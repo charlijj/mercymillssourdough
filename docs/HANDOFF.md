@@ -123,16 +123,29 @@ Every other day is automatically greyed out in the customer's calendar.
 
 1. An order email arrives with the items, chosen options, total, customer
    contact, requested pickup date and any allergy notes.
-2. Reply with the total and your **e-transfer** details.
+2. Send the customer the total and your **e-transfer** details using the
+   **"✉ Email (customer name)"** button in that order email. It opens a fresh
+   email to them. **Don't press Reply or Forward on the order email** — those
+   copy the whole email, Accept button included. (Reply now comes back to you
+   anyway, as a safety net.)
 3. **When the e-transfer arrives**, open that same order email and press
-   **"Accept"**. A page opens showing the order with a **message box** — add a
-   note (pickup address and time, say), then press
-   **"Payment received — confirm order"**. The customer is emailed
-   automatically.
-4. To turn an order down, press **"Decline"** instead and optionally explain
-   why; the customer is emailed that too.
+   **"Accept"**. A page opens showing the order:
+   - Press **"Email me a security code"**.
+   - A 6-digit code arrives in your inbox within a few seconds
+     ("123456 is your Mercy Mill security code"). It lasts 10 minutes.
+   - Type the code into the page, add a note if you like (pickup address and
+     time, say), then press **"Payment received — confirm order"**. The
+     customer is emailed automatically.
+4. To turn an order down, press **"Decline"** instead. It asks for a code the
+   same way, then lets you explain why. The customer is emailed that too.
 
-Nothing is sent to the customer until you press the button on that page.
+Nothing is sent to the customer until you press the final button on that page.
+
+**If a security code arrives that you didn't ask for**, someone else opened an
+Accept or Decline link, usually from an order email that was replied to or
+forwarded. They can't do anything without the code, so just ignore it. If
+there are many wrong attempts, that order's buttons lock. Handle that order by
+emailing the customer directly.
 
 ---
 

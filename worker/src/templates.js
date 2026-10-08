@@ -114,8 +114,16 @@ function messageBlock(message) {
 function button(label, url, bg) {
   return `<table role="presentation" cellpadding="0" cellspacing="0" style="display:inline-block;"><tr>
     <td style="border-radius:999px;background:${bg};">
-      <a href="${url}" style="display:inline-block;padding:13px 30px;font-size:15px;font-weight:bold;color:#ffffff;text-decoration:none;border-radius:999px;">${esc(label)}</a>
+      <a href="${esc(url)}" style="display:inline-block;padding:13px 30px;font-size:15px;font-weight:bold;color:#ffffff;text-decoration:none;border-radius:999px;">${esc(label)}</a>
     </td></tr></table>`;
+}
+
+// A mailto: that opens a *new* message to the customer — nothing quoted, so
+// none of the order email's buttons travel with it. The address is customer
+// input, so each half is percent-encoded before it goes into an href.
+function composeTo(email, subject) {
+  const [local, domain = ''] = String(email).split('@');
+  return `mailto:${encodeURIComponent(local)}@${encodeURIComponent(domain)}?subject=${encodeURIComponent(subject)}`;
 }
 
 // ---- Customer: order received -------------------------------------------
@@ -143,12 +151,40 @@ export function ownerNewOrder(order, acceptUrl, declineUrl, siteUrl) {
       <td style="padding-right:10px;">${button('✓ Accept order', acceptUrl, C.olive)}</td>
       <td>${button('✕ Decline order', declineUrl, '#a23b2e')}</td>
     </tr></table>
-    <p style="margin:18px 0 0;font-size:12px;color:${C.muted};">Order ${esc(order.id)}. If the buttons don't work, reply to this email.</p>
+    <p style="margin:22px 0 6px;font-size:14px;color:${C.crustSoft};">Need to ask the customer something first?</p>
+    ${button(`✉ Email ${order.customer.name}`, composeTo(order.customer.email, `Your Mercy Mill Sourdough order ${order.id}`), C.crustSoft)}
+    <p style="margin:18px 0 0;font-size:12px;line-height:1.6;color:${C.muted};">
+      Order ${esc(order.id)}. Please use the button above to write to the customer rather than
+      replying to or forwarding this email. For your security, Accept and Decline also ask for a
+      one-time code we send only to this inbox.
+    </p>
   `;
+  // No replyTo here on purpose: the Worker points replies back at the owner.
   return {
     subject: `New order from ${order.customer.name} — ${money(order.total)}`,
     html: wrap(`New order from ${order.customer.name}`, body, siteUrl),
-    replyTo: order.customer.email,
+  };
+}
+
+// ---- Owner (mom): one-time security code ---------------------------------
+// Deliberately carries no link that acts on the order: if this email is ever
+// forwarded or replied to, the only link in it is the shop's homepage.
+export function ownerSecurityCode(order, action, code, siteUrl) {
+  const verb = action === 'accept' ? 'accept' : 'decline';
+  const body = `
+    ${heading('Your security code')}
+    ${para(`Use this code to <strong>${verb}</strong> order <strong>${esc(order.id)}</strong> from ${esc(order.customer.name)} (${money(order.total)}).`)}
+    <div style="margin:18px 0;padding:18px;text-align:center;background:${C.cream};border-radius:12px;font-family:'Courier New',Courier,monospace;font-size:34px;letter-spacing:10px;font-weight:bold;color:${C.crust};">${esc(code)}</div>
+    ${para(`It works for 10 minutes and only once. Never share it — nobody from the bakery or the website will ever ask you for it.`)}
+    <p style="margin:18px 0 0;font-size:13px;line-height:1.6;color:${C.muted};">
+      <strong>Didn't ask for this?</strong> Then someone else opened the ${verb} link for this order
+      — most likely from an email that was replied to or forwarded. They can't ${verb} the order
+      without this code, so just ignore this email.
+    </p>
+  `;
+  return {
+    subject: `${code} is your Mercy Mill security code (${verb} ${order.id})`,
+    html: wrap(`Security code to ${verb} order ${order.id}`, body, siteUrl),
   };
 }
 
@@ -200,8 +236,13 @@ export function ownerNewSubscriber(email, siteUrl) {
   return { subject: `New newsletter signup — ${esc(email)}`, html: wrap('New newsletter signup', body, siteUrl) };
 }
 
-// ---- Page shown when mom clicks Accept/Decline: review + optional message --
-export function decisionForm(action, order, token, siteUrl) {
+// ---- Page shown when mom clicks Accept/Decline ---------------------------
+// Two steps. 'send': the order plus an "email me a security code" button.
+// 'code': the code box, the optional message, and the confirm button.
+// Anyone holding the link can open this page, so it reveals nothing the link
+// itself doesn't, and nothing on it acts without the emailed code.
+export function decisionForm(action, order, token, siteUrl, opts = {}) {
+  const { step = 'send', message = '', error = '', notice = '' } = opts;
   const accepted = action === 'accept';
   const title = accepted ? 'Confirm this order?' : 'Decline this order?';
   const cta = accepted ? 'Payment received — confirm order' : 'Decline & notify customer';
@@ -239,6 +280,13 @@ export function decisionForm(action, order, token, siteUrl) {
   button{width:100%;margin-top:16px;padding:14px;font:inherit;font-size:16px;font-weight:700;color:#fff;background:${btnColor};border:none;border-radius:999px;cursor:pointer;}
   button:hover{opacity:.92;}
   .meta{font-size:12px;color:${C.muted};text-align:center;margin-top:14px;}
+  .secure{border-top:1px solid ${C.creamDeep};padding-top:16px;margin-top:4px;}
+  .secure h2{font-size:15px;margin:0 0 4px;color:${C.crust};}
+  .notice{background:#eef1e4;color:#4b4d2c;border-radius:10px;padding:10px 14px;font-size:14px;margin:0 0 14px;}
+  .error{background:#f8e3df;color:#8a2d22;border-radius:10px;padding:10px 14px;font-size:14px;font-weight:600;margin:0 0 14px;}
+  .code{width:100%;box-sizing:border-box;font-family:'Courier New',Courier,monospace;font-size:28px;letter-spacing:10px;text-align:center;padding:12px;border:1.5px solid rgba(58,42,30,.25);border-radius:10px;margin-bottom:16px;}
+  .code:focus{outline:none;border-color:${C.amber};box-shadow:0 0 0 3px rgba(200,134,45,.15);}
+  .link{width:auto;margin:10px auto 0;display:block;padding:6px 10px;background:none;color:${C.crustSoft};font-size:14px;font-weight:600;text-decoration:underline;}
 </style></head>
 <body>
   <div class="card">
@@ -251,14 +299,35 @@ export function decisionForm(action, order, token, siteUrl) {
       ${order.pickupDate ? `<div style="margin-top:10px;font-size:14px;color:${C.crustSoft};"><strong>Preferred pickup:</strong> ${esc(order.pickupDate)}</div>` : ''}
       ${order.notes ? `<div style="margin-top:6px;font-size:14px;color:${C.crustSoft};"><strong>Notes:</strong> ${esc(order.notes)}</div>` : ''}
     </div>
+    ${error ? `<p class="error" role="alert">${esc(error)}</p>` : ''}
+    ${
+      step === 'code'
+        ? `
+    ${notice ? `<p class="notice" role="status">${esc(notice)}</p>` : ''}
     <form method="POST" action="/api/decide">
       <input type="hidden" name="token" value="${esc(token)}">
+      <label for="code">Security code</label>
+      <input class="code" id="code" name="code" type="text" inputmode="numeric" autocomplete="one-time-code"
+             pattern="[0-9 ]{6,7}" maxlength="7" required autofocus placeholder="••••••">
       <label for="message">Message to the customer</label>
       <p class="hint">${esc(hint)}</p>
-      <textarea id="message" name="message" rows="5" placeholder="${esc(placeholder)}"></textarea>
+      <textarea id="message" name="message" rows="5" placeholder="${esc(placeholder)}">${esc(message)}</textarea>
       <button type="submit">${esc(cta)}</button>
+      <button type="submit" class="link" formaction="/api/decide/code" formnovalidate>Didn't get it? Send a new code</button>
     </form>
-    <p class="meta">Order ${esc(order.id)} &middot; nothing is sent until you press the button</p>
+    <p class="meta">Order ${esc(order.id)} &middot; nothing is sent to the customer until you press the button</p>`
+        : `
+    <div class="secure">
+      <h2>Security check</h2>
+      <p class="hint">To keep your orders safe, we'll email a one-time code to your bakery inbox. Nothing is sent to the customer yet.</p>
+      <form method="POST" action="/api/decide/code">
+        <input type="hidden" name="token" value="${esc(token)}">
+        <input type="hidden" name="message" value="${esc(message)}">
+        <button type="submit">Email me a security code</button>
+      </form>
+    </div>
+    <p class="meta">Order ${esc(order.id)}</p>`
+    }
   </div>
 </body></html>`;
 }

@@ -45,9 +45,12 @@ npm install
 npx wrangler login          # opens a browser to sign in / create a free Cloudflare account
 ```
 
-### 2a. (Recommended) Create the order log
+### 2a. Create the order store (required)
 
-Stores orders for 30 days and prevents a double accept/decline:
+Stores orders for 30 days, prevents a double accept/decline, and holds the
+one-time security codes the Accept/Decline pages ask for. **Without it the
+Accept and Decline buttons refuse to work** — that's deliberate, so they never
+fall back to trusting the emailed link alone.
 
 ```bash
 npx wrangler kv namespace create ORDERS
@@ -65,7 +68,11 @@ npx wrangler secret put OWNER_EMAIL        # your mom's email address (where ord
 ```
 
 The `SIGNING_SECRET` is what makes the Accept/Decline links tamper-proof — pick
-something long and random, and don't share it.
+something long and random, and don't share it. Changing it invalidates every
+Accept/Decline link already sent.
+
+`OWNER_EMAIL` is also where the one-time security codes go, so it must be an
+inbox only the owner can read.
 
 ### 2c. Check the config
 

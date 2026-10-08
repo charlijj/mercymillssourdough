@@ -65,11 +65,35 @@ Two deployables, both on free tiers, no credit card required:
 1. Customer submits the order form → `POST /api/order` on the Worker.
 2. The Worker emails the **customer** ("order received") and the **owner** (the
    full order plus **Accept** / **Decline** buttons).
-3. Those buttons are **HMAC-signed links**. Opening one shows a review page with
-   a "message to the customer" box — nothing is sent on that GET, so mail
-   scanners that pre-fetch links cannot decide an order.
-4. Submitting that page (`POST /api/decide`) emails the customer the
-   confirmation or decline, including the owner's optional message.
+3. Those buttons are **HMAC-signed links**, valid for 30 days. Opening one shows
+   the order and an **"Email me a security code"** button — nothing is sent on
+   that GET, so mail scanners that pre-fetch links cannot trigger anything.
+4. Pressing it (`POST /api/decide/code`) emails a **one-time 6-digit code to
+   `OWNER_EMAIL` only**, whoever pressed it. The code lasts 10 minutes, works
+   once, and only for the action it was requested for.
+5. Entering the code plus an optional message (`POST /api/decide`) emails the
+   customer the confirmation or decline.
+
+**Why the code.** The link travels inside an email, and emails get replied to
+and forwarded with the original quoted underneath. A signed link only proves
+someone has a copy of that email. The code proves they also have the owner's
+inbox. So an Accept link quoted in a reply to the customer is useless on its
+own: they can open the page, but the code goes to the owner, and guessing runs
+out quickly. Each order allows 5 code emails and 10 wrong guesses in total, then
+the buttons lock. That puts the odds of guessing in at about 1 in 100,000.
+
+Two smaller things back this up:
+
+- The owner email's **Reply goes to the owner, not the customer**. To write to
+  the customer there is an **"Email <name>"** button that opens a fresh,
+  unquoted message.
+- Decision pages are sent `no-store`, `no-referrer`, unframeable and
+  `noindex`, so the token in the URL is not cached, leaked to the website via
+  `Referer`, or clickjacked.
+
+The decision routes **fail closed**. Without the `ORDERS` KV binding,
+`SIGNING_SECRET` or `OWNER_EMAIL` they return 503 instead of running
+unprotected, and `GET /` prints a warning naming what is missing.
 
 Payment is **e-transfer only**, and an order is confirmed only once payment has
 been received.
