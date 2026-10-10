@@ -5,6 +5,19 @@ import T from './T.astro';
 // into the image: not clickable, not translatable, unreadable on a phone.
 // So the buttons and the benefit strip below are real HTML — the image is
 // decorative, and everything it says is also available as text.
+// Headline and tagline are stacked one phrase per line, as the owner asked,
+// instead of running on as comma-separated sentences. Each line is its own
+// block so it breaks the same way in both languages.
+const headline = [
+  { en: 'Handcrafted with Care', zh: '用心手作' },
+  { en: 'From My Home to Yours', zh: '從我家到您家' },
+];
+const tagline = [
+  { en: 'Milled fresh.', zh: '現磨麵粉' },
+  { en: 'Fermented slow.', zh: '慢速發酵' },
+  { en: 'Baked in small batches in my own home kitchen.', zh: '在我的家庭廚房以小批量細心烘焙。' },
+];
+
 const benefits = [
   {
     // wheat
@@ -57,12 +70,11 @@ const benefits = [
   </div>
 
   <div class="container hero-intro">
-    <h1><T en="Handcrafted with Care, From My Home to Yours" zh="用心手作，從我家到您家" /></h1>
+    <h1>
+      {headline.map((l) => <span class="line"><T en={l.en} zh={l.zh} /></span>)}
+    </h1>
     <p class="hero-tagline">
-      <T
-        en="Milled fresh, fermented slow, and baked in small batches in my own home kitchen."
-        zh="現磨麵粉，慢速發酵，在我的家庭廚房以小批量細心烘焙。"
-      />
+      {tagline.map((l) => <span class="line"><T en={l.en} zh={l.zh} /></span>)}
     </p>
     <div class="hero-actions">
       <a href="#order" class="btn btn-primary"><T en="Order Now" zh="立即訂購" /></a>
@@ -137,6 +149,10 @@ const benefits = [
     color: var(--crust-soft);
     margin-bottom: 1.6rem;
   }
+  /* One phrase per line, in both languages. */
+  .hero-intro .line { display: block; }
+  .hero-intro h1 .line { line-height: 1.15; }
+  .hero-tagline .line { line-height: 1.55; }
   .hero-actions {
     display: flex;
     gap: 1.6rem;
