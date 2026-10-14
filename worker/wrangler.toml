@@ -8,7 +8,7 @@ workers_dev = true
 FROM_NAME = "Mercy Mill Sourdough"
 FROM_EMAIL = "orders@mercymillsourdough.com"   # must be on your Resend-verified domain
 SITE_URL = "https://mercymillsourdough.com"
-ALLOW_ORIGIN = "https://mercymillsourdough.com"  # your live site origin (CORS)
+ALLOW_ORIGIN = "https://mercymillsourdough.com"  # your live site origin. Several? Comma-separate, e.g. "https://mercymillsourdough.com,https://www.mercymillsourdough.com"
 
 # Secrets are NOT stored here. Set them once with:
 #   npx wrangler secret put RESEND_API_KEY

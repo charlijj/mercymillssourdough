@@ -25,3 +25,6 @@ worker/node_modules/
 Thumbs.db
 .vscode/
 .idea/
+
+# end-to-end test build (never deployed)
+.e2e-dist/

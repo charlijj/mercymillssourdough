@@ -39,6 +39,7 @@ import {
   decisionPage,
   messagePage,
 } from './templates.js';
+import { validateOrder } from './validate.js';
 
 // Decision-link and security-code limits.
 const TOKEN_TTL_MS = 30 * 24 * 60 * 60 * 1000; // links work for 30 days
@@ -48,10 +49,17 @@ const MAX_CODES_PER_ORDER = 5; // codes that can ever be sent for one order
 const MAX_FAILS_PER_ORDER = 10; // wrong guesses ever, before the order locks
 const RECORD_TTL_SECONDS = 60 * 60 * 24 * 30;
 
+// Order-intake limits.
+// Bump when the order API changes in a way the smoke test must know about.
+const ORDER_API_VERSION = '2';
+const MAX_BODY_CHARS = 20000; // a full 15-item order is under 4,000
+const MAX_ORDERS_PER_IP_PER_HOUR = 10;
+const IDEMPOTENCY_TTL_SECONDS = 60 * 60 * 24;
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
-    const cors = corsHeaders(env);
+    const cors = corsHeaders(env, request);
 
     if (request.method === 'OPTIONS') return new Response(null, { headers: cors });
 
@@ -72,11 +80,14 @@ export default {
         return await handleSubscribe(request, env, cors);
       }
       if (url.pathname === '/') {
-        const off = decisionsUnavailable(env);
+        const off = orderingUnavailable(env);
         const text = off
           ? `Mercy Mill Sourdough order service is running.\nWarning: ${off}`
           : 'Mercy Mill Sourdough order service is running.';
-        return new Response(text, { headers: { 'content-type': 'text/plain' } });
+        // x-mms-orders names the generation of the order API: 2 = validates
+        // orders against the menu. The smoke test refuses to send order-shaped
+        // requests to a Worker that does not say so.
+        return new Response(text, { headers: { 'content-type': 'text/plain', 'x-mms-orders': ORDER_API_VERSION } });
       }
       return json({ success: false, error: 'Not found' }, 404, cors);
     } catch (err) {
@@ -90,84 +101,124 @@ export default {
 // POST /api/order
 // --------------------------------------------------------------------------
 async function handleOrder(request, env, cors) {
+  // Never accept an order we could not deliver or act on. Taking the order and
+  // silently dropping the owner's email is the worst failure this service has.
+  const off = orderingUnavailable(env);
+  if (off) {
+    console.error(`Ordering unavailable: ${off}`);
+    return json(
+      {
+        success: false,
+        code: 'unavailable',
+        error: 'Ordering is temporarily unavailable. Please email us to place your order.',
+      },
+      503,
+      cors
+    );
+  }
+
+  if (!originAllowed(request, env)) {
+    return json({ success: false, code: 'bad_origin', error: 'This request is not allowed.' }, 403, cors);
+  }
+
+  // Read the body with a cap so nobody can make us parse a huge payload.
+  const text = await request.text();
+  if (text.length > MAX_BODY_CHARS) {
+    return json({ success: false, code: 'too_large', error: 'That request is too large.' }, 413, cors);
+  }
   let data;
   try {
-    data = await request.json();
+    data = JSON.parse(text);
   } catch {
     return json({ success: false, error: 'Invalid JSON' }, 400, cors);
   }
 
-  // Honeypot: bots fill hidden fields.
-  if (data.botcheck) return json({ success: true }, 200, cors);
+  // Honeypot: bots fill hidden fields. They get a normal-looking success.
+  if (data && data.botcheck) return json({ success: true }, 200, cors);
 
-  const items = Array.isArray(data.items)
-    ? data.items.filter((it) => Number(it.qty) > 0)
-    : [];
-  const email = String(data.customer?.email || '').trim();
-  const name = String(data.customer?.name || '').trim();
+  const checked = validateOrder(data);
+  if (!checked.ok) {
+    return json({ success: false, code: checked.code, error: checked.error }, checked.status, cors);
+  }
 
-  if (!items.length) return json({ success: false, error: 'No items selected' }, 400, cors);
-  if (!name) return json({ success: false, error: 'Name is required' }, 400, cors);
-  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email))
-    return json({ success: false, error: 'Valid email is required' }, 400, cors);
+  // A double-click, a retry after a slow response, or "back then submit again"
+  // sends the same key. Answer it with the original order instead of emailing
+  // the owner a second time.
+  const idemKey = /^[A-Za-z0-9_-]{8,64}$/.test(String(data.orderKey || '')) ? `idem:${data.orderKey}` : null;
+  if (idemKey) {
+    const prior = await env.ORDERS.get(idemKey);
+    if (prior) return json({ success: true, id: prior, duplicate: true, customerEmail: true }, 200, cors);
+  }
 
-  const total = items.reduce((t, it) => t + Number(it.price) * Number(it.qty), 0);
+  // Per-address hourly cap, so one client cannot flood the owner's inbox.
+  const ip = request.headers.get('cf-connecting-ip');
+  if (ip) {
+    const bucket = `rl:${ip}:${Math.floor(Date.now() / 3600000)}`;
+    const used = Number(await env.ORDERS.get(bucket)) || 0;
+    if (used >= MAX_ORDERS_PER_IP_PER_HOUR) {
+      return json(
+        { success: false, code: 'rate_limited', error: 'Too many orders from this connection. Please try again later, or email us.' },
+        429,
+        cors
+      );
+    }
+    await env.ORDERS.put(bucket, String(used + 1), { expirationTtl: 3700 });
+  }
 
   const order = {
     id: shortId(),
-    items: items.map((it) => ({
-      id: String(it.id || ''),
-      name: String(it.name || 'Item'),
-      unit: String(it.unit || ''),
-      // The shape, size and flavour the customer picked. Mom bakes from this,
-      // so it has to survive onto the order and into both emails.
-      size: cleanText(it.size),
-      options: cleanOptions(it.options),
-      price: Number(it.price) || 0,
-      qty: Number(it.qty) || 0,
-    })),
-    total,
-    customer: {
-      name,
-      email,
-      phone: String(data.customer?.phone || '').trim(),
-    },
-    pickupDate: String(data.pickupDate || '').trim(),
-    notes: String(data.notes || '').trim(),
+    items: checked.items,
+    total: checked.total,
+    customer: checked.customer,
+    pickupDate: checked.pickupDate,
+    notes: checked.notes,
     createdAt: new Date().toISOString(),
     status: 'pending',
   };
 
-  // Optional record for idempotency + history.
-  if (env.ORDERS) {
-    await env.ORDERS.put(`order:${order.id}`, JSON.stringify(order), {
-      expirationTtl: 60 * 60 * 24 * 30, // 30 days
-    });
-  }
+  await env.ORDERS.put(`order:${order.id}`, JSON.stringify(order), { expirationTtl: RECORD_TTL_SECONDS });
+  if (idemKey) await env.ORDERS.put(idemKey, order.id, { expirationTtl: IDEMPOTENCY_TTL_SECONDS });
 
   const apiBase = new URL(request.url).origin;
   const exp = Date.now() + TOKEN_TTL_MS;
   const acceptUrl = `${apiBase}/api/decide?token=${await makeToken({ id: order.id, action: 'accept', order, exp }, env.SIGNING_SECRET)}`;
   const declineUrl = `${apiBase}/api/decide?token=${await makeToken({ id: order.id, action: 'decline', order, exp }, env.SIGNING_SECRET)}`;
-
   const siteUrl = env.SITE_URL || 'https://mercymillsourdough.com';
-  const ownerEmail = env.OWNER_EMAIL;
 
-  // Email the customer + the owner.
-  const cust = customerReceived(order, siteUrl);
-  await sendEmail(env, { to: email, ...cust });
-
-  if (ownerEmail) {
+  // 1. The owner first. If this fails the order is lost, so the customer must
+  //    be told, and nothing is left behind that looks like a live order.
+  try {
     const own = ownerNewOrder(order, acceptUrl, declineUrl, siteUrl);
     // Reply goes back to the owner, never to the customer: a reply quotes the
     // whole email, Accept and Decline buttons included. The email carries its
     // own "Email the customer" button that starts a fresh, unquoted message.
-    await sendEmail(env, { to: ownerEmail, ...own, replyTo: ownerEmail });
-  } else {
-    console.warn('OWNER_EMAIL not set — owner notification skipped.');
+    await sendEmail(env, { to: env.OWNER_EMAIL, ...own, replyTo: env.OWNER_EMAIL });
+  } catch (err) {
+    console.error(`Owner email failed for ${order.id}: ${err.message}`);
+    await env.ORDERS.delete(`order:${order.id}`);
+    if (idemKey) await env.ORDERS.delete(idemKey);
+    return json(
+      {
+        success: false,
+        code: 'email_failed',
+        error: 'We could not send your order just now. Please try again in a few minutes, or email us.',
+      },
+      502,
+      cors
+    );
   }
 
-  return json({ success: true, id: order.id }, 200, cors);
+  // 2. The customer's confirmation. The owner already has the order, so a
+  //    failure here is logged and reported but does not fail the order.
+  let customerEmail = true;
+  try {
+    await sendEmail(env, { to: checked.customer.email, ...customerReceived(order, siteUrl) });
+  } catch (err) {
+    customerEmail = false;
+    console.error(`Customer email failed for ${order.id}: ${err.message}`);
+  }
+
+  return json({ success: true, id: order.id, customerEmail }, 200, cors);
 }
 
 // --------------------------------------------------------------------------
@@ -182,6 +233,18 @@ function decisionsUnavailable(env) {
   }
   if (!env.SIGNING_SECRET) return 'order decisions are switched off because SIGNING_SECRET is not set.';
   if (!env.OWNER_EMAIL) return 'order decisions are switched off because OWNER_EMAIL is not set.';
+  return null;
+}
+
+// Everything taking an order needs: the decision checks above, plus a way to
+// send mail. Local development can opt out of real mail with DRY_RUN=true.
+function orderingUnavailable(env) {
+  const base = decisionsUnavailable(env);
+  if (base) return base.replace('order decisions are', 'ordering is');
+  if (env.DRY_RUN !== 'true') {
+    if (!env.RESEND_API_KEY) return 'ordering is switched off because RESEND_API_KEY is not set.';
+    if (!env.FROM_EMAIL) return 'ordering is switched off because FROM_EMAIL is not set.';
+  }
   return null;
 }
 
@@ -437,6 +500,9 @@ function maskEmail(email) {
 // POST /api/subscribe  — newsletter signup
 // --------------------------------------------------------------------------
 async function handleSubscribe(request, env, cors) {
+  if (!originAllowed(request, env)) {
+    return json({ success: false, code: 'bad_origin', error: 'This request is not allowed.' }, 403, cors);
+  }
   let data;
   try {
     data = await request.json();
@@ -471,10 +537,11 @@ async function handleSubscribe(request, env, cors) {
 // Email via Resend (dry-run/log if no API key, useful for local testing)
 // --------------------------------------------------------------------------
 async function sendEmail(env, { to, subject, html, replyTo }) {
-  if (!env.RESEND_API_KEY) {
+  if (env.DRY_RUN === 'true') {
     console.log(`[dry-run email] to=${to} subject="${subject}"`);
     return { dryRun: true };
   }
+  if (!env.RESEND_API_KEY) throw new Error('RESEND_API_KEY is not set');
   const res = await fetch('https://api.resend.com/emails', {
     method: 'POST',
     headers: {
@@ -488,6 +555,8 @@ async function sendEmail(env, { to, subject, html, replyTo }) {
       html,
       ...(replyTo ? { reply_to: replyTo } : {}),
     }),
+    // Don't hang the customer's browser if the mail service stalls.
+    signal: AbortSignal.timeout(10000),
   });
   if (!res.ok) throw new Error(`Resend ${res.status}: ${await res.text()}`);
   return res.json();
@@ -496,12 +565,34 @@ async function sendEmail(env, { to, subject, html, replyTo }) {
 // --------------------------------------------------------------------------
 // Helpers: signing, ids, responses
 // --------------------------------------------------------------------------
-function corsHeaders(env) {
+// ALLOW_ORIGIN is the site's address, or several separated by commas (for
+// example the bare domain and the www one). Unset means "anywhere", which is
+// only appropriate for local development.
+function allowedOrigins(env) {
+  return String(env.ALLOW_ORIGIN || '')
+    .split(',')
+    .map((o) => o.trim())
+    .filter(Boolean);
+}
+function corsHeaders(env, request) {
+  const list = allowedOrigins(env);
+  const origin = request?.headers?.get('origin');
+  let allow = '*';
+  if (list.length) allow = origin && list.includes(origin) ? origin : list[0];
   return {
-    'Access-Control-Allow-Origin': env.ALLOW_ORIGIN || '*',
+    'Access-Control-Allow-Origin': allow,
+    Vary: 'Origin',
     'Access-Control-Allow-Methods': 'POST, GET, OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type',
   };
+}
+// CORS only stops a browser from *reading* the answer; the request still
+// arrives. So a browser page on some other site is refused outright. Requests
+// with no Origin (curl, the smoke test) are not browsers and are let through.
+function originAllowed(request, env) {
+  const list = allowedOrigins(env);
+  const origin = request.headers.get('origin');
+  return !list.length || !origin || list.includes(origin);
 }
 function json(obj, status = 200, extra = {}) {
   return new Response(JSON.stringify(obj), {
@@ -532,27 +623,6 @@ function shortId() {
   const t = Date.now().toString(36).slice(-4).toUpperCase();
   const r = Math.random().toString(36).slice(2, 5).toUpperCase();
   return `MM-${t}${r}`;
-}
-
-// The order body comes from the browser, so anything we keep is coerced to a
-// bounded string. The email templates escape on the way out; this keeps the
-// stored record tidy too.
-function cleanText(v, max = 120) {
-  if (v === null || v === undefined) return '';
-  if (typeof v === 'object') return '';
-  return String(v).trim().slice(0, max);
-}
-
-function cleanOptions(obj, maxKeys = 8) {
-  if (!obj || typeof obj !== 'object' || Array.isArray(obj)) return {};
-  const out = {};
-  for (const [k, v] of Object.entries(obj)) {
-    if (Object.keys(out).length >= maxKeys) break;
-    const key = cleanText(k, 40);
-    const val = cleanText(v);
-    if (key && val) out[key] = val;
-  }
-  return out;
 }
 
 function b64urlEncode(str) {

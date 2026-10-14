@@ -6,79 +6,82 @@ const year = new Date().getFullYear();
 
 <footer class="site-footer">
   <div class="container footer-inner">
-    <div class="footer-brand">
-      <img
-        src="/images/logo-full.jpg"
-        class="footer-logo"
-        alt={`${site.name} logo`}
-        width="900"
-        height="438"
-        loading="lazy"
-      />
-      <p><T en={site.location} zh={site.location_zh} /></p>
-      <p class="footer-cert">
-        <T en="FOODSAFE Level 1 Certified · British Columbia" zh="FOODSAFE 一級認證 · 卑詩省（BC）" />
-      </p>
-    </div>
+    <a href="#top" class="footer-brand" aria-label={`${site.name} — back to top`}>
+      <img src="/images/logo.png" class="footer-logo" alt="" width="224" height="224" loading="lazy" />
+      <span>{site.name}</span>
+    </a>
 
-    <nav class="footer-nav">
+    <nav class="footer-links" aria-label="Footer">
       <a href="#story"><T en="Our Story" zh="關於我們" /></a>
       <a href="#menu"><T en="Menu" zh="菜單" /></a>
       <a href="#order"><T en="Order" zh="訂購" /></a>
       <a href="#newsletter"><T en="Newsletter" zh="訂閱" /></a>
-    </nav>
-
-    <div class="footer-contact">
       {site.email && <a href={`mailto:${site.email}`}>{site.email}</a>}
-      <div class="footer-social">
-        {site.instagram && <a href={site.instagram} target="_blank" rel="noopener">Instagram</a>}
-        {site.facebook && <a href={site.facebook} target="_blank" rel="noopener">Facebook</a>}
-      </div>
-    </div>
+      {site.instagram && <a href={site.instagram} target="_blank" rel="noopener">Instagram</a>}
+      {site.facebook && <a href={site.facebook} target="_blank" rel="noopener">Facebook</a>}
+    </nav>
   </div>
+
   <div class="footer-base">
     <div class="container">
-      <p>© {year} {site.name} · {site.domain}</p>
+      <p>
+        © {year} {site.name} · {site.domain} ·
+        <T en="FOODSAFE Level 1 Certified · British Columbia" zh="FOODSAFE 一級認證 · 卑詩省（BC）" />
+      </p>
     </div>
   </div>
 </footer>
 
 <style>
-  .site-footer { background: var(--crust); color: var(--cream); }
+  /* One compact strip: brand on the left, every link on one wrapping row on the
+     right, and a single small line underneath. Sized from the window width so
+     it stays tidy when zoomed in. */
+  .site-footer {
+    background: var(--crust);
+    color: var(--cream);
+    font-size: clamp(0.78rem, 1.5vw, 0.9rem);
+  }
   .footer-inner {
-    display: grid;
-    grid-template-columns: 1.4fr 1fr 1fr;
-    gap: 2rem;
-    padding-top: 3.5rem;
-    padding-bottom: 2.5rem;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.6rem 1.5rem;
+    padding-top: 1.1rem;
+    padding-bottom: 1rem;
   }
-  /* The logo artwork is painted on cream, so it sits on its own light panel
-     rather than floating a pale rectangle on the dark footer. */
-  .footer-logo {
-    width: 100%;
-    max-width: 280px;
-    height: auto;
-    border-radius: var(--radius);
-    /* The artwork's own paper colour, so the padding blends into the image
-       instead of ringing it with a slightly different cream. */
-    background: #fff9e9;
-    padding: 0.6rem 0.9rem;
-    margin-bottom: 1rem;
+  .footer-brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6em;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 1.2em;
+    color: var(--wheat);
+    white-space: nowrap;
   }
-  .footer-brand p { color: rgba(250, 244, 234, 0.7); margin-top: 0.4rem; }
-  .footer-cert { font-size: 0.85rem; color: rgba(250, 244, 234, 0.55); }
-  .footer-nav { display: flex; flex-direction: column; gap: 0.5rem; }
-  .footer-nav a, .footer-contact a { color: rgba(250, 244, 234, 0.85); }
-  .footer-nav a:hover, .footer-contact a:hover { color: var(--wheat); text-decoration: none; }
-  .footer-social { display: flex; gap: 1rem; margin-top: 0.6rem; }
+  .footer-brand:hover { text-decoration: none; color: var(--white); }
+  .footer-logo { display: block; height: 2.4em; width: auto; flex-shrink: 0; }
+
+  .footer-links {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 0.35rem 1.3em;
+  }
+  .footer-links a { color: rgba(250, 244, 234, 0.85); }
+  .footer-links a:hover { color: var(--wheat); text-decoration: none; }
+
   .footer-base {
     border-top: 1px solid rgba(250, 244, 234, 0.12);
-    padding: 1.2rem 0;
-    font-size: 0.85rem;
+    padding: 0.7rem 0;
+    font-size: 0.92em;
   }
   .footer-base p { margin: 0; color: rgba(250, 244, 234, 0.6); }
 
-  @media (max-width: 680px) {
-    .footer-inner { grid-template-columns: 1fr; gap: 1.5rem; }
+  @media (max-width: 600px) {
+    .footer-inner { justify-content: center; text-align: center; }
+    .footer-links { justify-content: center; }
+    .footer-base p { text-align: center; }
   }
 </style>

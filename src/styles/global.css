@@ -35,6 +35,8 @@
 * { box-sizing: border-box; }
 
 html { scroll-behavior: smooth; scroll-padding-top: 84px; }
+/* On narrow screens the header is two rows tall, so anchors need more room. */
+@media (max-width: 600px) { html { scroll-padding-top: 104px; } }
 
 body {
   margin: 0;

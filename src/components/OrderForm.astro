@@ -247,9 +247,51 @@ import PickupCalendar from './PickupCalendar.astro';
       en: 'Thank you! Your order request was sent. We’ll email you to confirm.',
       zh: '謝謝！您的訂單需求已送出。我們會以電子郵件與您確認。',
     },
+    // The order went through but Resend could not deliver the customer's copy.
+    okNoMail: {
+      en: 'Thank you! Your order request was sent, but we couldn’t email you a copy. We’ll still reply to this address, so please keep an eye on your inbox.',
+      zh: '謝謝！您的訂單需求已送出，但我們無法寄出確認副本。我們仍會寄信到此信箱回覆您，請留意收件匣。',
+    },
     err: {
       en: 'Sorry, something went wrong. Please email us directly and we’ll sort it out.',
       zh: '抱歉，發生問題。請直接寄電子郵件給我們，我們會為您處理。',
+    },
+    network: {
+      en: 'We couldn’t reach the server. Please check your connection and try again — your order is still here.',
+      zh: '無法連線到伺服器。請檢查網路後再試一次——您的訂單內容仍保留。',
+    },
+  };
+  // Specific, actionable answers for the failures a customer can fix.
+  const errorByCode = {
+    price_changed: {
+      en: 'Our prices have changed since this page loaded. Please refresh the page and try again.',
+      zh: '自頁面載入後價格已更新。請重新整理頁面後再試一次。',
+    },
+    bad_date: {
+      en: 'That pickup date isn’t available. Please choose a date from the calendar.',
+      zh: '該取貨日期無法選擇，請從日曆中重新選擇。',
+    },
+    bad_item: {
+      en: 'One of the items is no longer on the menu. Please refresh the page and try again.',
+      zh: '其中一項商品已下架。請重新整理頁面後再試一次。',
+    },
+    bad_qty: { en: 'Please order between 1 and 5 of each item.', zh: '每項商品請訂購 1 至 5 件。' },
+    bad_customer: { en: 'Please check your name and email address.', zh: '請檢查您的姓名與電子郵件地址。' },
+    too_many: {
+      en: 'That’s a big order! Please email us so we can plan it with you.',
+      zh: '訂單數量較大！請寄電子郵件給我們，讓我們與您一起規劃。',
+    },
+    rate_limited: {
+      en: 'Too many orders from this connection. Please try again later, or email us.',
+      zh: '此連線的訂單次數過多。請稍後再試，或寄電子郵件給我們。',
+    },
+    email_failed: {
+      en: 'We couldn’t send your order just now. Please try again in a few minutes, or email us.',
+      zh: '目前無法送出您的訂單。請幾分鐘後再試，或寄電子郵件給我們。',
+    },
+    unavailable: {
+      en: 'Ordering is temporarily unavailable. Please email us to place your order.',
+      zh: '目前暫時無法下單。請寄電子郵件給我們訂購。',
     },
   };
   const lang = () => (document.documentElement.getAttribute('data-lang') === 'zh' ? 'zh' : 'en');
@@ -414,48 +456,78 @@ import PickupCalendar from './PickupCalendar.astro';
     };
   }
 
+  // One key per order attempt. If the customer double-clicks, or retries after
+  // a timeout, the Worker recognises the key and answers with the original
+  // order instead of emailing the bakery twice. It changes only after success.
+  const newKey = () =>
+    (self.crypto && crypto.randomUUID ? crypto.randomUUID() : `k${Date.now()}${Math.random().toString(36).slice(2)}`).replace(/[^A-Za-z0-9_-]/g, '');
+  let orderKey = newKey();
+
+  function setStatus(text, kind) {
+    status.textContent = text;
+    status.className = 'order-status' + (kind ? ' ' + kind : '');
+  }
+
+  // Put every control back as it was, including the ones outside the <form>
+  // (the quantities on the menu cards and the calendar), which form.reset()
+  // does not touch.
+  function clearOrder() {
+    form.reset();
+    rows.forEach((row) => {
+      row.querySelectorAll('select').forEach((sel) => (sel.selectedIndex = 0));
+      row.classList.remove('has-qty');
+      refreshRow(row);
+    });
+    document.dispatchEvent(new CustomEvent('order:reset'));
+    refreshAll();
+  }
+
   if (form && status) {
     rows.forEach(refreshRow);
     refreshAll();
 
+    const submitBtn = form.querySelector('button[type="submit"]');
+    let sending = false;
+
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
+      if (sending) return; // a second click while the first is in flight
 
-      if (recalcTotal() === 0) {
-        status.textContent = msg.none[lang()];
-        status.className = 'order-status err';
-        return;
-      }
-      if (dateInput && !dateInput.value) {
-        status.textContent = msg.date[lang()];
-        status.className = 'order-status err';
-        return;
-      }
-      if (!ORDER_API) {
-        status.textContent = msg.noapi[lang()];
-        status.className = 'order-status err';
-        return;
-      }
+      if (recalcTotal() === 0) return setStatus(msg.none[lang()], 'err');
+      if (dateInput && !dateInput.value) return setStatus(msg.date[lang()], 'err');
+      if (!ORDER_API) return setStatus(msg.noapi[lang()], 'err');
 
-      status.textContent = msg.sending[lang()];
-      status.className = 'order-status';
+      sending = true;
+      submitBtn.disabled = true;
+      submitBtn.setAttribute('aria-busy', 'true');
+      setStatus(msg.sending[lang()]);
 
       try {
         const res = await fetch(ORDER_API + '/api/order', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(buildOrder()),
+          body: JSON.stringify({ ...buildOrder(), orderKey }),
         });
         const j = await res.json().catch(() => ({}));
-        if (!res.ok || !j.success) throw new Error(j.error || 'Submission failed');
-        status.textContent = msg.ok[lang()];
-        status.className = 'order-status ok';
-        form.reset();
-        rows.forEach(refreshRow);
-        recalcTotal();
+
+        if (!res.ok || !j.success) {
+          const known = errorByCode[j.code];
+          return setStatus((known || msg.err)[lang()], 'err');
+        }
+
+        const ref = j.id ? ` (${j.id})` : '';
+        setStatus((j.customerEmail === false ? msg.okNoMail : msg.ok)[lang()] + ref, 'ok');
+        orderKey = newKey(); // the next order is a new order
+        clearOrder();
       } catch (err) {
-        status.textContent = msg.err[lang()];
-        status.className = 'order-status err';
+        // No response at all: offline, or the Worker is unreachable. The order
+        // is still on the page and the same key is kept, so retrying is safe.
+        setStatus(msg.network[lang()], 'err');
+      } finally {
+        sending = false;
+        submitBtn.disabled = false;
+        submitBtn.removeAttribute('aria-busy');
+        status.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
       }
     });
   }

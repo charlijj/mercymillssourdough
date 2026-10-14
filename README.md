@@ -114,17 +114,65 @@ ready-made, on-brand HTML template lives in `email-templates/newsletter.html`.
 ### Tests
 
 ```bash
-npm test        # node --test worker/test/*.test.mjs
+npm test            # 77 Worker tests: fast, no browser, no network
+npm run test:e2e    # 17 browser tests: builds the site and drives it in Chromium
+npm run test:all    # both
+npm run smoke       # checks the LIVE Worker after a deploy (sends no email)
 ```
 
-`worker/test/lifecycle.test.mjs` runs the real Worker in-process against a
-fake KV, with `fetch` stubbed so the Resend calls are captured rather than
-sent. It covers the whole order lifecycle and the things that are expensive to
-get wrong: that the server recomputes the total rather than trusting the
-browser, that `GET /api/decide` only renders a form (a mail scanner prefetching
-the link must not decide an order), that deciding twice emails the customer
-once, that forged or re-signed tokens are refused, and that the shape/flavour
-the customer picked survives onto the owner's email.
+**`npm test`** (`worker/test/`) runs the real Worker in-process against a fake KV
+with `fetch` stubbed, so the Resend calls are captured rather than sent.
+
+- `lifecycle.test.mjs`: the order and decision flow, including the leaked-link
+  attack (a quoted Accept link is useless without the emailed code).
+- `order-validation.test.mjs`: the Worker never trusts the browser. Prices,
+  names and units come from `src/data/menu.js`; quantities, options, sizes,
+  customer fields and the pickup date (weekday, lead time, blackout dates,
+  Vancouver time) are all checked, and tampered, stale or hostile input is
+  refused.
+- `order-delivery.test.mjs`: what happens when things go wrong. The owner is
+  emailed **first**, so if that fails the customer is told and nothing is left
+  behind. A failed customer copy does not fail the order. Double submissions are
+  de-duplicated, one connection is rate-limited, other websites are refused, and
+  ordering switches itself off (503, with an "email us" message) rather than
+  take an order it cannot deliver. It also orders **every product, size and
+  choice** on the menu, so the site and the Worker cannot drift apart.
+
+**`npm run test:e2e`** (`tests/e2e/`) builds the site into `.e2e-dist` (never
+`dist/`) pointing at the real Worker running behind a local HTTP server, then
+uses a real browser: header fit at 320-1440px, the menu, the reviews grid, the
+footer, a full order, double-clicking Send, a dropped connection, a tampered
+price, Mandarin, and the owner's whole accept flow including the security code.
+It needs Playwright and a browser: `npm i -D playwright && npx playwright install
+chromium`, or point `E2E_CHROMIUM` at an existing Chrome/Chromium.
+
+**`npm run smoke`** is for after a deploy. It reads `PUBLIC_ORDER_API` from
+`.env` and checks the live Worker: is it configured (KV, secrets), does it allow
+the website's origin, does it refuse bad orders, and is the Accept page
+protected. It sends no email. To prove delivery end to end, add
+`-- --place-order you@example.com`: that sends one real test order to the
+bakery inbox and a copy to you.
+
+### Layout notes
+
+**Header.** There is no hamburger menu. Everything in it is sized from the
+window width with `clamp()`, so the text shrinks to fit as the window narrows or
+the browser is zoomed. Above 600px the brand and nav share a row; at 600px and
+below the nav drops to a second row (still scaling), so all five items are
+always visible.
+
+**Reviews.** An equal-height grid: 3 columns on desktop, 2 on tablet, 1 on a
+phone. Text is clamped to `--lines` lines (8) with a "Read more" button that
+appears only on boxes that are actually cut off. The knobs are at the top of
+`src/components/Reviews.astro` and in its CSS:
+
+- `ROWS_3` / `ROWS_2`: the order reviews appear in, per layout. Put reviews of
+  similar length together so a row's boxes are filled evenly.
+- `SHORT_QUOTE_MAX`: a review this short (in characters) is set as a large
+  pull-quote that spans two desktop columns.
+- `--lines`: how many lines show before "Read more".
+
+**Menu cards** carry no badges or tags; every item uses the same card.
 
 ### Bilingual (English / 中文)
 

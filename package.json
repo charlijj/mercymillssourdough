@@ -9,7 +9,10 @@
     "build": "astro build",
     "preview": "astro preview",
     "astro": "astro",
-    "test": "node --test worker/test/*.test.mjs"
+    "test": "node --test worker/test/*.test.mjs",
+    "test:e2e": "node --test --test-concurrency=1 tests/e2e/site.e2e.mjs",
+    "test:all": "npm test && npm run test:e2e",
+    "smoke": "node scripts/smoke-test.mjs"
   },
   "dependencies": {
     "astro": "^5.18.2"

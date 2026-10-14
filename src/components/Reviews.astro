@@ -52,6 +52,25 @@ const reviews = [
     name: 'Jennifer',
   },
 ];
+
+// ---------------------------------------------------------------------------
+//  LAYOUT. The boxes sit in an equal-height grid (3 columns on desktop, 2 on
+//  tablet, 1 on phones), so the aim is for the reviews that share a row to
+//  hold a similar amount of text. `ROWS_3` and `ROWS_2` list reviewers in the
+//  order they should appear for each layout — reorder them to rebalance.
+//  Reviews short enough for a single-line pull-quote are set larger and, on
+//  desktop, span two columns so the box is filled by design.
+// ---------------------------------------------------------------------------
+const ROWS_3 = ['Xing', 'Adelle', 'Jennifer', 'Ayaz', 'Nafeesa Brown', 'Susan Kuyer', 'Shelley Roch', 'D. Harvey'];
+const ROWS_2 = ['Xing', 'Adelle', 'Jennifer', 'Ayaz', 'Susan Kuyer', 'Nafeesa Brown', 'Shelley Roch', 'D. Harvey'];
+const SHORT_QUOTE_MAX = 100; // characters (English) at or below which a review is a pull-quote
+
+const placed = reviews.map((r) => ({
+  ...r,
+  short: r.en.length <= SHORT_QUOTE_MAX,
+  o3: ROWS_3.indexOf(r.name),
+  o2: ROWS_2.indexOf(r.name),
+}));
 ---
 
 <section id="reviews">
@@ -61,11 +80,14 @@ const reviews = [
       <h2><T en="What our customers say" zh="顧客怎麼說" /></h2>
     </div>
 
-    <div class="reviews-masonry">
-      {reviews.map((r) => (
-        <figure class="review">
+    <div class="reviews-grid">
+      {placed.map((r) => (
+        <figure class={`review${r.short ? ' review-short' : ''}`} style={`--o3:${r.o3};--o2:${r.o2}`}>
           <div class="stars" aria-label="5 out of 5 stars">★★★★★</div>
           <blockquote><T en={r.en} zh={r.zh} /></blockquote>
+          <button type="button" class="review-more" hidden aria-expanded="false">
+            <span data-lang-en>Read more</span><span data-lang-zh>閱讀全文</span>
+          </button>
           <figcaption>— {r.name}</figcaption>
         </figure>
       ))}
@@ -76,33 +98,159 @@ const reviews = [
 <style>
   .reviews-head { max-width: 720px; margin-bottom: 2.5rem; }
 
-  /* Multi-column masonry handles the very different quote lengths gracefully */
-  .reviews-masonry {
-    columns: 3;
-    column-gap: 1.5rem;
+  /* Equal-height boxes: every box in a row is as tall as the tallest, and the
+     text is clamped to a fixed number of lines (see --lines) so one long review
+     cannot stretch a row and leave its neighbours mostly empty. */
+  .reviews-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.25rem;
+    --lines: 8;
   }
   .review {
-    break-inside: avoid;
-    margin: 0 0 1.5rem;
+    order: var(--o3);
+    margin: 0;
+    display: flex;
+    flex-direction: column;
     background: var(--white);
     border-radius: var(--radius);
-    padding: 1.6rem 1.7rem;
+    padding: 1.4rem 1.5rem 1.2rem;
     box-shadow: var(--shadow-sm);
     border: 1px solid rgba(58, 42, 30, 0.06);
-    display: inline-block;
-    width: 100%;
   }
-  .stars { color: var(--amber); letter-spacing: 0.15em; margin-bottom: 0.7rem; font-size: 0.95rem; }
-  .review blockquote {
-    margin: 0 0 0.9rem;
-    font-size: 1rem;
-    color: var(--crust-soft);
-    line-height: 1.65;
-  }
-  /* Chinese needs a little more breathing room between lines */
-  :global(html[data-lang='zh']) .review blockquote { line-height: 1.9; }
-  .review figcaption { font-weight: 600; color: var(--crust); font-size: 0.95rem; }
+  .stars { color: var(--amber); letter-spacing: 0.15em; margin-bottom: 0.6rem; font-size: 0.95rem; }
 
-  @media (max-width: 980px) { .reviews-masonry { columns: 2; } }
-  @media (max-width: 620px) { .reviews-masonry { columns: 1; } }
+  .review blockquote {
+    flex: 1 1 auto;
+    margin: 0 0 0.8rem;
+    font-size: 0.98rem;
+    color: var(--crust-soft);
+    line-height: 1.6;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: var(--lines);
+    line-clamp: var(--lines);
+    overflow: hidden;
+  }
+  .review.is-open blockquote { display: block; -webkit-line-clamp: unset; line-clamp: unset; overflow: visible; }
+  /* Chinese needs a little more breathing room between lines */
+  :global(html[data-lang='zh']) .review blockquote { line-height: 1.8; }
+
+  .review-more {
+    align-self: flex-start;
+    margin: -0.2rem 0 0.7rem;
+    padding: 0;
+    background: none;
+    border: none;
+    font: inherit;
+    font-size: 0.86rem;
+    font-weight: 600;
+    color: var(--olive-deep);
+    cursor: pointer;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+  .review-more[hidden] { display: none; }
+
+  .review figcaption { font-weight: 600; color: var(--crust); font-size: 0.95rem; margin-top: auto; }
+
+  /* A one-line review is set as a pull-quote so its box is filled on purpose,
+     not left mostly empty: centred, in the display face, much larger than the
+     other reviews, under a big decorative opening quote mark. */
+  .review-short { justify-content: center; text-align: center; }
+  .review-short::before {
+    content: '\201C';
+    display: block;
+    font-family: var(--font-display);
+    font-size: clamp(3.4rem, 6vw, 5rem);
+    line-height: 0.7;
+    height: 0.5em;
+    color: var(--amber);
+    opacity: 0.45;
+    margin-bottom: 0.35rem;
+  }
+  .review-short .stars { margin-bottom: 0.5rem; }
+  .review-short blockquote {
+    flex: 0 0 auto;
+    display: block;
+    -webkit-line-clamp: unset;
+    line-clamp: unset;
+    font-family: var(--font-display);
+    font-size: clamp(1.45rem, 3vw, 2.25rem);
+    line-height: 1.25;
+    color: var(--crust);
+    margin: 0.1rem auto 0.9rem;
+    max-width: 22em;
+  }
+  :global(html[data-lang='zh']) .review-short blockquote { font-family: var(--font-body); line-height: 1.5; }
+  .review-short figcaption { margin-top: 0; }
+
+  /* Desktop: the pull-quote takes the two columns beside the last long review. */
+  @media (min-width: 1000px) {
+    .review-short { grid-column: span 2; }
+  }
+
+  /* Tablet: two columns, in an order that pairs reviews of similar length. */
+  @media (max-width: 999px) {
+    .reviews-grid { grid-template-columns: repeat(2, 1fr); --lines: 8; }
+    .review { order: var(--o2); }
+  }
+  /* Phone: one column. */
+  @media (max-width: 619px) {
+    .reviews-grid { grid-template-columns: 1fr; --lines: 8; gap: 1rem; }
+    .review { padding: 1.2rem 1.25rem 1.05rem; }
+  }
 </style>
+
+<script>
+  // Show "Read more" only on boxes whose text is actually cut off, and make it
+  // toggle. Re-checked on resize and on language change, since both change how
+  // many lines the text needs.
+  const cards = Array.from(document.querySelectorAll<HTMLElement>('.reviews-grid .review'));
+
+  function refresh(card: HTMLElement) {
+    const quote = card.querySelector<HTMLElement>('blockquote');
+    const btn = card.querySelector<HTMLButtonElement>('.review-more');
+    if (!quote || !btn) return;
+    if (card.classList.contains('is-open')) {
+      btn.hidden = false;
+      return;
+    }
+    // Measured while clamped: scrollHeight is the full text, clientHeight what shows.
+    btn.hidden = !(quote.scrollHeight > quote.clientHeight + 1);
+  }
+
+  function labelFor(card: HTMLElement, open: boolean) {
+    const btn = card.querySelector<HTMLButtonElement>('.review-more');
+    if (!btn) return;
+    const [en, zh] = Array.from(btn.querySelectorAll('span'));
+    if (en) en.textContent = open ? 'Show less' : 'Read more';
+    if (zh) zh.textContent = open ? '收合' : '閱讀全文';
+    btn.setAttribute('aria-expanded', String(open));
+  }
+
+  cards.forEach((card) => {
+    const btn = card.querySelector<HTMLButtonElement>('.review-more');
+    btn?.addEventListener('click', () => {
+      const open = !card.classList.contains('is-open');
+      card.classList.toggle('is-open', open);
+      labelFor(card, open);
+      if (!open) refresh(card);
+    });
+  });
+
+  const refreshAll = () => cards.forEach(refresh);
+  refreshAll();
+  // Fonts load after first paint and change line lengths.
+  window.addEventListener('load', refreshAll);
+  document.fonts?.ready.then(refreshAll);
+  let t: number | undefined;
+  window.addEventListener('resize', () => {
+    window.clearTimeout(t);
+    t = window.setTimeout(refreshAll, 120);
+  });
+  new MutationObserver(refreshAll).observe(document.documentElement, {
+    attributes: true,
+    attributeFilter: ['data-lang'],
+  });
+</script>

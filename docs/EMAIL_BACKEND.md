@@ -74,6 +74,16 @@ Accept/Decline link already sent.
 `OWNER_EMAIL` is also where the one-time security codes go, so it must be an
 inbox only the owner can read.
 
+### 2b-ii. Allow your website's address
+
+`ALLOW_ORIGIN` in `worker/wrangler.toml` is the address orders are accepted
+from. Browsers on any other site are refused. If customers might arrive on
+`www.` as well, list both, comma-separated:
+
+```toml
+ALLOW_ORIGIN = "https://mercymillsourdough.com,https://www.mercymillsourdough.com"
+```
+
 ### 2c. Check the config
 
 In `worker/wrangler.toml`, confirm:
@@ -195,3 +205,34 @@ news. Options:
 | Update a secret | `npx wrangler secret put NAME` |
 | Local dry-run test | `npx wrangler dev` |
 | View live logs | `npx wrangler tail` |
+
+---
+
+## Checking the live service
+
+After every deploy, from the project folder:
+
+```bash
+npm run smoke
+```
+
+It reads `PUBLIC_ORDER_API` from `.env`, sends **no email**, and tells you in
+plain words what is wrong: a missing KV store, a missing secret, the wrong
+`ALLOW_ORIGIN`, or a Worker that has not been redeployed with the latest code.
+All green means the service is ready.
+
+To prove delivery end to end, once, after the first deploy:
+
+```bash
+npm run smoke -- --place-order your-own-email@example.com
+```
+
+That places one real test order. Check that the bakery inbox gets "New order
+from Smoke Test", that you get "We got your order", then press Decline, ask for
+the security code, and enter it. Decline is the safe choice for a test. You
+should then get "Update on your order".
+
+**If ordering suddenly stops working,** the Worker's address (`GET /`) lists
+exactly what it is missing. When something it needs is absent it refuses orders
+(HTTP 503, shown to customers as "email us") instead of accepting an order it
+cannot deliver.

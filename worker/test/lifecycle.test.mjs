@@ -9,87 +9,12 @@
 
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { createHmac } from 'node:crypto';
 
 import worker from '../src/index.js';
-
-// ---------------------------------------------------------------- fake world
-function makeKV() {
-  const store = new Map();
-  return {
-    store,
-    async get(k) {
-      return store.has(k) ? store.get(k) : null;
-    },
-    async put(k, v) {
-      store.set(k, v);
-    },
-    async delete(k) {
-      store.delete(k);
-    },
-  };
-}
-
-function makeEnv(overrides = {}) {
-  return {
-    RESEND_API_KEY: 'test-key',
-    SIGNING_SECRET: 'test-signing-secret',
-    OWNER_EMAIL: 'mercymillsourdough@gmail.com',
-    FROM_EMAIL: 'orders@mercymillsourdough.com',
-    FROM_NAME: 'Mercy Mill Sourdough',
-    SITE_URL: 'https://mercymillsourdough.com',
-    ORDERS: makeKV(),
-    ...overrides,
-  };
-}
-
-// Captures outgoing mail instead of sending it.
-function captureMail() {
-  const sent = [];
-  const real = globalThis.fetch;
-  globalThis.fetch = async (url, init) => {
-    if (String(url).includes('api.resend.com')) {
-      sent.push(JSON.parse(init.body));
-      return new Response(JSON.stringify({ id: 'msg_test' }), { status: 200 });
-    }
-    return real(url, init);
-  };
-  return {
-    sent,
-    restore() {
-      globalThis.fetch = real;
-    },
-  };
-}
-
-const ORIGIN = 'https://orders.example.workers.dev';
-
-const sampleOrder = (over = {}) => ({
-  items: [
-    { id: 'artisan-loaf', name: 'Artisan Regular Loaf', unit: 'loaf', price: 11, qty: 2, options: { Shape: 'Boule (round)' } },
-    { id: 'bagels', name: 'Bagels', unit: '12 bagels', size: '12 bagels', price: 28, qty: 1, options: { Flavour: 'Plain' } },
-  ],
-  total: 50,
-  lang: 'en',
-  pickupDate: '2026-10-14',
-  notes: 'Fraser Heights Recreation Centre, please. No nuts.',
-  botcheck: false,
-  customer: { name: 'Test Customer', email: 'customer@example.com', phone: '604-555-0142' },
-  ...over,
-});
-
-const post = (path, body) =>
-  new Request(ORIGIN + path, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body),
-  });
-
-const postForm = (path, fields) => {
-  const fd = new FormData();
-  for (const [k, v] of Object.entries(fields)) fd.set(k, v);
-  return new Request(ORIGIN + path, { method: 'POST', body: fd });
-};
+import {
+  makeKV, makeEnv, captureMail, ORIGIN, sampleOrder, post, postForm,
+  placeOrder, requestCode, decide, sign, validPickupDate, ownerMail, customerMail,
+} from './helpers.mjs';
 
 // ---------------------------------------------------------------- the tests
 test('health check responds', async () => {
@@ -110,17 +35,15 @@ test('a valid order is accepted and emails both parties', async () => {
     assert.match(body.id, /^MM-[A-Z0-9]{7}$/, 'order id looks like MM-XXXXXXX');
 
     assert.equal(mail.sent.length, 2, 'customer and owner are both emailed');
-    const [toCustomer, toOwner] = mail.sent;
-    assert.deepEqual(toCustomer.to, ['customer@example.com']);
-    assert.deepEqual(toOwner.to, ['mercymillsourdough@gmail.com']);
-    assert.match(toCustomer.from, /Mercy Mill Sourdough <orders@mercymillsourdough\.com>/);
+    assert.deepEqual(mail.sent.map((m) => m.to[0]), ['mercymillsourdough@gmail.com', 'customer@example.com'], 'the owner is emailed first');
+    assert.match(customerMail(mail).from, /Mercy Mill Sourdough <orders@mercymillsourdough\.com>/);
 
     // The order is stored pending, for idempotency later.
     const stored = JSON.parse(await env.ORDERS.get(`order:${body.id}`));
     assert.equal(stored.status, 'pending');
     assert.equal(stored.total, 50, 'total recomputed server-side from price x qty');
     assert.equal(stored.notes, 'Fraser Heights Recreation Centre, please. No nuts.');
-    assert.equal(stored.pickupDate, '2026-10-14');
+    assert.equal(stored.pickupDate, sampleOrder().pickupDate);
   } finally {
     mail.restore();
   }
@@ -184,41 +107,6 @@ test('malformed JSON is rejected', async () => {
 });
 
 // -------------------------------------------------------- the decision flow
-async function placeOrder(env, mail, over = {}) {
-  const res = await worker.fetch(post('/api/order', sampleOrder(over)), env);
-  const { id } = await res.json();
-  const ownerHtml = mail.sent[1].html;
-  const links = [...ownerHtml.matchAll(/https?:\/\/[^"'\s]*\/api\/decide\?token=([^"'\s&]+)/g)].map(
-    (m) => m[1]
-  );
-  mail.sent.length = 0; // only look at what the decision sends
-  return { id, ownerHtml, acceptToken: links[0], declineToken: links[1] };
-}
-
-// Presses "Email me a security code" and reads the code out of the email
-// that arrives in the owner's inbox.
-async function requestCode(env, mail, token) {
-  const res = await worker.fetch(postForm('/api/decide/code', { token }), env);
-  const email = mail.sent.at(-1);
-  const code = email && /^(\d{6}) is your/.exec(email.subject)?.[1];
-  mail.sent.length = 0;
-  return { res, code, email };
-}
-
-// The whole owner path: request a code, then confirm with it.
-async function decide(env, mail, token, message = '') {
-  const { code } = await requestCode(env, mail, token);
-  return worker.fetch(postForm('/api/decide', { token, code, message }), env);
-}
-
-// Signs a decision token the same way the Worker does, so tests can build
-// expired or legacy links.
-function sign(payloadObj, secret = 'test-signing-secret') {
-  const p = Buffer.from(JSON.stringify(payloadObj)).toString('base64url');
-  const s = createHmac('sha256', secret).update(p).digest('base64url');
-  return `${p}.${s}`;
-}
-
 test('the owner email carries two distinct signed decision links', async () => {
   const mail = captureMail();
   try {
@@ -418,14 +306,14 @@ test('the owner email replies to the owner and offers a fresh email to the custo
   try {
     const env = makeEnv();
     await worker.fetch(post('/api/order', sampleOrder()), env);
-    const owner = mail.sent[1];
+    const owner = ownerMail(mail);
     assert.equal(owner.reply_to, 'mercymillsourdough@gmail.com', 'Reply never goes to the customer');
     assert.match(
       owner.html,
       /href="mailto:customer@example\.com\?subject=Your%20Mercy%20Mill%20Sourdough%20order%20MM-/,
       'a compose button that starts an unquoted email'
     );
-    assert.notEqual(mail.sent[0].reply_to, 'customer@example.com');
+    assert.notEqual(customerMail(mail).reply_to, 'customer@example.com');
   } finally {
     mail.restore();
   }
@@ -440,7 +328,7 @@ test('a hostile customer email address cannot break out of the compose link', as
       env
     );
     assert.equal(res.status, 200);
-    const owner = mail.sent[1].html;
+    const owner = ownerMail(mail).html;
     assert.ok(!owner.includes('a"onclick'), 'quote is not emitted raw');
     assert.ok(!owner.includes('<b>@'), 'markup is not emitted raw');
   } finally {
@@ -657,13 +545,13 @@ test('the shape and flavour the customer picked reach the owner', async () => {
 
     // Mom bakes from this email: she has to know boule vs sandwich, and which
     // bagel flavour, or the order is not actionable.
-    const ownerHtml = mail.sent[1].html;
+    const ownerHtml = ownerMail(mail).html;
     assert.match(ownerHtml, /Boule \(round\)/, 'shape choice is in the owner email');
     assert.match(ownerHtml, /Plain/, 'bagel flavour is in the owner email');
     assert.match(ownerHtml, /12 bagels/, 'bagel size is in the owner email');
 
     // and the customer's own copy should agree with what they chose
-    assert.match(mail.sent[0].html, /Boule \(round\)/, 'shape choice is in the customer email');
+    assert.match(customerMail(mail).html, /Boule \(round\)/, 'shape choice is in the customer email');
 
     const stored = JSON.parse(await env.ORDERS.get(`order:${id}`));
     const loaf = stored.items.find((i) => i.id === 'artisan-loaf');
@@ -671,48 +559,6 @@ test('the shape and flavour the customer picked reach the owner', async () => {
     const bagel = stored.items.find((i) => i.id === 'bagels');
     assert.equal(bagel.size, '12 bagels');
     assert.equal(bagel.options.Flavour, 'Plain');
-  } finally {
-    mail.restore();
-  }
-});
-
-test('item choices are sanitised, not stored or emailed raw', async () => {
-  const mail = captureMail();
-  try {
-    const env = makeEnv();
-    const nasty = sampleOrder({
-      items: [
-        {
-          id: 'artisan-loaf',
-          name: 'Artisan Regular Loaf',
-          price: 11,
-          qty: 1,
-          size: { not: 'a string' },
-          options: {
-            Shape: '<img src=x onerror=alert(1)>',
-            Junk: { nested: true },
-            Empty: '',
-            ...Object.fromEntries([...Array(40)].map((_, i) => [`k${i}`, `v${i}`])),
-          },
-        },
-      ],
-    });
-    const res = await worker.fetch(post('/api/order', nasty), env);
-    const { id } = await res.json();
-    const stored = JSON.parse(await env.ORDERS.get(`order:${id}`));
-    const it = stored.items[0];
-
-    assert.equal(typeof it.size, 'string', 'a non-string size is coerced');
-    for (const [k, v] of Object.entries(it.options)) {
-      assert.equal(typeof k, 'string');
-      assert.equal(typeof v, 'string');
-      assert.ok(v.length <= 120, 'values are bounded');
-    }
-    assert.ok(Object.keys(it.options).length <= 8, 'the number of options is bounded');
-    assert.ok(!('Empty' in it.options), 'empty values are dropped');
-
-    // The templates escape, so the markup must not survive as live HTML.
-    assert.ok(!mail.sent[1].html.includes('<img src=x'), 'injected markup is escaped');
   } finally {
     mail.restore();
   }

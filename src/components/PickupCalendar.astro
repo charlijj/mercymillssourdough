@@ -218,6 +218,13 @@ const config = JSON.stringify(pickup);
       })
     );
 
+    // After a successful order the form tells the calendar to forget the day.
+    document.addEventListener('order:reset', () => {
+      selected = null;
+      hidden.value = '';
+      render();
+    });
+
     // Re-render when the site language toggles.
     new MutationObserver(render).observe(document.documentElement, {
       attributes: true,

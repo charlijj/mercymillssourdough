@@ -40,7 +40,6 @@ Open **`src/data/menu.js`**. Each product is a block like this:
   description: '...',
   description_zh: '...',
   image: '/images/artisan-loaf.jpg',
-  tags: ['Bestseller'],            // or [] , or ['Sweet']
   details: { ... },                // see "Ingredients & allergens" below
   options: [shapeOption],          // optional
 },
