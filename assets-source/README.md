@@ -10,6 +10,7 @@ serves what lives in `public/`, so these large files stay out of the build.
 | `logo-large-original.jpeg` | The wide logo lockup, as supplied. `assets-source/logo-full-unused.jpg` is it trimmed to the artwork at 900px (it was the footer logo until the footer was slimmed down to the small round mark), and `public/images/og-image.jpg` is it centred on a 1200×630 social-share card. |
 | `sarahs-logo-original.png` | Sarah's earlier logo, superseded by the two above. Kept for reference. |
 | `making-focaccia-unused.jpg` | In-progress focaccia photo that lived in the "How it's made" section. That section was removed, so the photo has no home on the page. Kept so it can be placed somewhere else. |
+| `story-boules-unused.jpg` | Boules cooling on a rack: the photo in the Our Story section until the sourdough starter photo replaced it. Kept in case it's wanted elsewhere. |
 | `hero-bread-unused.jpg` | The photo used in the hero before the banner replaced it. Kept in case it's wanted elsewhere. |
 | `sourdough-buns-unused.jpg`, `sourdough-muffins-unused.jpg`, `cinnamon-buns-unused.jpg` | Sourdough buns, muffins and cinnamon buns. The owner set the launch menu at fifteen products and these three are not on it, so they are out of the build. Put the photo back in `public/images/` and restore the product block in `src/data/menu.js` to bring an item back. |
 

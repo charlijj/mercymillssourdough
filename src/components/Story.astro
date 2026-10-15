@@ -75,7 +75,7 @@ const reasons = [
         </p>
       </div>
       <figure class="story-photo">
-        <img src="/images/story-boules.jpg" alt="Freshly baked sourdough boules cooling on a rack" loading="lazy" />
+        <img src="/images/story-starter.jpg" alt="A jar of bubbly sourdough starter beside a slice of sourdough bread" loading="lazy" />
       </figure>
     </div>
 
@@ -161,6 +161,7 @@ const reasons = [
 
   @media (max-width: 860px) {
     .story-top { grid-template-columns: 1fr; gap: 2rem; }
-    .story-photo img { aspect-ratio: 16 / 10; }
+    /* Square on phones: a wide strip would slice the top and bottom off the jar. */
+    .story-photo img { aspect-ratio: 1 / 1; }
   }
 </style>

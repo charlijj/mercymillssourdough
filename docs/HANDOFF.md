@@ -110,7 +110,7 @@ Every other day is automatically greyed out in the customer's calendar.
 3. Build and deploy.
 
 - **Hero banner:** replace `public/images/hero-bread.jpg` (keep the name).
-- **Our Story photo:** `public/images/story-boules.jpg`.
+- **Our Story photo:** `public/images/story-starter.jpg`.
 - **Behind-the-scenes photos:** add a block to `progressPhotos` at the top of
   `src/components/Process.astro`; they appear in the "In the kitchen" strip.
 - **Logo:** replace `public/images/logo.svg` (a PNG works too — change the
