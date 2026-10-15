@@ -92,7 +92,7 @@ safe to fill these in gradually. **Do not guess allergen information.**
 Open **`src/data/pickup.js`**:
 
 ```js
-availableWeekdays: [2, 3, 4],   // 0=Sun 1=Mon 2=Tue 3=Wed 4=Thu 5=Fri 6=Sat
+availableWeekdays: [1, 4],      // 0=Sun 1=Mon 2=Tue 3=Wed 4=Thu 5=Fri 6=Sat
 minLeadDays: 3,                 // how far ahead orders must be placed
 monthsAhead: 3,                 // how far ahead customers can book
 blackoutDates: ['2026-12-24'],  // holidays / vacation, 'YYYY-MM-DD'
