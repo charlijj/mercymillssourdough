@@ -20,6 +20,6 @@ ALLOW_ORIGIN = "https://mercymillsourdough.com"  # your live site origin. Severa
 # the emailed link alone. Create the namespace:
 #   npx wrangler kv namespace create ORDERS
 # then paste the printed id below and uncomment these three lines.
-# [[kv_namespaces]]
-# binding = "ORDERS"
-# id = "PASTE_KV_NAMESPACE_ID_HERE"
+[[kv_namespaces]]
+binding = "ORDERS"
+id = "b69a4d929e4b46ed9641bf3bfdabff9e"
