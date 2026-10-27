@@ -134,7 +134,6 @@ const config = JSON.stringify(pickup);
     const maxDate = new Date(today);
     maxDate.setMonth(maxDate.getMonth() + (cfg.monthsAhead || 3));
 
-    let view = new Date(minDate.getFullYear(), minDate.getMonth(), 1);
     let selected = null;
 
     function isSelectable(d) {
@@ -142,6 +141,17 @@ const config = JSON.stringify(pickup);
       if (!cfg.availableWeekdays.includes(d.getDay())) return false;
       if ((cfg.blackoutDates || []).includes(iso(d))) return false;
       return true;
+    }
+
+    // Open on the first month that actually has a day to pick. Near the end of
+    // a month the next pickup day can already be in the following one, and a
+    // calendar that opens on a month of greyed-out days looks broken.
+    let view = new Date(minDate.getFullYear(), minDate.getMonth(), 1);
+    for (let d = new Date(minDate); d <= maxDate; d.setDate(d.getDate() + 1)) {
+      if (isSelectable(d)) {
+        view = new Date(d.getFullYear(), d.getMonth(), 1);
+        break;
+      }
     }
 
     function render() {

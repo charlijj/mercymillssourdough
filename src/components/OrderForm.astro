@@ -1,6 +1,7 @@
 ---
 import T from './T.astro';
 import PickupCalendar from './PickupCalendar.astro';
+import { site } from '../data/menu.js';
 ---
 
 <section id="order" class="bg-cream-deep">
@@ -16,7 +17,7 @@ import PickupCalendar from './PickupCalendar.astro';
       </p>
     </div>
 
-    <form id="order-form" class="order-form">
+    <form id="order-form" class="order-form" data-contact={site.email}>
       <!-- Honeypot spam trap (leave empty) -->
       <input type="checkbox" name="botcheck" style="display:none" tabindex="-1" autocomplete="off" />
 
@@ -254,8 +255,8 @@ import PickupCalendar from './PickupCalendar.astro';
       zh: '抱歉，發生問題。請直接寄電子郵件給我們，我們會為您處理。',
     },
     network: {
-      en: 'We couldn’t reach the server. Please check your connection and try again — your order is still here.',
-      zh: '無法連線到伺服器。請檢查網路後再試一次——您的訂單內容仍保留。',
+      en: 'We couldn’t send your order — the connection to our ordering system failed. Please check your internet connection and try again. Your order is still here. If it keeps happening, email us and we’ll take your order that way:',
+      zh: '無法送出您的訂單——與訂購系統的連線失敗。請檢查網路後再試一次，您的訂單內容仍保留。若持續發生，請寄電子郵件給我們，我們會以電子郵件為您處理：',
     },
   };
   // Specific, actionable answers for the failures a customer can fix.
@@ -292,6 +293,10 @@ import PickupCalendar from './PickupCalendar.astro';
     },
   };
   const lang = () => (document.documentElement.getAttribute('data-lang') === 'zh' ? 'zh' : 'en');
+  const contact = (form && form.dataset.contact) || '';
+  // Whenever ordering fails, give the customer another way to get their order
+  // to us, rather than leaving them at a dead end.
+  const withContact = (text) => (contact && !text.includes(contact) ? `${text} ${contact}` : text);
   const fmt = (n) => (Number.isInteger(n) ? `$${n}` : `$${n.toFixed(2)}`);
 
   // The quantity controls live on the menu cards above this form, so look them
@@ -500,26 +505,52 @@ import PickupCalendar from './PickupCalendar.astro';
       setStatus(msg.sending[lang()]);
 
       try {
-        const res = await fetch(ORDER_API + '/api/order', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ ...buildOrder(), orderKey }),
-        });
-        const j = await res.json().catch(() => ({}));
-
-        if (!res.ok || !j.success) {
-          const known = errorByCode[j.code];
-          return setStatus((known || msg.err)[lang()], 'err');
+        // Three separate steps, so each failure is reported as what it really is.
+        // (One catch-all would call a bug in this page "couldn't reach the
+        // server", or - worse - report a failure after the order had succeeded.)
+        let payload;
+        try {
+          payload = JSON.stringify({ ...buildOrder(), orderKey });
+        } catch (err) {
+          console.error('Could not read the order form:', err);
+          return setStatus(withContact(msg.err[lang()]), 'err');
         }
 
+        let res;
+        try {
+          res = await fetch(ORDER_API + '/api/order', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: payload,
+          });
+        } catch (err) {
+          // No answer at all: offline, the Worker unreachable, or the browser
+          // blocked the request (for example a page on an address the Worker
+          // does not allow). The order is still on the page and the same key is
+          // kept, so retrying is safe.
+          console.error('Order request failed:', err);
+          return setStatus(withContact(msg.network[lang()]), 'err');
+        }
+
+        const j = await res.json().catch(() => ({}));
+        if (!res.ok || !j.success) {
+          const known = errorByCode[j.code];
+          const text = (known || msg.err)[lang()];
+          // The errors a customer can fix themselves don't need the email; the
+          // ones they can't do.
+          const stuck = !known || ['email_failed', 'unavailable', 'rate_limited', 'too_many'].includes(j.code);
+          return setStatus(stuck ? withContact(text) : text, 'err');
+        }
+
+        // The order is placed. Nothing below may report a failure.
         const ref = j.id ? ` (${j.id})` : '';
         setStatus((j.customerEmail === false ? msg.okNoMail : msg.ok)[lang()] + ref, 'ok');
         orderKey = newKey(); // the next order is a new order
-        clearOrder();
-      } catch (err) {
-        // No response at all: offline, or the Worker is unreachable. The order
-        // is still on the page and the same key is kept, so retrying is safe.
-        setStatus(msg.network[lang()], 'err');
+        try {
+          clearOrder();
+        } catch (err) {
+          console.error('Order sent, but the form could not be cleared:', err);
+        }
       } finally {
         sending = false;
         submitBtn.disabled = false;

@@ -114,8 +114,8 @@ ready-made, on-brand HTML template lives in `email-templates/newsletter.html`.
 ### Tests
 
 ```bash
-npm test            # 77 Worker tests: fast, no browser, no network
-npm run test:e2e    # 17 browser tests: builds the site and drives it in Chromium
+npm test            # 83 Worker tests: fast, no browser, no network
+npm run test:e2e    # 22 browser tests: builds the site and drives it in Chromium
 npm run test:all    # both
 npm run smoke       # checks the LIVE Worker after a deploy (sends no email)
 ```
@@ -130,6 +130,11 @@ with `fetch` stubbed, so the Resend calls are captured rather than sent.
   customer fields and the pickup date (weekday, lead time, blackout dates,
   Vancouver time) are all checked, and tampered, stale or hostile input is
   refused.
+- `deploy-config.test.mjs`: checks `worker/wrangler.toml` against the rest of the
+  project, because a mistake there deploys fine and then fails only for real
+  customers. It requires `ALLOW_ORIGIN` to list every address the site is served
+  at (including Firebase's `.web.app` and `.firebaseapp.com`) and the KV store to
+  be bound as `ORDERS`. Both of those were real incidents.
 - `order-delivery.test.mjs`: what happens when things go wrong. The owner is
   emailed **first**, so if that fails the customer is told and nothing is left
   behind. A failed customer copy does not fail the order. Double submissions are

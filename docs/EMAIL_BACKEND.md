@@ -74,15 +74,21 @@ Accept/Decline link already sent.
 `OWNER_EMAIL` is also where the one-time security codes go, so it must be an
 inbox only the owner can read.
 
-### 2b-ii. Allow your website's address
+### 2b-ii. Allow every address your website is served at
 
-`ALLOW_ORIGIN` in `worker/wrangler.toml` is the address orders are accepted
-from. Browsers on any other site are refused. If customers might arrive on
-`www.` as well, list both, comma-separated:
+`ALLOW_ORIGIN` in `worker/wrangler.toml` lists the addresses orders are accepted
+from; a browser on any other address is refused. **List every address the site
+can be reached at.** Firebase serves it at its own `.web.app` and
+`.firebaseapp.com` addresses as well as your domain, and a customer who arrives
+that way and isn't listed sees "We couldn't send your order" with nothing wrong
+on their side. Comma-separate them:
 
 ```toml
-ALLOW_ORIGIN = "https://mercymillsourdough.com,https://www.mercymillsourdough.com"
+ALLOW_ORIGIN = "https://mercymillsourdough.com,https://www.mercymillsourdough.com,https://mercy-mills-sourdough.web.app,https://mercy-mills-sourdough.firebaseapp.com"
 ```
+
+`npm test` checks that this list covers all of them, and `npm run smoke` checks
+the deployed Worker allows each one.
 
 ### 2c. Check the config
 

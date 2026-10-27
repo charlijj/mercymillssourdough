@@ -346,7 +346,9 @@ test('if the connection drops the order stays on the page, and retrying sends it
   await fullOrder(page);
   apiState.down = true;
   await submit(page);
-  assert.match(await status(page), /couldn.t reach the server/i);
+  const dropped = await status(page);
+  assert.match(dropped, /connection to our ordering system failed/i);
+  assert.ok(dropped.includes('mercymillsourdough@gmail.com'), 'with the email as a fallback');
   assert.equal(await text(page, '#order-total-amount'), '$50', 'the order is still there');
   assert.equal(mail.sent.length, 0);
 
@@ -476,3 +478,97 @@ test('a quoted Accept link opened by someone else cannot accept the order', asyn
   await stranger.close();
   await page.ctx.close();
 });
+
+// ============================================ WHEN ORDERING CANNOT GO THROUGH
+test('a page on an address the Worker does not allow shows a clear message with the email, and sends nothing', async () => {
+  // Same site, same server, but reached as "localhost" instead of "127.0.0.1":
+  // a different origin, which the Worker's allow-list (SITE only) refuses.
+  mail.sent.length = 0;
+  const ctx = await browser.newContext({ viewport: { width: 1280, height: 900 } });
+  const page = await ctx.newPage();
+  await page.goto(SITE.replace('127.0.0.1', 'localhost'), { waitUntil: 'networkidle' });
+  await fullOrder(page);
+  await submit(page);
+  const msg = await status(page);
+  assert.match(msg, /couldn.t send your order/i);
+  assert.match(msg, /try again/i);
+  assert.ok(msg.includes('mercymillsourdough@gmail.com'), `the message gives the customer another way to order: ${msg}`);
+  assert.equal(mail.sent.length, 0, 'nothing was sent');
+  assert.equal(await text(page, '#order-total-amount'), '$50', 'and their order is still on the page');
+  await ctx.close();
+});
+
+test('once that address is allowed, the same page can order', async () => {
+  const saved = env.ALLOW_ORIGIN;
+  env.ALLOW_ORIGIN = `${saved},${SITE.replace('127.0.0.1', 'localhost')}`;
+  try {
+    mail.sent.length = 0;
+    const ctx = await browser.newContext({ viewport: { width: 1280, height: 900 } });
+    const page = await ctx.newPage();
+    await page.goto(SITE.replace('127.0.0.1', 'localhost'), { waitUntil: 'networkidle' });
+    await fullOrder(page);
+    await submit(page);
+    assert.match(await status(page), /Thank you/);
+    assert.ok(ownerMail(mail), 'Mercy received it');
+    await ctx.close();
+  } finally {
+    env.ALLOW_ORIGIN = saved;
+  }
+});
+
+test('every failure message offers the email address; the ones a customer can fix do not', async () => {
+  const page = await open();
+  const EMAIL = 'mercymillsourdough@gmail.com';
+  await fullOrder(page);
+
+  // stuck: the customer cannot fix these, so they are given the email
+  for (const [mutate, label] of [
+    [() => { env.OWNER_EMAIL = undefined; }, 'service unavailable'],
+  ]) {
+    const saved = env.OWNER_EMAIL;
+    mutate();
+    await submit(page);
+    assert.ok((await status(page)).includes(EMAIL), `${label} shows the email`);
+    env.OWNER_EMAIL = saved;
+  }
+
+  // fixable: a stale price just needs a refresh
+  await page.evaluate(() => { document.querySelector('.card[data-id="artisan-loaf"]').dataset.price = '1'; });
+  await submit(page);
+  const fixable = await status(page);
+  assert.match(fixable, /refresh the page/i);
+  assert.ok(!fixable.includes(EMAIL), 'a refreshable error does not send them away');
+  await page.ctx.close();
+});
+
+test('a problem after the order is placed is never reported as a failed order', async () => {
+  const page = await open();
+  await fullOrder(page);
+  // Make the post-order clean-up blow up. The order has already gone through.
+  await page.evaluate(() => {
+    const real = document.dispatchEvent.bind(document);
+    document.dispatchEvent = (e) => { if (e.type === 'order:reset') throw new Error('boom'); return real(e); };
+  });
+  await submit(page);
+  const msg = await status(page);
+  assert.match(msg, /Thank you/, `still reported as a success: ${msg}`);
+  assert.doesNotMatch(msg, /couldn.t/i);
+  assert.equal(mail.sent.filter((m) => m.to.includes(OWNER)).length, 1, 'placed exactly once');
+  await page.ctx.close();
+});
+
+test('the calendar opens on a month that has a day to pick, whatever today is', async () => {
+  // Near the end of a month the next pickup day can already be in the next one.
+  // The calendar must open there, not on a month of greyed-out days.
+  const dates = ['2026-10-27', '2026-10-31', '2026-11-30', '2026-12-28', '2027-01-30', '2027-03-31'];
+  for (const iso of dates) {
+    const ctx = await browser.newContext({ viewport: { width: 1280, height: 900 } });
+    const page = await ctx.newPage();
+    await page.clock.install({ time: new Date(`${iso}T20:00:00Z`) });
+    await page.goto(SITE, { waitUntil: 'networkidle' });
+    const open = await page.locator('#pickup-cal button.cal-day:not([disabled])').count();
+    assert.ok(open > 0, `on ${iso} the calendar opens with ${open} pickable days`);
+    await ctx.close();
+  }
+});
+

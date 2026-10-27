@@ -113,17 +113,27 @@ check(
 
 // -------------------------------------------------------------------- 2. CORS
 console.log('\nThe website can reach it');
-const pre = await call('/api/order', {
-  method: 'OPTIONS',
-  headers: { Origin: SITE, 'Access-Control-Request-Method': 'POST', 'Access-Control-Request-Headers': 'content-type' },
-});
-const allowed = pre.res?.headers.get('access-control-allow-origin');
-check(
-  allowed === SITE || allowed === '*',
-  `Allows ${SITE}`,
-  `Answers with allow-origin "${allowed}", so browsers on ${SITE} will be blocked`,
-  `Set ALLOW_ORIGIN = "${SITE}" in worker/wrangler.toml (comma-separate to add the www address) and redeploy.`
-);
+// Every address the site can be reached at: the domain, www, and Firebase's own
+// .web.app / .firebaseapp.com addresses. A customer on any of them who is not
+// allowed sees "couldn't reach the server", so each is checked.
+let project = '';
+try {
+  project = JSON.parse(fs.readFileSync(path.join(ROOT, '.firebaserc'), 'utf8')).projects?.default || '';
+} catch {}
+const addresses = [SITE, `https://www.${site.domain}`, ...(project ? [`https://${project}.web.app`, `https://${project}.firebaseapp.com`] : [])];
+for (const origin of addresses) {
+  const pre = await call('/api/order', {
+    method: 'OPTIONS',
+    headers: { Origin: origin, 'Access-Control-Request-Method': 'POST', 'Access-Control-Request-Headers': 'content-type' },
+  });
+  const allowed = pre.res?.headers.get('access-control-allow-origin');
+  check(
+    allowed === origin || allowed === '*',
+    `Allows customers on ${origin}`,
+    `Customers on ${origin} would be blocked: the Worker answers allow-origin "${allowed}"`,
+    `Add ${origin} to ALLOW_ORIGIN in worker/wrangler.toml (comma-separated) and redeploy: cd worker && npx wrangler@4 deploy`
+  );
+}
 const stranger = await call('/api/order', {
   method: 'OPTIONS',
   headers: { Origin: 'https://evil.example', 'Access-Control-Request-Method': 'POST' },

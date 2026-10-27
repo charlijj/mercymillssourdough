@@ -8,7 +8,12 @@ workers_dev = true
 FROM_NAME = "Mercy Mill Sourdough"
 FROM_EMAIL = "orders@mercymillsourdough.com"   # must be on your Resend-verified domain
 SITE_URL = "https://mercymillsourdough.com"
-ALLOW_ORIGIN = "https://mercymillsourdough.com"  # your live site origin. Several? Comma-separate, e.g. "https://mercymillsourdough.com,https://www.mercymillsourdough.com"
+# Every address the website can be reached at. Orders from a page on any other
+# address are refused, so a missing one here means "couldn't reach the server"
+# for customers who arrive that way. Firebase also serves the site at its own
+# .web.app and .firebaseapp.com addresses, so those are listed too.
+# `npm test` checks that this list covers all of them.
+ALLOW_ORIGIN = "https://mercymillsourdough.com,https://www.mercymillsourdough.com,https://mercy-mills-sourdough.web.app,https://mercy-mills-sourdough.firebaseapp.com"
 
 # Secrets are NOT stored here. Set them once with:
 #   npx wrangler secret put RESEND_API_KEY
